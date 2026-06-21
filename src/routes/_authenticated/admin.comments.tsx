@@ -13,7 +13,7 @@ function CommentsAdmin() {
   });
 
   const toggle = async (id: string, field: "is_featured" | "is_hidden", value: boolean) => {
-    await supabase.from("comments").update({ [field]: value }).eq("id", id);
+    await supabase.from("comments").update({ [field]: value } as any).eq("id", id);
     q.refetch();
   };
 

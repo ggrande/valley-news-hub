@@ -91,7 +91,7 @@ function IntakeDetail() {
         nesting_level: Math.min(c.nesting_level ?? 0, 3),
         sort_order: i,
       }));
-      await supabase.from("comments").insert(rows);
+      await supabase.from("comments").insert(rows as any);
     }
     await supabase.from("reddit_imports").update({ import_status: "generated", generated_post_id: post.id }).eq("id", id);
     navigate({ to: "/admin/posts/$id", params: { id: post.id } });
