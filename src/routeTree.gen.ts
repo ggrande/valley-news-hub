@@ -11,14 +11,20 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeatherRouteImport } from './routes/weather'
 import { Route as WatchLiveRouteImport } from './routes/watch-live'
+import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
 import { Route as SubmitNewsTipRouteImport } from './routes/submit-news-tip'
 import { Route as SportsRouteImport } from './routes/sports'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShowsRouteImport } from './routes/shows'
+import { Route as PublicFileRouteImport } from './routes/public-file'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as NewsRouteImport } from './routes/news'
+import { Route as CorrectionsPolicyRouteImport } from './routes/corrections-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CareersRouteImport } from './routes/careers'
 import { Route as AdvertiseRouteImport } from './routes/advertise'
+import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
@@ -34,6 +40,11 @@ const WatchLiveRoute = WatchLiveRouteImport.update({
   path: '/watch-live',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsOfUseRoute = TermsOfUseRouteImport.update({
+  id: '/terms-of-use',
+  path: '/terms-of-use',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SubmitNewsTipRoute = SubmitNewsTipRouteImport.update({
   id: '/submit-news-tip',
   path: '/submit-news-tip',
@@ -44,14 +55,34 @@ const SportsRoute = SportsRouteImport.update({
   path: '/sports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShowsRoute = ShowsRouteImport.update({
   id: '/shows',
   path: '/shows',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicFileRoute = PublicFileRouteImport.update({
+  id: '/public-file',
+  path: '/public-file',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewsRoute = NewsRouteImport.update({
   id: '/news',
   path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CorrectionsPolicyRoute = CorrectionsPolicyRouteImport.update({
+  id: '/corrections-policy',
+  path: '/corrections-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -72,6 +103,11 @@ const CareersRoute = CareersRouteImport.update({
 const AdvertiseRoute = AdvertiseRouteImport.update({
   id: '/advertise',
   path: '/advertise',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessibilityRoute = AccessibilityRouteImport.update({
+  id: '/accessibility',
+  path: '/accessibility',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -98,14 +134,20 @@ const NewsSlugRoute = NewsSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
   '/advertise': typeof AdvertiseRoute
   '/careers': typeof CareersRoute
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
+  '/corrections-policy': typeof CorrectionsPolicyRoute
   '/news': typeof NewsRouteWithChildren
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/public-file': typeof PublicFileRoute
   '/shows': typeof ShowsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sports': typeof SportsRoute
   '/submit-news-tip': typeof SubmitNewsTipRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRoute
   '/news/$slug': typeof NewsSlugRoute
@@ -114,14 +156,20 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
   '/advertise': typeof AdvertiseRoute
   '/careers': typeof CareersRoute
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
+  '/corrections-policy': typeof CorrectionsPolicyRoute
   '/news': typeof NewsRouteWithChildren
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/public-file': typeof PublicFileRoute
   '/shows': typeof ShowsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sports': typeof SportsRoute
   '/submit-news-tip': typeof SubmitNewsTipRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRoute
   '/news/$slug': typeof NewsSlugRoute
@@ -131,14 +179,20 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
   '/advertise': typeof AdvertiseRoute
   '/careers': typeof CareersRoute
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
+  '/corrections-policy': typeof CorrectionsPolicyRoute
   '/news': typeof NewsRouteWithChildren
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/public-file': typeof PublicFileRoute
   '/shows': typeof ShowsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sports': typeof SportsRoute
   '/submit-news-tip': typeof SubmitNewsTipRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRoute
   '/news/$slug': typeof NewsSlugRoute
@@ -149,14 +203,20 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/accessibility'
     | '/advertise'
     | '/careers'
     | '/community'
     | '/contact'
+    | '/corrections-policy'
     | '/news'
+    | '/privacy-policy'
+    | '/public-file'
     | '/shows'
+    | '/sitemap.xml'
     | '/sports'
     | '/submit-news-tip'
+    | '/terms-of-use'
     | '/watch-live'
     | '/weather'
     | '/news/$slug'
@@ -165,14 +225,20 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/accessibility'
     | '/advertise'
     | '/careers'
     | '/community'
     | '/contact'
+    | '/corrections-policy'
     | '/news'
+    | '/privacy-policy'
+    | '/public-file'
     | '/shows'
+    | '/sitemap.xml'
     | '/sports'
     | '/submit-news-tip'
+    | '/terms-of-use'
     | '/watch-live'
     | '/weather'
     | '/news/$slug'
@@ -181,14 +247,20 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/accessibility'
     | '/advertise'
     | '/careers'
     | '/community'
     | '/contact'
+    | '/corrections-policy'
     | '/news'
+    | '/privacy-policy'
+    | '/public-file'
     | '/shows'
+    | '/sitemap.xml'
     | '/sports'
     | '/submit-news-tip'
+    | '/terms-of-use'
     | '/watch-live'
     | '/weather'
     | '/news/$slug'
@@ -198,14 +270,20 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AccessibilityRoute: typeof AccessibilityRoute
   AdvertiseRoute: typeof AdvertiseRoute
   CareersRoute: typeof CareersRoute
   CommunityRoute: typeof CommunityRoute
   ContactRoute: typeof ContactRoute
+  CorrectionsPolicyRoute: typeof CorrectionsPolicyRoute
   NewsRoute: typeof NewsRouteWithChildren
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  PublicFileRoute: typeof PublicFileRoute
   ShowsRoute: typeof ShowsRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SportsRoute: typeof SportsRoute
   SubmitNewsTipRoute: typeof SubmitNewsTipRoute
+  TermsOfUseRoute: typeof TermsOfUseRoute
   WatchLiveRoute: typeof WatchLiveRoute
   WeatherRoute: typeof WeatherRoute
 }
@@ -226,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WatchLiveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms-of-use': {
+      id: '/terms-of-use'
+      path: '/terms-of-use'
+      fullPath: '/terms-of-use'
+      preLoaderRoute: typeof TermsOfUseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/submit-news-tip': {
       id: '/submit-news-tip'
       path: '/submit-news-tip'
@@ -240,6 +325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shows': {
       id: '/shows'
       path: '/shows'
@@ -247,11 +339,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShowsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/public-file': {
+      id: '/public-file'
+      path: '/public-file'
+      fullPath: '/public-file'
+      preLoaderRoute: typeof PublicFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/news': {
       id: '/news'
       path: '/news'
       fullPath: '/news'
       preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/corrections-policy': {
+      id: '/corrections-policy'
+      path: '/corrections-policy'
+      fullPath: '/corrections-policy'
+      preLoaderRoute: typeof CorrectionsPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -280,6 +393,13 @@ declare module '@tanstack/react-router' {
       path: '/advertise'
       fullPath: '/advertise'
       preLoaderRoute: typeof AdvertiseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accessibility': {
+      id: '/accessibility'
+      path: '/accessibility'
+      fullPath: '/accessibility'
+      preLoaderRoute: typeof AccessibilityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -328,14 +448,20 @@ const NewsRouteWithChildren = NewsRoute._addFileChildren(NewsRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AccessibilityRoute: AccessibilityRoute,
   AdvertiseRoute: AdvertiseRoute,
   CareersRoute: CareersRoute,
   CommunityRoute: CommunityRoute,
   ContactRoute: ContactRoute,
+  CorrectionsPolicyRoute: CorrectionsPolicyRoute,
   NewsRoute: NewsRouteWithChildren,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
+  PublicFileRoute: PublicFileRoute,
   ShowsRoute: ShowsRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SportsRoute: SportsRoute,
   SubmitNewsTipRoute: SubmitNewsTipRoute,
+  TermsOfUseRoute: TermsOfUseRoute,
   WatchLiveRoute: WatchLiveRoute,
   WeatherRoute: WeatherRoute,
 }
