@@ -3,6 +3,7 @@ import { Layout, PageHeader } from "@/components/site/Layout";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { FormBlock } from "@/components/site/Form";
 import { articles } from "@/lib/news-data";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
@@ -58,6 +59,13 @@ function CommunityPage() {
             successTitle="Event submitted — thanks!"
             successBody="Our community team reviews submissions before they're added to the calendar."
             submitLabel="Submit Event"
+            onSubmitValues={async (v) => {
+              const { error } = await supabase.from("community_events").insert({
+                title: v.event, description: v.details, location: v.location,
+                event_date: v.date || null, submitter_name: v.name, submitter_email: v.email,
+              });
+              if (error) throw error;
+            }}
             fields={[
               { name: "name", label: "Your Name", required: true },
               { name: "email", label: "Email", type: "email", required: true },

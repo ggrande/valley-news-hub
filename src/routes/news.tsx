@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/site/Layout";
 import { ArticleCard } from "@/components/site/ArticleCard";
-import { articles } from "@/lib/news-data";
+import { dbPostToArticle, fetchPublishedPosts } from "@/lib/posts-queries";
 
 export const Route = createFileRoute("/news")({
   head: () => ({
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/news")({
 });
 
 function NewsPage() {
+  const q = useQuery({ queryKey: ["news-all"], queryFn: () => fetchPublishedPosts({ limit: 100 }) });
+  const articles = (q.data ?? []).map(dbPostToArticle);
   return (
     <Layout>
       <PageHeader eyebrow="WKNA 49 Newsroom" title="News" description="Headlines from across the Kanawha Valley and West Virginia, reported by the WKNA 49 News team." />

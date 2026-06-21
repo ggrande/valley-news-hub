@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Layout, PageHeader } from "@/components/site/Layout";
 import { FormBlock } from "@/components/site/Form";
+import { supabase } from "@/integrations/supabase/client";
 import { Check } from "lucide-react";
 
 export const Route = createFileRoute("/advertise")({
@@ -46,6 +47,13 @@ function Advertise() {
             intro="Tell us about your business and a representative will follow up with rates and availability."
             submitLabel="Request Information"
             successTitle="Thanks — we'll be in touch."
+            onSubmitValues={async (v) => {
+              const { error } = await supabase.from("ad_inquiries").insert({
+                contact_name: v.name, company: v.company, email: v.email, phone: v.phone,
+                budget_range: v.budget, details: v.message,
+              });
+              if (error) throw error;
+            }}
             fields={[
               { name: "name", label: "Your Name", required: true },
               { name: "company", label: "Company", required: true },

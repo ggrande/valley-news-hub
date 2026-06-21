@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/site/Layout";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { WeatherCard } from "@/components/site/WeatherCard";
 import { LivePlayer } from "@/components/site/LivePlayer";
 import { Newsletter } from "@/components/site/Newsletter";
-import { articles, shows, schedule } from "@/lib/news-data";
+import { shows, schedule } from "@/lib/news-data";
+import { dbPostToArticle, fetchPublishedPosts } from "@/lib/posts-queries";
 import { Calendar, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -38,6 +40,11 @@ function SectionHead({ title, to, kicker }: { title: string; to?: string; kicker
 }
 
 function Home() {
+  const q = useQuery({
+    queryKey: ["home-posts"],
+    queryFn: () => fetchPublishedPosts({ limit: 30 }),
+  });
+  const articles = (q.data ?? []).map(dbPostToArticle);
   const [hero, ...rest] = articles;
   const headlines = rest.slice(0, 5);
   const localNews = rest.slice(0, 6);
@@ -46,105 +53,65 @@ function Home() {
 
   return (
     <Layout>
-      {/* Hero + sidebar */}
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
-        <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-          <div>
-            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--breaking)]">
-              Top Story
-            </p>
-            <ArticleCard a={hero} variant="hero" />
-          </div>
-          <aside>
-            <SectionHead title="Latest Headlines" kicker="On WKNA49.com" />
-            <div className="rounded-lg border bg-card p-4">
-              {headlines.map((a) => (
-                <ArticleCard key={a.slug} a={a} variant="compact" />
-              ))}
+      {hero && (
+        <section className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
+          <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
+            <div>
+              <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--breaking)]">Top Story</p>
+              <ArticleCard a={hero} variant="hero" />
             </div>
-          </aside>
-        </div>
-      </section>
-
-      {/* Weather + Watch Live */}
+            <aside>
+              <SectionHead title="Latest Headlines" kicker="On WKNA49.com" />
+              <div className="rounded-lg border bg-card p-4">
+                {headlines.map((a) => <ArticleCard key={a.slug} a={a} variant="compact" />)}
+              </div>
+            </aside>
+          </div>
+        </section>
+      )}
       <section className="mx-auto max-w-7xl px-4 py-8">
         <div className="grid gap-6 lg:grid-cols-2">
-          <div>
-            <SectionHead title="WKNA 49 Weather" to="/weather" kicker="Kanawha Valley" />
-            <WeatherCard />
-          </div>
-          <div>
-            <SectionHead title="Watch Live" to="/watch-live" kicker="Streaming" />
-            <LivePlayer />
-          </div>
+          <div><SectionHead title="WKNA 49 Weather" to="/weather" kicker="Kanawha Valley" /><WeatherCard /></div>
+          <div><SectionHead title="Watch Live" to="/watch-live" kicker="Streaming" /><LivePlayer /></div>
         </div>
       </section>
-
-      {/* Local news grid */}
       <section className="mx-auto max-w-7xl px-4 py-8">
         <SectionHead title="Local News" to="/news" kicker="From the Kanawha Valley" />
-        <div className="news-grid">
-          {localNews.map((a) => (
-            <ArticleCard key={a.slug} a={a} />
-          ))}
-        </div>
+        <div className="news-grid">{localNews.map((a) => <ArticleCard key={a.slug} a={a} />)}</div>
       </section>
-
-      {/* Sports + Community */}
       <section className="mx-auto max-w-7xl px-4 py-8">
         <div className="grid gap-8 lg:grid-cols-2">
           <div>
             <SectionHead title="49 Sports" to="/sports" kicker="High school & local" />
             <div className="space-y-4">
-              {sports.map((a) => (
-                <ArticleCard key={a.slug} a={a} variant="compact" />
-              ))}
-              <p className="text-sm text-muted-foreground">
-                Full scores, schedules and highlights every Friday night on <em>49 Sports Final</em>.
-              </p>
+              {sports.map((a) => <ArticleCard key={a.slug} a={a} variant="compact" />)}
+              <p className="text-sm text-muted-foreground">Full scores, schedules and highlights every Friday night on <em>49 Sports Final</em>.</p>
             </div>
           </div>
           <div>
             <SectionHead title="Community" to="/community" kicker="Around the Valley" />
             <div className="space-y-4">
-              {community.map((a) => (
-                <ArticleCard key={a.slug} a={a} variant="compact" />
-              ))}
-              <Link
-                to="/community"
-                className="mt-2 inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold text-primary hover:bg-accent"
-              >
+              {community.map((a) => <ArticleCard key={a.slug} a={a} variant="compact" />)}
+              <Link to="/community" className="mt-2 inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold text-primary hover:bg-accent">
                 <Calendar className="size-4" /> Community Calendar
               </Link>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Shows */}
       <section className="mx-auto max-w-7xl px-4 py-8">
         <SectionHead title="WKNA 49 Shows" to="/shows" kicker="On Channel 49" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {shows.slice(0, 6).map((s) => (
-            <Link
-              key={s.slug}
-              to="/shows"
-              className="group flex flex-col rounded-lg border bg-gradient-to-br from-[color:var(--ivory)] to-background p-5 transition-shadow hover:shadow-md"
-            >
-              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--broadcast)]">
-                WKNA 49
-              </span>
-              <h3 className="mt-2 font-display text-lg font-bold text-primary group-hover:underline">
-                {s.name}
-              </h3>
+            <Link key={s.slug} to="/shows" className="group flex flex-col rounded-lg border bg-gradient-to-br from-[color:var(--ivory)] to-background p-5 transition-shadow hover:shadow-md">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--broadcast)]">WKNA 49</span>
+              <h3 className="mt-2 font-display text-lg font-bold text-primary group-hover:underline">{s.name}</h3>
               <p className="mt-1 text-xs font-semibold text-[color:var(--navy-light)]">{s.time}</p>
               <p className="mt-2 text-sm text-muted-foreground">{s.description}</p>
             </Link>
           ))}
         </div>
       </section>
-
-      {/* Schedule strip */}
       <section className="mx-auto max-w-7xl px-4 py-8">
         <div className="rounded-lg border bg-[color:var(--navy-dark)] p-6 text-primary-foreground">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--gold)]">Today on Channel 49</p>
@@ -158,11 +125,7 @@ function Home() {
           </ul>
         </div>
       </section>
-
-      {/* Newsletter */}
-      <section className="mx-auto max-w-7xl px-4 py-10">
-        <Newsletter />
-      </section>
+      <section className="mx-auto max-w-7xl px-4 py-10"><Newsletter /></section>
     </Layout>
   );
 }

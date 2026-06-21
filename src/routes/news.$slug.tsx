@@ -1,61 +1,57 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/site/Layout";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { ArticleImage } from "@/components/site/ArticleImage";
-import { articles, formatDate, getArticle } from "@/lib/news-data";
+import { formatDate } from "@/lib/news-data";
+import { dbPostToArticle, fetchCommentsForPost, fetchPostBySlug, fetchPublishedPosts, fetchSetting } from "@/lib/posts-queries";
 
 export const Route = createFileRoute("/news/$slug")({
-  loader: ({ params }) => {
-    const article = getArticle(params.slug);
-    if (!article) throw notFound();
-    return { article };
+  loader: async ({ params }) => {
+    const post = await fetchPostBySlug(params.slug);
+    if (!post) throw notFound();
+    return { post };
   },
   head: ({ loaderData, params }) => {
-    const a = loaderData?.article;
+    const p = loaderData?.post;
+    if (!p) return { meta: [{ title: "Article — WKNA 49 News" }] };
+    const a = dbPostToArticle(p);
     return {
-      meta: a
-        ? [
-            { title: `${a.title} — WKNA 49 News` },
-            { name: "description", content: a.summary },
-            { property: "og:title", content: a.title },
-            { property: "og:description", content: a.summary },
-            { property: "og:type", content: "article" },
-            { property: "og:url", content: `/news/${params.slug}` },
-            { property: "article:published_time", content: a.date },
-            { property: "article:author", content: a.author },
-            { property: "article:section", content: a.category },
-          ]
-        : [{ title: "Article — WKNA 49 News" }],
+      meta: [
+        { title: p.seo_title ?? `${a.title} — WKNA 49 News` },
+        { name: "description", content: p.seo_description ?? a.summary },
+        { property: "og:title", content: a.title },
+        { property: "og:description", content: p.seo_description ?? a.summary },
+        { property: "og:type", content: "article" },
+        { property: "og:url", content: `/news/${params.slug}` },
+        ...(p.og_image || p.featured_image ? [{ property: "og:image", content: (p.og_image ?? p.featured_image)! }] : []),
+        { property: "article:published_time", content: a.date },
+        { property: "article:author", content: a.author },
+        { property: "article:section", content: a.category },
+      ],
       links: [{ rel: "canonical", href: `/news/${params.slug}` }],
-      scripts: a
-        ? [
-            {
-              type: "application/ld+json",
-              children: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "NewsArticle",
-                headline: a.title,
-                datePublished: a.date,
-                author: { "@type": "Person", name: a.author },
-                articleSection: a.category,
-                publisher: { "@type": "Organization", name: "WKNA 49 News" },
-                description: a.summary,
-              }),
-            },
-          ]
-        : [],
+      scripts: [{
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "NewsArticle",
+          headline: a.title,
+          datePublished: a.date,
+          author: { "@type": "Person", name: a.author },
+          articleSection: a.category,
+          publisher: { "@type": "Organization", name: "WKNA 49 News" },
+          description: p.seo_description ?? a.summary,
+          ...(p.featured_image ? { image: p.featured_image } : {}),
+        }),
+      }],
     };
   },
   notFoundComponent: () => (
     <Layout>
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
         <h1 className="font-display text-3xl font-bold text-primary">Article not found</h1>
-        <p className="mt-2 text-muted-foreground">
-          Older articles aren't part of the current WKNA49.com archive following our 2026 platform migration.
-        </p>
-        <Link to="/news" className="mt-6 inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground">
-          Latest news
-        </Link>
+        <p className="mt-2 text-muted-foreground">Older articles aren't part of the current WKNA49.com archive following our 2026 platform migration.</p>
+        <Link to="/news" className="mt-6 inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground">Latest news</Link>
       </div>
     </Layout>
   ),
@@ -63,40 +59,68 @@ export const Route = createFileRoute("/news/$slug")({
 });
 
 function ArticlePage() {
-  const { article: a } = Route.useLoaderData();
-  const related = articles.filter((x) => x.slug !== a.slug).slice(0, 3);
+  const { post } = Route.useLoaderData();
+  const a = dbPostToArticle(post);
+
+  const related = useQuery({ queryKey: ["related"], queryFn: () => fetchPublishedPosts({ limit: 4 }) });
+  const showComments = useQuery({ queryKey: ["setting-show-comments"], queryFn: () => fetchSetting<boolean>("show_imported_discussion", true) });
+  const comments = useQuery({
+    queryKey: ["comments", post.id],
+    queryFn: () => fetchCommentsForPost(post.id),
+    enabled: !!showComments.data,
+  });
+
+  const relatedArticles = (related.data ?? []).filter((p) => p.slug !== post.slug).slice(0, 3).map(dbPostToArticle);
 
   return (
     <Layout>
       <article>
         <div className="border-b bg-[color:var(--ivory)]">
           <div className="mx-auto max-w-3xl px-4 py-10">
-            <Link to="/news" className="text-xs font-bold uppercase tracking-[0.22em] text-[color:var(--breaking)] hover:underline">
-              {a.category}
-            </Link>
-            <h1 className="mt-3 font-display text-3xl font-black leading-tight tracking-tight text-primary sm:text-5xl">
-              {a.title}
-            </h1>
+            <Link to="/news" className="text-xs font-bold uppercase tracking-[0.22em] text-[color:var(--breaking)] hover:underline">{a.category}</Link>
+            {post.is_breaking && <span className="ml-2 rounded bg-[color:var(--breaking)] px-2 py-0.5 text-[10px] font-bold uppercase text-white">Breaking</span>}
+            <h1 className="mt-3 font-display text-3xl font-black leading-tight tracking-tight text-primary sm:text-5xl">{a.title}</h1>
             <p className="mt-4 font-news text-xl text-muted-foreground">{a.summary}</p>
             <p className="mt-5 text-sm text-muted-foreground">
               By <span className="font-semibold text-primary">{a.author}</span> • {formatDate(a.date)} • WKNA 49 News
             </p>
           </div>
         </div>
-        <ArticleImage hue={a.imageHue} label={a.title} className="mx-auto mt-8 aspect-[16/8] max-w-5xl rounded-lg" />
+        {post.featured_image ? (
+          <img src={post.featured_image} alt={post.hero_caption ?? a.title} className="mx-auto mt-8 aspect-[16/8] max-w-5xl rounded-lg object-cover" />
+        ) : (
+          <ArticleImage hue={a.imageHue} label={a.title} className="mx-auto mt-8 aspect-[16/8] max-w-5xl rounded-lg" />
+        )}
         <div className="mx-auto max-w-2xl px-4 py-10 font-news text-lg leading-relaxed text-foreground">
-          {a.body.map((p: string, i: number) => (
-            <p key={i} className="mb-5">{p}</p>
-          ))}
+          {a.body.map((p: string, i: number) => <p key={i} className="mb-5">{p}</p>)}
           <p className="mt-8 border-t pt-5 text-sm italic text-muted-foreground">
             Have a news tip? <Link to="/submit-news-tip" className="text-[color:var(--broadcast)] underline">Send it to the WKNA 49 newsroom.</Link>
           </p>
         </div>
       </article>
+
+      {showComments.data && (comments.data?.length ?? 0) > 0 && (
+        <section className="mx-auto max-w-3xl px-4 pb-12">
+          <h2 className="mb-5 border-b-2 border-primary pb-2 font-display text-2xl font-black text-primary">Reader Discussion</h2>
+          <ul className="space-y-4">
+            {comments.data!.map((c: any) => (
+              <li key={c.id} className="rounded-lg border bg-card p-4" style={{ marginLeft: Math.min(c.nesting_level ?? 0, 3) * 16 }}>
+                <p className="text-xs">
+                  <span className="font-semibold text-primary">{c.display_name}</span>
+                  {c.is_featured && <span className="ml-2 rounded bg-[color:var(--gold)]/30 px-1.5 py-0.5 text-[10px] font-bold uppercase text-[color:var(--navy-dark)]">Featured</span>}
+                  {c.source_created_at && <span className="ml-2 text-muted-foreground">· {new Date(c.source_created_at).toLocaleDateString()}</span>}
+                </p>
+                <p className="mt-2 whitespace-pre-wrap text-sm">{c.body}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="mx-auto max-w-7xl px-4 pb-12">
         <h2 className="mb-5 border-b-2 border-primary pb-2 font-display text-2xl font-black text-primary">Related stories</h2>
         <div className="news-grid">
-          {related.map((r) => <ArticleCard key={r.slug} a={r} />)}
+          {relatedArticles.map((r) => <ArticleCard key={r.slug} a={r} />)}
         </div>
       </section>
     </Layout>
