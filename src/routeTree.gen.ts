@@ -9,38 +9,406 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WeatherRouteImport } from './routes/weather'
+import { Route as WatchLiveRouteImport } from './routes/watch-live'
+import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
+import { Route as SubmitNewsTipRouteImport } from './routes/submit-news-tip'
+import { Route as SportsRouteImport } from './routes/sports'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ShowsRouteImport } from './routes/shows'
+import { Route as PublicFileRouteImport } from './routes/public-file'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as NewsRouteImport } from './routes/news'
+import { Route as CorrectionsPolicyRouteImport } from './routes/corrections-policy'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CommunityRouteImport } from './routes/community'
+import { Route as CareersRouteImport } from './routes/careers'
+import { Route as AdvertiseRouteImport } from './routes/advertise'
+import { Route as AccessibilityRouteImport } from './routes/accessibility'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as NewsLocalRouteImport } from './routes/news.local'
+import { Route as NewsSlugRouteImport } from './routes/news.$slug'
 
+const WeatherRoute = WeatherRouteImport.update({
+  id: '/weather',
+  path: '/weather',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WatchLiveRoute = WatchLiveRouteImport.update({
+  id: '/watch-live',
+  path: '/watch-live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsOfUseRoute = TermsOfUseRouteImport.update({
+  id: '/terms-of-use',
+  path: '/terms-of-use',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubmitNewsTipRoute = SubmitNewsTipRouteImport.update({
+  id: '/submit-news-tip',
+  path: '/submit-news-tip',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SportsRoute = SportsRouteImport.update({
+  id: '/sports',
+  path: '/sports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShowsRoute = ShowsRouteImport.update({
+  id: '/shows',
+  path: '/shows',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicFileRoute = PublicFileRouteImport.update({
+  id: '/public-file',
+  path: '/public-file',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CorrectionsPolicyRoute = CorrectionsPolicyRouteImport.update({
+  id: '/corrections-policy',
+  path: '/corrections-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CareersRoute = CareersRouteImport.update({
+  id: '/careers',
+  path: '/careers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdvertiseRoute = AdvertiseRouteImport.update({
+  id: '/advertise',
+  path: '/advertise',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessibilityRoute = AccessibilityRouteImport.update({
+  id: '/accessibility',
+  path: '/accessibility',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewsLocalRoute = NewsLocalRouteImport.update({
+  id: '/local',
+  path: '/local',
+  getParentRoute: () => NewsRoute,
+} as any)
+const NewsSlugRoute = NewsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => NewsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
+  '/advertise': typeof AdvertiseRoute
+  '/careers': typeof CareersRoute
+  '/community': typeof CommunityRoute
+  '/contact': typeof ContactRoute
+  '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/news': typeof NewsRouteWithChildren
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/public-file': typeof PublicFileRoute
+  '/shows': typeof ShowsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sports': typeof SportsRoute
+  '/submit-news-tip': typeof SubmitNewsTipRoute
+  '/terms-of-use': typeof TermsOfUseRoute
+  '/watch-live': typeof WatchLiveRoute
+  '/weather': typeof WeatherRoute
+  '/news/$slug': typeof NewsSlugRoute
+  '/news/local': typeof NewsLocalRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
+  '/advertise': typeof AdvertiseRoute
+  '/careers': typeof CareersRoute
+  '/community': typeof CommunityRoute
+  '/contact': typeof ContactRoute
+  '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/news': typeof NewsRouteWithChildren
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/public-file': typeof PublicFileRoute
+  '/shows': typeof ShowsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sports': typeof SportsRoute
+  '/submit-news-tip': typeof SubmitNewsTipRoute
+  '/terms-of-use': typeof TermsOfUseRoute
+  '/watch-live': typeof WatchLiveRoute
+  '/weather': typeof WeatherRoute
+  '/news/$slug': typeof NewsSlugRoute
+  '/news/local': typeof NewsLocalRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
+  '/advertise': typeof AdvertiseRoute
+  '/careers': typeof CareersRoute
+  '/community': typeof CommunityRoute
+  '/contact': typeof ContactRoute
+  '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/news': typeof NewsRouteWithChildren
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/public-file': typeof PublicFileRoute
+  '/shows': typeof ShowsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sports': typeof SportsRoute
+  '/submit-news-tip': typeof SubmitNewsTipRoute
+  '/terms-of-use': typeof TermsOfUseRoute
+  '/watch-live': typeof WatchLiveRoute
+  '/weather': typeof WeatherRoute
+  '/news/$slug': typeof NewsSlugRoute
+  '/news/local': typeof NewsLocalRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/accessibility'
+    | '/advertise'
+    | '/careers'
+    | '/community'
+    | '/contact'
+    | '/corrections-policy'
+    | '/news'
+    | '/privacy-policy'
+    | '/public-file'
+    | '/shows'
+    | '/sitemap.xml'
+    | '/sports'
+    | '/submit-news-tip'
+    | '/terms-of-use'
+    | '/watch-live'
+    | '/weather'
+    | '/news/$slug'
+    | '/news/local'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/about'
+    | '/accessibility'
+    | '/advertise'
+    | '/careers'
+    | '/community'
+    | '/contact'
+    | '/corrections-policy'
+    | '/news'
+    | '/privacy-policy'
+    | '/public-file'
+    | '/shows'
+    | '/sitemap.xml'
+    | '/sports'
+    | '/submit-news-tip'
+    | '/terms-of-use'
+    | '/watch-live'
+    | '/weather'
+    | '/news/$slug'
+    | '/news/local'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/accessibility'
+    | '/advertise'
+    | '/careers'
+    | '/community'
+    | '/contact'
+    | '/corrections-policy'
+    | '/news'
+    | '/privacy-policy'
+    | '/public-file'
+    | '/shows'
+    | '/sitemap.xml'
+    | '/sports'
+    | '/submit-news-tip'
+    | '/terms-of-use'
+    | '/watch-live'
+    | '/weather'
+    | '/news/$slug'
+    | '/news/local'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  AccessibilityRoute: typeof AccessibilityRoute
+  AdvertiseRoute: typeof AdvertiseRoute
+  CareersRoute: typeof CareersRoute
+  CommunityRoute: typeof CommunityRoute
+  ContactRoute: typeof ContactRoute
+  CorrectionsPolicyRoute: typeof CorrectionsPolicyRoute
+  NewsRoute: typeof NewsRouteWithChildren
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  PublicFileRoute: typeof PublicFileRoute
+  ShowsRoute: typeof ShowsRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SportsRoute: typeof SportsRoute
+  SubmitNewsTipRoute: typeof SubmitNewsTipRoute
+  TermsOfUseRoute: typeof TermsOfUseRoute
+  WatchLiveRoute: typeof WatchLiveRoute
+  WeatherRoute: typeof WeatherRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/weather': {
+      id: '/weather'
+      path: '/weather'
+      fullPath: '/weather'
+      preLoaderRoute: typeof WeatherRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/watch-live': {
+      id: '/watch-live'
+      path: '/watch-live'
+      fullPath: '/watch-live'
+      preLoaderRoute: typeof WatchLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-of-use': {
+      id: '/terms-of-use'
+      path: '/terms-of-use'
+      fullPath: '/terms-of-use'
+      preLoaderRoute: typeof TermsOfUseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/submit-news-tip': {
+      id: '/submit-news-tip'
+      path: '/submit-news-tip'
+      fullPath: '/submit-news-tip'
+      preLoaderRoute: typeof SubmitNewsTipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sports': {
+      id: '/sports'
+      path: '/sports'
+      fullPath: '/sports'
+      preLoaderRoute: typeof SportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shows': {
+      id: '/shows'
+      path: '/shows'
+      fullPath: '/shows'
+      preLoaderRoute: typeof ShowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/public-file': {
+      id: '/public-file'
+      path: '/public-file'
+      fullPath: '/public-file'
+      preLoaderRoute: typeof PublicFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/corrections-policy': {
+      id: '/corrections-policy'
+      path: '/corrections-policy'
+      fullPath: '/corrections-policy'
+      preLoaderRoute: typeof CorrectionsPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/careers': {
+      id: '/careers'
+      path: '/careers'
+      fullPath: '/careers'
+      preLoaderRoute: typeof CareersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/advertise': {
+      id: '/advertise'
+      path: '/advertise'
+      fullPath: '/advertise'
+      preLoaderRoute: typeof AdvertiseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accessibility': {
+      id: '/accessibility'
+      path: '/accessibility'
+      fullPath: '/accessibility'
+      preLoaderRoute: typeof AccessibilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +416,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/news/local': {
+      id: '/news/local'
+      path: '/local'
+      fullPath: '/news/local'
+      preLoaderRoute: typeof NewsLocalRouteImport
+      parentRoute: typeof NewsRoute
+    }
+    '/news/$slug': {
+      id: '/news/$slug'
+      path: '/$slug'
+      fullPath: '/news/$slug'
+      preLoaderRoute: typeof NewsSlugRouteImport
+      parentRoute: typeof NewsRoute
+    }
   }
 }
 
+interface NewsRouteChildren {
+  NewsSlugRoute: typeof NewsSlugRoute
+  NewsLocalRoute: typeof NewsLocalRoute
+}
+
+const NewsRouteChildren: NewsRouteChildren = {
+  NewsSlugRoute: NewsSlugRoute,
+  NewsLocalRoute: NewsLocalRoute,
+}
+
+const NewsRouteWithChildren = NewsRoute._addFileChildren(NewsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  AccessibilityRoute: AccessibilityRoute,
+  AdvertiseRoute: AdvertiseRoute,
+  CareersRoute: CareersRoute,
+  CommunityRoute: CommunityRoute,
+  ContactRoute: ContactRoute,
+  CorrectionsPolicyRoute: CorrectionsPolicyRoute,
+  NewsRoute: NewsRouteWithChildren,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
+  PublicFileRoute: PublicFileRoute,
+  ShowsRoute: ShowsRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SportsRoute: SportsRoute,
+  SubmitNewsTipRoute: SubmitNewsTipRoute,
+  TermsOfUseRoute: TermsOfUseRoute,
+  WatchLiveRoute: WatchLiveRoute,
+  WeatherRoute: WeatherRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
