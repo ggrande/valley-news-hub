@@ -85,7 +85,7 @@ function ArticlePage() {
         </div>
         <ArticleImage hue={a.imageHue} label={a.title} className="mx-auto mt-8 aspect-[16/8] max-w-5xl rounded-lg" />
         <div className="mx-auto max-w-2xl px-4 py-10 font-news text-lg leading-relaxed text-foreground">
-          {a.body.map((p, i) => (
+          {a.body.map((p: string, i: number) => (
             <p key={i} className="mb-5">{p}</p>
           ))}
           <p className="mt-8 border-t pt-5 text-sm italic text-muted-foreground">
