@@ -12,6 +12,7 @@ export function FormBlock({
   submitLabel = "Submit",
   successTitle = "Thanks — we received your submission.",
   successBody = "A member of our team will review it shortly.",
+  onSubmitValues,
   ...rest
 }: {
   intro?: ReactNode;
@@ -19,8 +20,11 @@ export function FormBlock({
   submitLabel?: string;
   successTitle?: string;
   successBody?: string;
-} & FormHTMLAttributes<HTMLFormElement>) {
+  onSubmitValues?: (values: Record<string, string>) => Promise<void>;
+} & Omit<FormHTMLAttributes<HTMLFormElement>, "onSubmit">) {
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   if (done) {
     return (
       <div className="rounded-lg border bg-card p-8 text-center">
@@ -33,9 +37,20 @@ export function FormBlock({
   return (
     <form
       {...rest}
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        setDone(true);
+        setError(null);
+        const fd = new FormData(e.currentTarget);
+        const values: Record<string, string> = {};
+        fd.forEach((v, k) => { values[k] = String(v); });
+        if (onSubmitValues) {
+          setBusy(true);
+          try { await onSubmitValues(values); setDone(true); }
+          catch (err) { setError((err as Error).message); }
+          finally { setBusy(false); }
+        } else {
+          setDone(true);
+        }
       }}
       className="space-y-5 rounded-lg border bg-card p-6 sm:p-8"
     >
@@ -52,45 +67,22 @@ export function FormBlock({
                 {f.required && <span className="text-[color:var(--breaking)]"> *</span>}
               </label>
               {f.type === "textarea" ? (
-                <textarea
-                  id={f.name}
-                  name={f.name}
-                  required={f.required}
-                  rows={f.rows ?? 5}
-                  placeholder={f.placeholder}
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-[color:var(--broadcast)] focus:outline-none"
-                />
+                <textarea id={f.name} name={f.name} required={f.required} rows={f.rows ?? 5} placeholder={f.placeholder} className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-[color:var(--broadcast)] focus:outline-none" />
               ) : f.type === "select" ? (
-                <select
-                  id={f.name}
-                  name={f.name}
-                  required={f.required}
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm focus:border-[color:var(--broadcast)] focus:outline-none"
-                >
+                <select id={f.name} name={f.name} required={f.required} className="h-10 w-full rounded-md border bg-background px-3 text-sm focus:border-[color:var(--broadcast)] focus:outline-none">
                   <option value="">Select…</option>
-                  {f.options.map((o) => (
-                    <option key={o} value={o}>{o}</option>
-                  ))}
+                  {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
               ) : (
-                <input
-                  id={f.name}
-                  name={f.name}
-                  type={f.type ?? "text"}
-                  required={f.required}
-                  placeholder={f.placeholder}
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm focus:border-[color:var(--broadcast)] focus:outline-none"
-                />
+                <input id={f.name} name={f.name} type={f.type ?? "text"} required={f.required} placeholder={f.placeholder} className="h-10 w-full rounded-md border bg-background px-3 text-sm focus:border-[color:var(--broadcast)] focus:outline-none" />
               )}
             </div>
           );
         })}
       </div>
-      <button
-        type="submit"
-        className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-6 text-sm font-semibold uppercase tracking-wide text-primary-foreground hover:bg-primary/90"
-      >
-        {submitLabel}
+      {error && <p className="text-sm text-[color:var(--breaking)]">{error}</p>}
+      <button type="submit" disabled={busy} className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-6 text-sm font-semibold uppercase tracking-wide text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+        {busy ? "Sending…" : submitLabel}
       </button>
     </form>
   );

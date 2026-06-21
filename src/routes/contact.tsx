@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Layout, PageHeader } from "@/components/site/Layout";
 import { FormBlock } from "@/components/site/Form";
+import { supabase } from "@/integrations/supabase/client";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/contact")({
@@ -33,6 +34,12 @@ function ContactPage() {
           <FormBlock
             intro="Send a message to the WKNA 49 newsroom. For tips, please use our News Tip form so we can route it quickly."
             submitLabel="Send Message"
+            onSubmitValues={async (v) => {
+              const { error } = await supabase.from("contact_submissions").insert({
+                name: v.name, email: v.email, subject: v.subject, message: v.message,
+              });
+              if (error) throw error;
+            }}
             fields={[
               { name: "name", label: "Your Name", required: true },
               { name: "email", label: "Email", type: "email", required: true },
