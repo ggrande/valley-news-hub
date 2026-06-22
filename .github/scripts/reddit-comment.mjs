@@ -73,33 +73,47 @@ async function shot(page, name) {
 }
 
 async function loginFresh(context, page, username, password) {
-  await page.goto("https://www.reddit.com/login/", { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(1500);
-  // The new Reddit login form lives in a shadow DOM (faceplate-tabpanel).
-  // Use input[name=username] / input[name=password] which work in both old and new UIs.
-  const userInput = page.locator('input[name="username"]').first();
-  const passInput = page.locator('input[name="password"]').first();
+  // Use old.reddit.com — the new login form lives in a shadow DOM
+  // (faceplate-tabpanel) which Playwright can't reliably target with
+  // input[name=...] locators. old.reddit.com is plain HTML and the
+  // resulting session cookie (reddit_session) is valid across all
+  // *.reddit.com subdomains.
+  await page.goto("https://old.reddit.com/login", { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(1000);
+  await shot(page, "01-login-page");
+
+  // old.reddit has two side-by-side forms (login + register). Target the login one.
+  const userInput = page.locator('#login_login-main input[name="user"]').first();
+  const passInput = page.locator('#login_login-main input[name="passwd"]').first();
+  const submitBtn = page.locator('#login_login-main button[type="submit"], #login_login-main button.btn').first();
   await userInput.waitFor({ timeout: 15000 });
   await userInput.fill(username);
   await passInput.fill(password);
-  await shot(page, "01-login-filled");
-  await page.keyboard.press("Enter");
-  // Wait for nav OR challenge
+  await shot(page, "01b-login-filled");
+  await submitBtn.click().catch(async () => { await passInput.press("Enter"); });
+
   await page.waitForLoadState("networkidle", { timeout: 20000 }).catch(() => {});
   await shot(page, "02-after-login");
 
-  // Detect a few failure modes
-  const url = page.url();
-  if (/login/i.test(url) && !/\/r\//.test(url)) {
-    const bodyText = (await page.locator("body").innerText().catch(() => "")) || "";
-    if (/incorrect|invalid/i.test(bodyText)) {
-      throw Object.assign(new Error("Reddit rejected credentials"), { kind: "login_required" });
-    }
-    if (/verify|captcha|challenge|two-step|code/i.test(bodyText)) {
-      throw Object.assign(new Error("Reddit requires a manual verification step"), { kind: "challenge_required" });
-    }
-    throw Object.assign(new Error(`Still on login page: ${url}`), { kind: "login_required" });
+  // old.reddit shows inline errors inside #login_login-main on failure.
+  const errText = (await page.locator('#login_login-main .status, #login_login-main .error').first().innerText().catch(() => "")) || "";
+  if (/incorrect|wrong password|invalid/i.test(errText)) {
+    throw Object.assign(new Error(`Reddit rejected credentials: ${errText}`), { kind: "login_required" });
   }
+  if (/verify|captcha|challenge|two-step|otp|code/i.test(errText)) {
+    throw Object.assign(new Error(`Reddit requires a manual verification step: ${errText}`), { kind: "challenge_required" });
+  }
+
+  // Verify via JSON API that we're actually signed in.
+  const meResp = await context.request.get("https://www.reddit.com/api/me.json", {
+    headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" },
+  });
+  const meJson = await meResp.json().catch(() => ({}));
+  const name = meJson?.data?.name || meJson?.name || null;
+  if (!name) {
+    throw Object.assign(new Error("Login submitted but session is not active (likely captcha / 2FA challenge)"), { kind: "challenge_required" });
+  }
+  console.log("[loginFresh] logged in as", name);
   return await context.cookies();
 }
 
