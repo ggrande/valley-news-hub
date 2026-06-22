@@ -46,6 +46,7 @@ import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
 import { Route as ApiPublicHooksProcessPendingRouteImport } from './routes/api/public/hooks/process-pending'
+import { Route as ApiPublicHooksManualJsonlImportRouteImport } from './routes/api/public/hooks/manual-jsonl-import'
 import { Route as AuthenticatedAdminRedditIdRouteImport } from './routes/_authenticated/admin.reddit.$id'
 import { Route as AuthenticatedAdminPostsIdRouteImport } from './routes/_authenticated/admin.posts.$id'
 import { Route as AuthenticatedAdminImportBatchIdRouteImport } from './routes/_authenticated/admin.import.$batchId'
@@ -242,6 +243,12 @@ const ApiPublicHooksProcessPendingRoute =
     path: '/api/public/hooks/process-pending',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksManualJsonlImportRoute =
+  ApiPublicHooksManualJsonlImportRouteImport.update({
+    id: '/api/public/hooks/manual-jsonl-import',
+    path: '/api/public/hooks/manual-jsonl-import',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminRedditIdRoute =
   AuthenticatedAdminRedditIdRouteImport.update({
     id: '/$id',
@@ -300,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/manual-jsonl-import': typeof ApiPublicHooksManualJsonlImportRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
 export interface FileRoutesByTo {
@@ -340,6 +348,7 @@ export interface FileRoutesByTo {
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/manual-jsonl-import': typeof ApiPublicHooksManualJsonlImportRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
 export interface FileRoutesById {
@@ -383,6 +392,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/_authenticated/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/_authenticated/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/manual-jsonl-import': typeof ApiPublicHooksManualJsonlImportRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
 export interface FileRouteTypes {
@@ -426,6 +436,7 @@ export interface FileRouteTypes {
     | '/admin/import/$batchId'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
+    | '/api/public/hooks/manual-jsonl-import'
     | '/api/public/hooks/process-pending'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -466,6 +477,7 @@ export interface FileRouteTypes {
     | '/admin/import/$batchId'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
+    | '/api/public/hooks/manual-jsonl-import'
     | '/api/public/hooks/process-pending'
   id:
     | '__root__'
@@ -508,6 +520,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/import/$batchId'
     | '/_authenticated/admin/posts/$id'
     | '/_authenticated/admin/reddit/$id'
+    | '/api/public/hooks/manual-jsonl-import'
     | '/api/public/hooks/process-pending'
   fileRoutesById: FileRoutesById
 }
@@ -534,6 +547,7 @@ export interface RootRouteChildren {
   WatchLiveRoute: typeof WatchLiveRoute
   WeatherRoute: typeof WeatherRoute
   ApiMediaRoute: typeof ApiMediaRoute
+  ApiPublicHooksManualJsonlImportRoute: typeof ApiPublicHooksManualJsonlImportRoute
   ApiPublicHooksProcessPendingRoute: typeof ApiPublicHooksProcessPendingRoute
 }
 
@@ -798,6 +812,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksProcessPendingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/manual-jsonl-import': {
+      id: '/api/public/hooks/manual-jsonl-import'
+      path: '/api/public/hooks/manual-jsonl-import'
+      fullPath: '/api/public/hooks/manual-jsonl-import'
+      preLoaderRoute: typeof ApiPublicHooksManualJsonlImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/reddit/$id': {
       id: '/_authenticated/admin/reddit/$id'
       path: '/$id'
@@ -941,6 +962,7 @@ const rootRouteChildren: RootRouteChildren = {
   WatchLiveRoute: WatchLiveRoute,
   WeatherRoute: WeatherRoute,
   ApiMediaRoute: ApiMediaRoute,
+  ApiPublicHooksManualJsonlImportRoute: ApiPublicHooksManualJsonlImportRoute,
   ApiPublicHooksProcessPendingRoute: ApiPublicHooksProcessPendingRoute,
 }
 export const routeTree = rootRouteImport
