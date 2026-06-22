@@ -27,3 +27,4 @@ WKNA 49 News is a local television station serving Charleston, West Virginia and
 
 - [RSS Feed](/rss.xml): Subscribe to the latest articles via RSS.
 - [Sitemap](/sitemap.xml): Full site index for crawlers.
+- [WV School Closings & Delays](/weather/closings): Live tracker of school, government, and business closings across the Kanawha Valley.

@@ -30,6 +30,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NewsIndexRouteImport } from './routes/news.index'
+import { Route as WeatherClosingsRouteImport } from './routes/weather.closings'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
@@ -42,6 +43,7 @@ import { Route as AuthenticatedAdminPostsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin.media'
 import { Route as AuthenticatedAdminImportRouteImport } from './routes/_authenticated/admin.import'
 import { Route as AuthenticatedAdminCommentsRouteImport } from './routes/_authenticated/admin.comments'
+import { Route as AuthenticatedAdminClosingsRouteImport } from './routes/_authenticated/admin.closings'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
@@ -155,6 +157,11 @@ const NewsIndexRoute = NewsIndexRouteImport.update({
   path: '/news/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WeatherClosingsRoute = WeatherClosingsRouteImport.update({
+  id: '/closings',
+  path: '/closings',
+  getParentRoute: () => WeatherRoute,
+} as any)
 const NewsLocalRoute = NewsLocalRouteImport.update({
   id: '/news/local',
   path: '/news/local',
@@ -218,6 +225,12 @@ const AuthenticatedAdminCommentsRoute =
   AuthenticatedAdminCommentsRouteImport.update({
     id: '/comments',
     path: '/comments',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminClosingsRoute =
+  AuthenticatedAdminClosingsRouteImport.update({
+    id: '/closings',
+    path: '/closings',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminCategoriesRoute =
@@ -287,15 +300,17 @@ export interface FileRoutesByFullPath {
   '/submit-news-tip': typeof SubmitNewsTipRoute
   '/terms-of-use': typeof TermsOfUseRoute
   '/watch-live': typeof WatchLiveRoute
-  '/weather': typeof WeatherRoute
+  '/weather': typeof WeatherRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
+  '/weather/closings': typeof WeatherClosingsRoute
   '/news/': typeof NewsIndexRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
+  '/admin/closings': typeof AuthenticatedAdminClosingsRoute
   '/admin/comments': typeof AuthenticatedAdminCommentsRoute
   '/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
   '/admin/media': typeof AuthenticatedAdminMediaRoute
@@ -329,14 +344,16 @@ export interface FileRoutesByTo {
   '/submit-news-tip': typeof SubmitNewsTipRoute
   '/terms-of-use': typeof TermsOfUseRoute
   '/watch-live': typeof WatchLiveRoute
-  '/weather': typeof WeatherRoute
+  '/weather': typeof WeatherRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
+  '/weather/closings': typeof WeatherClosingsRoute
   '/news': typeof NewsIndexRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
+  '/admin/closings': typeof AuthenticatedAdminClosingsRoute
   '/admin/comments': typeof AuthenticatedAdminCommentsRoute
   '/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
   '/admin/media': typeof AuthenticatedAdminMediaRoute
@@ -372,15 +389,17 @@ export interface FileRoutesById {
   '/submit-news-tip': typeof SubmitNewsTipRoute
   '/terms-of-use': typeof TermsOfUseRoute
   '/watch-live': typeof WatchLiveRoute
-  '/weather': typeof WeatherRoute
+  '/weather': typeof WeatherRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
+  '/weather/closings': typeof WeatherClosingsRoute
   '/news/': typeof NewsIndexRoute
   '/_authenticated/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/_authenticated/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
+  '/_authenticated/admin/closings': typeof AuthenticatedAdminClosingsRoute
   '/_authenticated/admin/comments': typeof AuthenticatedAdminCommentsRoute
   '/_authenticated/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
   '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
@@ -421,10 +440,12 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/news/$slug'
     | '/news/local'
+    | '/weather/closings'
     | '/news/'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
+    | '/admin/closings'
     | '/admin/comments'
     | '/admin/import'
     | '/admin/media'
@@ -462,10 +483,12 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/news/$slug'
     | '/news/local'
+    | '/weather/closings'
     | '/news'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
+    | '/admin/closings'
     | '/admin/comments'
     | '/admin/import'
     | '/admin/media'
@@ -505,10 +528,12 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/news/$slug'
     | '/news/local'
+    | '/weather/closings'
     | '/news/'
     | '/_authenticated/admin/ai-log'
     | '/_authenticated/admin/authors'
     | '/_authenticated/admin/categories'
+    | '/_authenticated/admin/closings'
     | '/_authenticated/admin/comments'
     | '/_authenticated/admin/import'
     | '/_authenticated/admin/media'
@@ -544,7 +569,7 @@ export interface RootRouteChildren {
   SubmitNewsTipRoute: typeof SubmitNewsTipRoute
   TermsOfUseRoute: typeof TermsOfUseRoute
   WatchLiveRoute: typeof WatchLiveRoute
-  WeatherRoute: typeof WeatherRoute
+  WeatherRoute: typeof WeatherRouteWithChildren
   ApiMediaRoute: typeof ApiMediaRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NewsLocalRoute: typeof NewsLocalRoute
@@ -702,6 +727,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/weather/closings': {
+      id: '/weather/closings'
+      path: '/closings'
+      fullPath: '/weather/closings'
+      preLoaderRoute: typeof WeatherClosingsRouteImport
+      parentRoute: typeof WeatherRoute
+    }
     '/news/local': {
       id: '/news/local'
       path: '/news/local'
@@ -784,6 +816,13 @@ declare module '@tanstack/react-router' {
       path: '/comments'
       fullPath: '/admin/comments'
       preLoaderRoute: typeof AuthenticatedAdminCommentsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/closings': {
+      id: '/_authenticated/admin/closings'
+      path: '/closings'
+      fullPath: '/admin/closings'
+      preLoaderRoute: typeof AuthenticatedAdminClosingsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/categories': {
@@ -891,6 +930,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAiLogRoute: typeof AuthenticatedAdminAiLogRoute
   AuthenticatedAdminAuthorsRoute: typeof AuthenticatedAdminAuthorsRoute
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
+  AuthenticatedAdminClosingsRoute: typeof AuthenticatedAdminClosingsRoute
   AuthenticatedAdminCommentsRoute: typeof AuthenticatedAdminCommentsRoute
   AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRouteWithChildren
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
@@ -905,6 +945,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAiLogRoute: AuthenticatedAdminAiLogRoute,
   AuthenticatedAdminAuthorsRoute: AuthenticatedAdminAuthorsRoute,
   AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
+  AuthenticatedAdminClosingsRoute: AuthenticatedAdminClosingsRoute,
   AuthenticatedAdminCommentsRoute: AuthenticatedAdminCommentsRoute,
   AuthenticatedAdminImportRoute: AuthenticatedAdminImportRouteWithChildren,
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
@@ -929,6 +970,17 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface WeatherRouteChildren {
+  WeatherClosingsRoute: typeof WeatherClosingsRoute
+}
+
+const WeatherRouteChildren: WeatherRouteChildren = {
+  WeatherClosingsRoute: WeatherClosingsRoute,
+}
+
+const WeatherRouteWithChildren =
+  WeatherRoute._addFileChildren(WeatherRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -949,7 +1001,7 @@ const rootRouteChildren: RootRouteChildren = {
   SubmitNewsTipRoute: SubmitNewsTipRoute,
   TermsOfUseRoute: TermsOfUseRoute,
   WatchLiveRoute: WatchLiveRoute,
-  WeatherRoute: WeatherRoute,
+  WeatherRoute: WeatherRouteWithChildren,
   ApiMediaRoute: ApiMediaRoute,
   NewsSlugRoute: NewsSlugRoute,
   NewsLocalRoute: NewsLocalRoute,
