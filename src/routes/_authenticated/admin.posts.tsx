@@ -241,8 +241,8 @@ function PostsList() {
               <th className="p-3">Status</th>
               <th className="p-3">Category</th>
               <th className="p-3">Author</th>
+              <th className="p-3">Image</th>
               <th className="p-3">Updated</th>
-            </tr>
           </thead>
           <tbody>
             {rows.map((p: any) => (
