@@ -326,7 +326,7 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
             if (knownIds.has(p.id)) { summary.skipped_existing++; continue; }
             // Wait at least 6 hours after creation so subreddit moderators
             // have time to remove rule-breaking content before we import it.
-            if (typeof p.created_utc === "number" && nowSec - p.created_utc < SIX_HOURS_SEC) continue;
+            if (typeof p.created_utc === "number" && nowSec - p.created_utc < MODERATION_HOLD_SEC) continue;
             const body = (p.selftext ?? "").trim().toLowerCase();
             const title = (p.title ?? "").trim().toLowerCase();
             if (body === "[removed]" || body === "[deleted]" || title === "[removed]" || title === "[deleted]") continue;
