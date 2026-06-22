@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { generateFillerImage } from "@/lib/filler-image.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/posts")({
   component: PostsList,
