@@ -1,0 +1,29 @@
+# WKNA 49 News
+
+> WKNA-TV 49 — Charleston's Channel 49. Local news, weather, sports, and live coverage from the Kanawha Valley.
+
+WKNA 49 News is a local television station serving Charleston, West Virginia and the surrounding Kanawha Valley. The site publishes breaking news, local stories, weather forecasts with interactive radar, sports coverage, and community features.
+
+## Pages
+
+- [Home](/): Latest local news, weather, and top stories from the Kanawha Valley.
+- [Local News](/news): In-depth reporting on Charleston and Kanawha Valley news.
+- [Weather](/weather): Local forecast and interactive radar for the Kanawha Valley.
+- [Sports](/sports): High school, college, and regional sports coverage.
+- [Shows](/shows): WKNA 49 programming and local TV shows.
+- [Community](/community): Community events, features, and local interest stories.
+- [Watch Live](/watch-live): Live video stream of WKNA 49 broadcasts.
+- [Submit a News Tip](/submit-news-tip): Send news tips and story ideas to the newsroom.
+- [Contact](/contact): Reach the WKNA 49 newsroom and station staff.
+- [Advertise](/advertise): Advertising and sponsorship information for local businesses.
+- [Careers](/careers): Job openings and employment opportunities at WKNA 49.
+- [About](/about): Station history, mission, and newsroom information.
+- [Accessibility](/accessibility): Accessibility features and support options.
+- [Privacy Policy](/privacy-policy): Data collection and privacy practices.
+- [Terms of Use](/terms-of-use): Terms and conditions for using the website.
+- [Corrections Policy](/corrections-policy): How WKNA 49 handles corrections and clarifications.
+
+## Optional
+
+- [RSS Feed](/rss.xml): Subscribe to the latest articles via RSS.
+- [Sitemap](/sitemap.xml): Full site index for crawlers.
