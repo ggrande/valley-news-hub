@@ -31,43 +31,42 @@ export const Route = createFileRoute("/api/public/hooks/backfill-comments")({
         );
 
         // Posts that came from a reddit import. Order by recency so a small
-        // backfill run still hits the newest content first.
-        const { data: posts, error: postsErr } = await admin
+        // backfill run still hits the newest content first. We pre-filter
+        // out posts that already have reddit-sourced comments so each call
+        // makes progress instead of re-scanning the same head of the list.
+        let alreadyHave = new Set<string>();
+        if (onlyMissing) {
+          const { data: withComments } = await admin
+            .from("comments")
+            .select("post_id")
+            .eq("source_type", "reddit");
+          alreadyHave = new Set(((withComments ?? []) as any[]).map((r) => r.post_id));
+        }
+        const { data: allPosts, error: postsErr } = await admin
           .from("posts")
           .select("id, published_at, reddit_import_id")
           .not("reddit_import_id", "is", null)
-          .order("published_at", { ascending: false, nullsFirst: false })
-          .limit(limit * 4); // overscan; we filter below
+          .order("published_at", { ascending: false, nullsFirst: false });
         if (postsErr) {
           return Response.json({ error: postsErr.message }, { status: 500 });
         }
+        const posts = ((allPosts ?? []) as any[])
+          .filter((p) => !onlyMissing || !alreadyHave.has(p.id))
+          .slice(0, limit);
 
         const { curateAndInsertComments } = await import("@/lib/comment-curation.server");
 
         const summary = {
           considered: 0,
-          skipped_has_comments: 0,
           skipped_no_source_comments: 0,
           updated: 0,
           comments_inserted: 0,
           errors: [] as string[],
         };
 
-        let processed = 0;
-        for (const p of posts ?? []) {
-          if (processed >= limit) break;
+        for (const p of posts) {
           summary.considered++;
 
-          if (onlyMissing) {
-            const { count } = await admin
-              .from("comments")
-              .select("id", { count: "exact", head: true })
-              .eq("post_id", p.id);
-            if ((count ?? 0) > 0) {
-              summary.skipped_has_comments++;
-              continue;
-            }
-          }
 
           const { data: imp } = await admin
             .from("reddit_imports")
@@ -96,8 +95,8 @@ export const Route = createFileRoute("/api/public/hooks/backfill-comments")({
           } catch (err: any) {
             summary.errors.push(`${p.id}: ${err?.message ?? err}`);
           }
-          processed++;
         }
+
 
         return Response.json(summary);
       },
