@@ -56,7 +56,16 @@ async function fetchSubredditListing(
     let before: number | null = null;
     // Cap pages defensively so a misbehaving feed cannot loop forever.
     for (let page = 0; page < 5 && out.length < limit; page++) {
-      const params: Record<string, string> = { subreddit: sub, limit: "100" };
+      // sort=desc + sort_type=created_utc ensures the FIRST page is the most
+      // recent posts. Without this, Arctic Shift defaults to ascending order
+      // (oldest first), which made the automation re-scan the oldest 100
+      // posts on every run and never reach today's threads.
+      const params: Record<string, string> = {
+        subreddit: sub,
+        limit: "100",
+        sort: "desc",
+        sort_type: "created_utc",
+      };
       if (before != null) params.before = String(before);
       const batch = await arcticFetch("/posts/search", params);
       if (!batch.length) break;
