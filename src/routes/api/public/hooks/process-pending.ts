@@ -13,10 +13,31 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
         }
 
         const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+
+        // Auto-discard removed/deleted posts globally before draining
+        const { data: pending } = await admin
+          .from("reddit_imports")
+          .select("id, original_body, original_title")
+          .eq("import_status", "new");
+        const removedIds = (pending ?? [])
+          .filter((r: any) => {
+            const b = (r.original_body ?? "").trim().toLowerCase();
+            const t = (r.original_title ?? "").trim().toLowerCase();
+            return b === "[removed]" || b === "[deleted]" || t === "[removed]" || t === "[deleted]";
+          })
+          .map((r: any) => r.id);
+        if (removedIds.length) {
+          await admin
+            .from("reddit_imports")
+            .update({ import_status: "discarded", processing_error: "Source removed/deleted" })
+            .in("id", removedIds);
+        }
+
         const { data: rows } = await admin
           .from("reddit_imports")
           .select("id")
           .eq("import_status", "new")
+          .order("original_created_at", { ascending: false, nullsFirst: false })
           .limit(10);
 
         if (!rows?.length) return new Response(JSON.stringify({ processed: 0 }), { headers: { "Content-Type": "application/json" } });
