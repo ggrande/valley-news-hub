@@ -94,13 +94,22 @@ function BatchPage() {
             {batch.total_posts} threads · {batch.total_comments} comments · {batch.total_media} media · {batch.status}
           </p>
         </div>
-        <button
-          onClick={onDrain}
-          disabled={!!busy || pendingCount === 0}
-          className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-        >
-          {busy === "drain" ? "Working..." : `Generate 5 more (${pendingCount} pending)`}
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button
+            onClick={onDrain}
+            disabled={!!busy || queueRunning || pendingCount === 0}
+            className="h-10 rounded-md border border-primary px-4 text-sm font-semibold text-primary disabled:opacity-50"
+          >
+            {busy === "drain" ? "Working..." : `Generate next 10 (${pendingCount} pending)`}
+          </button>
+          <button
+            onClick={onQueueAll}
+            disabled={!!busy && !queueRunning}
+            className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          >
+            {queueRunning ? "Stop queue" : `Generate all (${pendingCount})`}
+          </button>
+        </div>
       </div>
       {msg && <p className="mt-2 text-xs text-muted-foreground">{msg}</p>}
 
