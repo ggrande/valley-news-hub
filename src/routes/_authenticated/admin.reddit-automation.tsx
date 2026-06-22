@@ -11,6 +11,7 @@ import {
   retryRedditNotification,
   captureRedditSession,
   debugGitHubStatus,
+  setRedditSessionCookies,
 } from "@/lib/reddit-automation.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/reddit-automation")({

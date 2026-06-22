@@ -176,6 +176,67 @@ export const captureRedditSession = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Accept cookies pasted from the browser. Supports several common shapes:
+//  - Playwright/Cookie-Editor JSON array: [{name,value,domain,path,...}, ...]
+//  - EditThisCookie JSON: same as above
+//  - Raw "Cookie:" header: "name=value; name2=value2"
+// Normalizes to Playwright's addCookies() shape and encrypts at rest.
+export const setRedditSessionCookies = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { raw: string }) => input)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { encryptString } = await import("@/lib/reddit-automation.server");
+
+    const raw = (data.raw ?? "").trim();
+    if (!raw) throw new Error("No cookie data provided");
+
+    type C = { name: string; value: string; domain?: string; path?: string; expires?: number; httpOnly?: boolean; secure?: boolean; sameSite?: "Strict" | "Lax" | "None" };
+    let cookies: C[] = [];
+
+    if (raw.startsWith("[") || raw.startsWith("{")) {
+      let parsed: any;
+      try { parsed = JSON.parse(raw); } catch (e: any) { throw new Error(`Invalid JSON: ${e?.message}`); }
+      const arr: any[] = Array.isArray(parsed) ? parsed : (parsed.cookies ?? []);
+      cookies = arr.map((c: any) => ({
+        name: String(c.name),
+        value: String(c.value),
+        domain: c.domain ?? ".reddit.com",
+        path: c.path ?? "/",
+        expires: typeof c.expires === "number" ? c.expires : (typeof c.expirationDate === "number" ? Math.floor(c.expirationDate) : undefined),
+        httpOnly: Boolean(c.httpOnly),
+        secure: c.secure !== false,
+        sameSite: (["Strict","Lax","None"].includes(c.sameSite) ? c.sameSite : "Lax") as "Strict" | "Lax" | "None",
+      })).filter((c: C) => c.name && c.value);
+    } else {
+      const stripped = raw.replace(/^cookie:\s*/i, "");
+      cookies = stripped.split(/;\s*/).map((pair) => {
+        const idx = pair.indexOf("=");
+        if (idx < 0) return null;
+        return { name: pair.slice(0, idx).trim(), value: pair.slice(idx + 1).trim(), domain: ".reddit.com", path: "/", secure: true, sameSite: "Lax" as const };
+      }).filter(Boolean) as C[];
+    }
+
+    if (!cookies.length) throw new Error("No valid cookies found in input");
+    const hasSession = cookies.some((c) => /reddit_session|token_v2|session_tracker|edgebucket|loid/i.test(c.name));
+    if (!hasSession) throw new Error(`Cookies don't look like a Reddit session (found: ${cookies.map(c=>c.name).slice(0,10).join(", ")})`);
+
+    const enc = encryptString(JSON.stringify(cookies));
+    const { error } = await supabaseAdmin
+      .from("reddit_automation_settings")
+      .update({
+        session_cookies_encrypted: enc.ciphertext,
+        session_cookies_iv: enc.iv,
+        session_captured_at: new Date().toISOString(),
+        session_status: "active",
+        session_last_error: null,
+      } as never)
+      .eq("id", true);
+    if (error) throw error;
+    return { ok: true, count: cookies.length, names: cookies.map((c) => c.name) };
+  });
+
 // Diagnostic: query GitHub Actions for this repo and return recent workflow runs
 // so an admin can see whether dispatches are actually starting workflows.
 export const debugGitHubStatus = createServerFn({ method: "GET" })
