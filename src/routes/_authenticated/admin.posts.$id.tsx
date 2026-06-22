@@ -63,6 +63,7 @@ function PostEditor() {
       featured_image: form.featured_image || null,
       editor_notes: form.editor_notes || null,
       verification_notes: form.verification_notes || null,
+      updated_at: new Date().toISOString(),
     };
     if (publish && !form.published_at) payload.published_at = new Date().toISOString();
 
@@ -73,14 +74,26 @@ function PostEditor() {
       result = await supabase.from("posts").update(payload).eq("id", id).select("id").single();
     }
     setSaving(false);
-    if (result.error) { setMsg(result.error.message); return; }
-    setMsg("Saved");
+    if (result.error) {
+      console.error("Post save failed:", result.error);
+      setMsg(`Save failed: ${result.error.message}`);
+      return;
+    }
+    if (!result.data) {
+      setMsg("Save failed: no row returned (check permissions).");
+      return;
+    }
+    setMsg(`Saved ${new Date().toLocaleTimeString()}`);
     if (isNew && result.data?.id) navigate({ to: "/admin/posts/$id", params: { id: result.data.id } });
   };
 
   const remove = async () => {
-    if (!confirm("Delete this post?")) return;
-    await supabase.from("posts").delete().eq("id", id);
+    if (!confirm("PERMANENTLY DELETE this post? This cannot be undone.")) return;
+    await supabase.from("post_tags").delete().eq("post_id", id);
+    await supabase.from("post_versions").delete().eq("post_id", id);
+    await supabase.from("comments").delete().eq("post_id", id);
+    const { error } = await supabase.from("posts").delete().eq("id", id);
+    if (error) { setMsg(`Delete failed: ${error.message}`); return; }
     navigate({ to: "/admin/posts" });
   };
 
