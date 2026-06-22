@@ -118,6 +118,7 @@ export const getRedditQueueStats = createServerFn({ method: "GET" })
     if (!roleRow) throw new Response("Forbidden", { status: 403 });
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await resetOrphans(supabaseAdmin);
     const { count } = await supabaseAdmin
       .from("reddit_imports")
       .select("id", { count: "exact", head: true })
