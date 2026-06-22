@@ -758,6 +758,197 @@ export type Database = {
         }
         Relationships: []
       }
+      reddit_automation_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          github_workflow_ref: string
+          id: boolean
+          mode: string
+          rate_per_day: number
+          rate_per_hour: number
+          reddit_password_encrypted: string | null
+          reddit_password_iv: string | null
+          reddit_username: string | null
+          session_captured_at: string | null
+          session_cookies_encrypted: string | null
+          session_cookies_iv: string | null
+          session_last_error: string | null
+          session_status: string | null
+          template_markdown: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          github_workflow_ref?: string
+          id?: boolean
+          mode?: string
+          rate_per_day?: number
+          rate_per_hour?: number
+          reddit_password_encrypted?: string | null
+          reddit_password_iv?: string | null
+          reddit_username?: string | null
+          session_captured_at?: string | null
+          session_cookies_encrypted?: string | null
+          session_cookies_iv?: string | null
+          session_last_error?: string | null
+          session_status?: string | null
+          template_markdown?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          github_workflow_ref?: string
+          id?: boolean
+          mode?: string
+          rate_per_day?: number
+          rate_per_hour?: number
+          reddit_password_encrypted?: string | null
+          reddit_password_iv?: string | null
+          reddit_username?: string | null
+          session_captured_at?: string | null
+          session_cookies_encrypted?: string | null
+          session_cookies_iv?: string | null
+          session_last_error?: string | null
+          session_status?: string | null
+          template_markdown?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reddit_comment_attempts: {
+        Row: {
+          attempt_no: number
+          created_at: string
+          finished_at: string | null
+          github_run_id: string | null
+          github_run_url: string | null
+          id: string
+          log_excerpt: string | null
+          notification_id: string
+          screenshot_path: string | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          attempt_no: number
+          created_at?: string
+          finished_at?: string | null
+          github_run_id?: string | null
+          github_run_url?: string | null
+          id?: string
+          log_excerpt?: string | null
+          notification_id: string
+          screenshot_path?: string | null
+          started_at?: string
+          status: string
+        }
+        Update: {
+          attempt_no?: number
+          created_at?: string
+          finished_at?: string | null
+          github_run_id?: string | null
+          github_run_url?: string | null
+          id?: string
+          log_excerpt?: string | null
+          notification_id?: string
+          screenshot_path?: string | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reddit_comment_attempts_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "reddit_comment_notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reddit_comment_notifications: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          attempt_count: number
+          created_at: string
+          dispatched_at: string | null
+          failure_reason: string | null
+          id: string
+          mode_at_enqueue: string
+          post_id: string
+          posted_at: string | null
+          reddit_comment_id: string | null
+          reddit_comment_permalink: string | null
+          reddit_import_id: string | null
+          rendered_comment: string
+          status: string
+          subreddit: string | null
+          thread_id: string | null
+          thread_url: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attempt_count?: number
+          created_at?: string
+          dispatched_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          mode_at_enqueue: string
+          post_id: string
+          posted_at?: string | null
+          reddit_comment_id?: string | null
+          reddit_comment_permalink?: string | null
+          reddit_import_id?: string | null
+          rendered_comment: string
+          status?: string
+          subreddit?: string | null
+          thread_id?: string | null
+          thread_url: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attempt_count?: number
+          created_at?: string
+          dispatched_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          mode_at_enqueue?: string
+          post_id?: string
+          posted_at?: string | null
+          reddit_comment_id?: string | null
+          reddit_comment_permalink?: string | null
+          reddit_import_id?: string | null
+          rendered_comment?: string
+          status?: string
+          subreddit?: string | null
+          thread_id?: string | null
+          thread_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reddit_comment_notifications_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reddit_comment_notifications_reddit_import_id_fkey"
+            columns: ["reddit_import_id"]
+            isOneToOne: false
+            referencedRelation: "reddit_imports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reddit_import_comments: {
         Row: {
           body: string | null
