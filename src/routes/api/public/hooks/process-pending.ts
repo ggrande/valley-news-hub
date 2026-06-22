@@ -21,56 +21,100 @@ async function loadSettings(admin: any): Promise<SettingsMap> {
   return map;
 }
 
-interface RedditChild { kind: string; data: any }
+// Reddit source: Arctic Shift archive API (Reddit's public JSON endpoints
+// return 403 from worker/edge environments).
+const ARCTIC_BASE = "https://arctic-shift.photon-reddit.com/api";
+const UA = "WKNA49NewsBot/1.0 (intake; +https://wkna49.com)";
+const SIX_HOURS_SEC = 6 * 60 * 60;
 
-async function fetchSubredditListing(sub: string, limit: number, sort: string, topWindow: string): Promise<{ posts: any[]; error?: string }> {
-  const validSort = ["new", "hot", "top", "rising", "best"].includes(sort) ? sort : "new";
-  const sortPath = validSort === "best" ? "" : validSort;
-  const base = `https://www.reddit.com/r/${encodeURIComponent(sub)}/${sortPath}.json`;
-  const params = new URLSearchParams({ limit: String(limit), raw_json: "1" });
-  if (validSort === "top") params.set("t", ["hour","day","week","month","year","all"].includes(topWindow) ? topWindow : "day");
-  const url = `${base}?${params.toString()}`;
-  let res: Response;
-  try {
-    res = await fetch(url, { headers: { "User-Agent": "WKNA49NewsBot/1.0 (intake; +https://wkna49.com)", "Accept": "application/json" } });
-  } catch (err: any) {
-    return { posts: [], error: `fetch threw: ${err?.message ?? err}` };
-  }
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function arcticFetch(path: string, params: Record<string, string>): Promise<any[]> {
+  const qs = new URLSearchParams(params).toString();
+  const url = `${ARCTIC_BASE}${path}?${qs}`;
+  const res = await fetch(url, {
+    headers: { "User-Agent": UA, Accept: "application/json" },
+  });
   if (!res.ok) {
     const snippet = (await res.text().catch(() => "")).slice(0, 200);
-    return { posts: [], error: `HTTP ${res.status} from ${url} :: ${snippet}` };
+    throw new Error(`Arctic Shift HTTP ${res.status} from ${url} :: ${snippet}`);
   }
-  const data = await res.json().catch(() => null);
-  const children: RedditChild[] = data?.data?.children ?? [];
-  return { posts: children.filter((c) => c.kind === "t3").map((c) => c.data) };
+  const json = await res.json().catch(() => null);
+  const data = Array.isArray(json) ? json : (json?.data ?? []);
+  return Array.isArray(data) ? data : [];
 }
 
-async function fetchPostWithComments(permalink: string): Promise<{ post: any; comments: any[] } | null> {
-  const u = `https://www.reddit.com${permalink.replace(/\/+$/, "")}.json?raw_json=1&limit=200`;
-  const res = await fetch(u, { headers: { "User-Agent": "WKNA49NewsBot/1.0 (intake)" } });
-  if (!res.ok) return null;
-  const data = await res.json();
-  const postData = data?.[0]?.data?.children?.[0]?.data;
-  if (!postData) return null;
+async function fetchSubredditListing(
+  sub: string,
+  limit: number,
+  _sort: string,
+  _topWindow: string,
+): Promise<{ posts: any[]; error?: string }> {
+  try {
+    const out: any[] = [];
+    const seen = new Set<string>();
+    let before: number | null = null;
+    // Cap pages defensively so a misbehaving feed cannot loop forever.
+    for (let page = 0; page < 5 && out.length < limit; page++) {
+      const params: Record<string, string> = { subreddit: sub, limit: "100" };
+      if (before != null) params.before = String(before);
+      const batch = await arcticFetch("/posts/search", params);
+      if (!batch.length) break;
+      let oldest = Infinity;
+      for (const p of batch) {
+        const ts = typeof p?.created_utc === "number" ? p.created_utc : null;
+        if (ts != null && ts < oldest) oldest = ts;
+        const key = p?.id ?? p?.name;
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        out.push(p);
+      }
+      if (batch.length < 100 || !isFinite(oldest)) break;
+      before = Math.floor(oldest) - 1;
+      await sleep(250);
+    }
+    return { posts: out.slice(0, limit) };
+  } catch (err: any) {
+    return { posts: [], error: err?.message ?? String(err) };
+  }
+}
+
+async function fetchPostComments(postId: string): Promise<any[]> {
   const out: any[] = [];
-  const flatten = (node: any, parent: string | null, depth: number) => {
-    if (!node || node.kind !== "t1") return;
-    const d = node.data;
-    if (!d?.body) return;
-    out.push({
-      id: d.id,
-      parent_id: parent,
-      author: d.author ?? "[deleted]",
-      body: d.body,
-      score: d.score ?? 0,
-      created_utc: d.created_utc ?? null,
-      depth,
-    });
-    const replies = d.replies;
-    if (replies?.data?.children) for (const c of replies.data.children) flatten(c, d.id, depth + 1);
-  };
-  for (const c of data?.[1]?.data?.children ?? []) flatten(c, null, 0);
-  return { post: postData, comments: out };
+  const seen = new Set<string>();
+  let before: number | null = null;
+  for (let page = 0; page < 10; page++) {
+    const params: Record<string, string> = { link_id: `t3_${postId}`, limit: "100" };
+    if (before != null) params.before = String(before);
+    let batch: any[];
+    try {
+      batch = await arcticFetch("/comments/search", params);
+    } catch {
+      break;
+    }
+    if (!batch.length) break;
+    let oldest = Infinity;
+    for (const c of batch) {
+      const ts = typeof c?.created_utc === "number" ? c.created_utc : null;
+      if (ts != null && ts < oldest) oldest = ts;
+      const key = c?.id ?? c?.name;
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push({
+        id: c.id,
+        parent_id: c.parent_id ?? null,
+        author: c.author ?? "[deleted]",
+        body: c.body ?? "",
+        score: c.score ?? 0,
+        created_utc: ts,
+        depth: 0,
+      });
+    }
+    if (batch.length < 100 || !isFinite(oldest)) break;
+    before = Math.floor(oldest) - 1;
+    await sleep(250);
+  }
+  return out;
 }
 
 export const Route = createFileRoute("/api/public/hooks/process-pending")({
@@ -126,20 +170,25 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
           ]);
           const knownIds = new Set((existingById ?? []).map((r: any) => r.reddit_post_id));
           const knownTitles = new Set((existingByTitle ?? []).map((r: any) => (r.original_title ?? "").trim().toLowerCase()));
+          const nowSec = Math.floor(Date.now() / 1000);
           for (const p of posts) {
             if (knownIds.has(p.id)) { summary.skipped_existing++; continue; }
+            // Wait at least 6 hours after creation so subreddit moderators
+            // have time to remove rule-breaking content before we import it.
+            if (typeof p.created_utc === "number" && nowSec - p.created_utc < SIX_HOURS_SEC) continue;
             const body = (p.selftext ?? "").trim().toLowerCase();
             const title = (p.title ?? "").trim().toLowerCase();
             if (body === "[removed]" || body === "[deleted]" || title === "[removed]" || title === "[deleted]") continue;
             if (knownTitles.has(title)) { summary.skipped_existing++; continue; }
             if ((p.score ?? 0) < minScore) { summary.skipped_low_score++; continue; }
-            // Fetch comments for richer source material.
+            // Fetch comments for richer source material (Arctic Shift, by link_id).
             let comments: any[] = [];
             try {
-              const detail = await fetchPostWithComments(p.permalink);
-              if (detail) comments = detail.comments;
+              comments = await fetchPostComments(p.id);
             } catch { /* fall back to no comments */ }
-            const permalink = `https://www.reddit.com${p.permalink}`;
+            const permalink = p.permalink
+              ? (p.permalink.startsWith("http") ? p.permalink : `https://www.reddit.com${p.permalink}`)
+              : `https://www.reddit.com/r/${p.subreddit}/comments/${p.id}/`;
             const { data: imp, error: insErr } = await admin.from("reddit_imports").insert({
               source_url: permalink,
               permalink,
