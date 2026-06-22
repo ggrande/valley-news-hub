@@ -178,15 +178,26 @@ async function main() {
   let result = { status: "failed", log_excerpt: "unknown" };
 
   try {
-    // Verify we're logged in by hitting the account page. If not, log in fresh.
-    await page.goto("https://www.reddit.com/", { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1500);
-    const loggedInIndicator = await page.locator(`[href*="/user/${job.reddit_username}"], [aria-label*="${job.reddit_username}"]`).first().count().catch(() => 0);
+    // Verify we're logged in via Reddit's JSON API — works reliably for both
+    // old and new Reddit, no DOM scraping required. If pasted cookies are valid,
+    // /api/me.json returns the user object; otherwise it returns an empty {}.
+    let loggedInAs = null;
+    try {
+      const meResp = await context.request.get("https://www.reddit.com/api/me.json", {
+        headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" },
+      });
+      const meJson = await meResp.json().catch(() => ({}));
+      loggedInAs = meJson?.data?.name || meJson?.name || null;
+      console.log("[session-check] /api/me.json →", loggedInAs ? `logged in as ${loggedInAs}` : "anonymous");
+    } catch (e) {
+      console.warn("[session-check] me.json failed:", e?.message);
+    }
 
-    if (!loggedInIndicator) {
+    if (!loggedInAs) {
       if (!job.reddit_username || !job.reddit_password) {
-        throw Object.assign(new Error("Session expired and no credentials configured"), { kind: "login_required" });
+        throw Object.assign(new Error("Session expired or invalid. Paste fresh cookies in the admin panel."), { kind: "login_required" });
       }
+      await page.goto("https://www.reddit.com/", { waitUntil: "domcontentloaded" });
       await loginFresh(context, page, job.reddit_username, job.reddit_password);
     }
 
