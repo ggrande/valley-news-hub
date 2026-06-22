@@ -60,6 +60,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "WKNA-TV 49 — Charleston's Channel 49. Local news, weather, sports, and live coverage from the Kanawha Valley." },
       { name: "author", content: "WKNA-TV 49" },
       { name: "theme-color", content: "#101a3a" },
+      { name: "google-site-verification", content: "PSEI_2pt6EH5BpztOnh3uzr-p8oFsur94EyiBq8rI88" },
       { property: "og:site_name", content: "WKNA 49 News" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
