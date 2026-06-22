@@ -267,6 +267,14 @@ function RedditIntake() {
                       <>r/{r.subreddit ?? "—"}</>
                     )}
                   </td>
+                  <td className="p-3 text-xs tabular-nums">
+                    {typeof r.current_score === "number" ? (
+                      <span title="Live upvote count">{r.current_score.toLocaleString()}</span>
+                    ) : typeof r.source_score === "number" ? (
+                      <span className="text-muted-foreground" title="Score at import time (live unavailable)">{r.source_score.toLocaleString()}</span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   <td className="p-3">
                     <span className="rounded bg-slate-100 px-2 py-0.5 text-xs">{orphan ? "post deleted" : r.import_status}</span>
                   </td>
