@@ -9,7 +9,7 @@ export const Route = createFileRoute("/sitemap.xml")({
     handlers: {
       GET: async () => {
         const staticPaths = [
-          "/", "/news", "/news/local", "/weather", "/sports", "/watch-live",
+          "/", "/news", "/news/local", "/weather", "/weather/closings", "/sports", "/watch-live",
           "/community", "/shows", "/about", "/submit-news-tip", "/contact",
           "/advertise", "/careers", "/corrections-policy", "/privacy-policy",
           "/terms-of-use", "/accessibility", "/public-file", "/rss.xml",

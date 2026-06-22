@@ -18,6 +18,7 @@ const NAV = [
   { to: "/admin/media", label: "Media Library" },
   { to: "/admin/ai-log", label: "AI Log" },
   { to: "/admin/submissions", label: "Submissions" },
+  { to: "/admin/closings", label: "Closings & Delays" },
   { to: "/admin/settings", label: "Site Settings" },
 ];
 
