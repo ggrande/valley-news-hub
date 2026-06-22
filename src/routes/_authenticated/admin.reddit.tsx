@@ -295,3 +295,91 @@ function RedditIntake() {
     </div>
   );
 }
+
+const AUTOMATION_KEYS = [
+  { key: "automation_enabled", label: "Enable automation (runs every 6 hours)", type: "bool", default: false },
+  { key: "automation_subreddits", label: "Subreddits to monitor (comma-separated, e.g. WestVirginia, Charleston)", type: "text", default: "WestVirginia, Charleston" },
+  { key: "automation_posts_per_sub", label: "Newest posts to pull per subreddit", type: "number", default: 10 },
+  { key: "automation_auto_generate", label: "Auto-generate article drafts from imports", type: "bool", default: false },
+  { key: "automation_generate_limit", label: "Max drafts to generate per run", type: "number", default: 20 },
+  { key: "automation_auto_filler_image", label: "Auto-generate AI hero image when none was provided (only for drafts that pass moderation)", type: "bool", default: false },
+  { key: "automation_auto_publish", label: "Auto-publish drafts that pass moderation", type: "bool", default: false },
+] as const;
+
+function AutomationPanel() {
+  const q = useQuery({
+    queryKey: ["automation-settings"],
+    queryFn: async () => (await supabase.from("site_settings").select("*").like("key", "automation_%")).data ?? [],
+  });
+  const [vals, setVals] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState<string | null>(null);
+
+  // Hydrate once data lands.
+  if (q.data && Object.keys(vals).length === 0 && q.data.length > 0) {
+    const map: Record<string, any> = {};
+    for (const r of q.data as any[]) map[r.key] = r.value;
+    // Use setTimeout to avoid setState in render warning.
+    queueMicrotask(() => setVals(map));
+  }
+
+  const save = async (key: string, value: any) => {
+    setVals((v) => ({ ...v, [key]: value }));
+    setSaving(key);
+    try { await supabase.from("site_settings").upsert({ key, value }); }
+    finally { setSaving(null); }
+  };
+
+  const enabled = vals.automation_enabled === true;
+
+  return (
+    <div className="rounded-lg border bg-white p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-lg font-bold text-primary">Scheduled automation</h2>
+          <p className="text-sm text-muted-foreground">Every 6 hours: import newest posts from your watched subreddits, optionally draft articles, generate hero images, and publish.</p>
+        </div>
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${enabled ? "bg-green-100 text-green-800" : "bg-slate-100 text-muted-foreground"}`}>
+          {enabled ? "ON" : "OFF"}
+        </span>
+      </div>
+      <div className="space-y-3">
+        {AUTOMATION_KEYS.map((k) => {
+          const v = vals[k.key] ?? k.default;
+          if (k.type === "bool") return (
+            <label key={k.key} className="flex items-center justify-between gap-3 border-b pb-2 last:border-0">
+              <span className="text-sm font-semibold">{k.label}</span>
+              <input
+                type="checkbox"
+                checked={!!v}
+                onChange={(e) => save(k.key, e.target.checked)}
+                className="h-5 w-5"
+              />
+            </label>
+          );
+          if (k.type === "number") return (
+            <label key={k.key} className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold">{k.label}</span>
+              <input
+                type="number"
+                value={v ?? ""}
+                onChange={(e) => save(k.key, Number(e.target.value))}
+                className="h-9 w-24 rounded border px-2 text-sm"
+              />
+            </label>
+          );
+          return (
+            <label key={k.key} className="block">
+              <span className="text-sm font-semibold">{k.label}</span>
+              <input
+                value={v ?? ""}
+                onChange={(e) => save(k.key, e.target.value)}
+                className="mt-1 h-9 w-full rounded border px-3 text-sm"
+              />
+            </label>
+          );
+        })}
+      </div>
+      {saving && <p className="mt-2 text-xs text-muted-foreground">Saving {saving}…</p>}
+    </div>
+  );
+}
