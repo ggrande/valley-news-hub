@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { drainRedditIntake, getRedditQueueStats } from "@/lib/generate-article.functions";
+import { drainRedditIntake, getRedditQueueStats, regenerateImport } from "@/lib/generate-article.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/reddit")({
   component: RedditIntake,
