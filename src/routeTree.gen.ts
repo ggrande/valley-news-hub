@@ -44,6 +44,7 @@ import { Route as AuthenticatedAdminCommentsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
+import { Route as ApiPublicHooksProcessPendingRouteImport } from './routes/api/public/hooks/process-pending'
 import { Route as AuthenticatedAdminRedditIdRouteImport } from './routes/_authenticated/admin.reddit.$id'
 import { Route as AuthenticatedAdminPostsIdRouteImport } from './routes/_authenticated/admin.posts.$id'
 
@@ -227,6 +228,12 @@ const AuthenticatedAdminAiLogRoute = AuthenticatedAdminAiLogRouteImport.update({
   path: '/ai-log',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const ApiPublicHooksProcessPendingRoute =
+  ApiPublicHooksProcessPendingRouteImport.update({
+    id: '/api/public/hooks/process-pending',
+    path: '/api/public/hooks/process-pending',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminRedditIdRoute =
   AuthenticatedAdminRedditIdRouteImport.update({
     id: '/$id',
@@ -277,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -314,6 +322,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -354,6 +363,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/_authenticated/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -394,6 +404,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
+    | '/api/public/hooks/process-pending'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -431,6 +442,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
+    | '/api/public/hooks/process-pending'
   id:
     | '__root__'
     | '/'
@@ -470,6 +482,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/admin/posts/$id'
     | '/_authenticated/admin/reddit/$id'
+    | '/api/public/hooks/process-pending'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -495,6 +508,7 @@ export interface RootRouteChildren {
   WatchLiveRoute: typeof WatchLiveRoute
   WeatherRoute: typeof WeatherRoute
   ApiMediaRoute: typeof ApiMediaRoute
+  ApiPublicHooksProcessPendingRoute: typeof ApiPublicHooksProcessPendingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -744,6 +758,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAiLogRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/api/public/hooks/process-pending': {
+      id: '/api/public/hooks/process-pending'
+      path: '/api/public/hooks/process-pending'
+      fullPath: '/api/public/hooks/process-pending'
+      preLoaderRoute: typeof ApiPublicHooksProcessPendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/reddit/$id': {
       id: '/_authenticated/admin/reddit/$id'
       path: '/$id'
@@ -864,6 +885,7 @@ const rootRouteChildren: RootRouteChildren = {
   WatchLiveRoute: WatchLiveRoute,
   WeatherRoute: WeatherRoute,
   ApiMediaRoute: ApiMediaRoute,
+  ApiPublicHooksProcessPendingRoute: ApiPublicHooksProcessPendingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
