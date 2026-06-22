@@ -16,32 +16,54 @@ export const Route = createFileRoute("/news/$slug")({
     const p = loaderData?.post;
     if (!p) return { meta: [{ title: "Article — WKNA 49 News" }] };
     const a = dbPostToArticle(p);
+    const canonical = `https://wkna49.com/news/${params.slug}`;
+    const image = p.og_image ?? p.featured_image ?? "https://wkna49.com/og-default.jpg";
+    const published = p.published_at ?? a.date;
+    const modified = p.updated_at ?? published;
     return {
       meta: [
         { title: p.seo_title ?? `${a.title} — WKNA 49 News` },
         { name: "description", content: p.seo_description ?? a.summary },
+        { name: "news_keywords", content: a.category },
         { property: "og:title", content: a.title },
         { property: "og:description", content: p.seo_description ?? a.summary },
         { property: "og:type", content: "article" },
-        { property: "og:url", content: `/news/${params.slug}` },
-        ...(p.og_image || p.featured_image ? [{ property: "og:image", content: (p.og_image ?? p.featured_image)! }] : []),
-        { property: "article:published_time", content: a.date },
+        { property: "og:url", content: canonical },
+        { property: "og:image", content: image },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: a.title },
+        { name: "twitter:description", content: p.seo_description ?? a.summary },
+        { name: "twitter:image", content: image },
+        { property: "article:published_time", content: published },
+        { property: "article:modified_time", content: modified },
         { property: "article:author", content: a.author },
         { property: "article:section", content: a.category },
       ],
-      links: [{ rel: "canonical", href: `/news/${params.slug}` }],
+      links: [{ rel: "canonical", href: canonical }],
       scripts: [{
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "NewsArticle",
-          headline: a.title,
-          datePublished: a.date,
-          author: { "@type": "Person", name: a.author },
-          articleSection: a.category,
-          publisher: { "@type": "Organization", name: "WKNA 49 News" },
+          mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+          headline: a.title.slice(0, 110),
           description: p.seo_description ?? a.summary,
-          ...(p.featured_image ? { image: p.featured_image } : {}),
+          image: [image],
+          datePublished: published,
+          dateModified: modified,
+          author: [{ "@type": "Person", name: a.author }],
+          articleSection: a.category,
+          publisher: {
+            "@type": "NewsMediaOrganization",
+            name: "WKNA 49 News",
+            url: "https://wkna49.com",
+            logo: {
+              "@type": "ImageObject",
+              url: "https://wkna49.com/logo.png",
+              width: 600,
+              height: 60,
+            },
+          },
         }),
       }],
     };

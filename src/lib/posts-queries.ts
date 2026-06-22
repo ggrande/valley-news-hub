@@ -9,6 +9,7 @@ export type DbPost = {
   body: string | null;
   status: string;
   published_at: string | null;
+  updated_at: string | null;
   is_breaking: boolean;
   is_weather_alert: boolean;
   is_pinned: boolean;
@@ -22,7 +23,7 @@ export type DbPost = {
 };
 
 const POST_SELECT =
-  "id, slug, title, dek, body, status, published_at, is_breaking, is_weather_alert, is_pinned, featured_image, hero_caption, seo_title, seo_description, og_image, category:categories(slug, name), author:authors(slug, name)";
+  "id, slug, title, dek, body, status, published_at, updated_at, is_breaking, is_weather_alert, is_pinned, featured_image, hero_caption, seo_title, seo_description, og_image, category:categories(slug, name), author:authors(slug, name)";
 
 function hueFor(s: string) {
   let h = 0;
