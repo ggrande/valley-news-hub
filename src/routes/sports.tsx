@@ -6,8 +6,10 @@ import { articles } from "@/lib/news-data";
 export const Route = createFileRoute("/sports")({
   head: () => ({
     meta: [
-      { title: "49 Sports — Kanawha Valley High School & Local Sports | WKNA 49" },
+      { title: "49 Sports — Kanawha Valley High School & Local Sports" },
       { name: "description", content: "Scores, highlights, and local sports coverage from across the Kanawha Valley with WKNA 49 Sports." },
+      { property: "og:title", content: "49 Sports — Kanawha Valley High School & Local Sports" },
+      { property: "og:description", content: "Scores, highlights, Friday night scoreboards, and local sports coverage from across the Kanawha Valley with WKNA 49 Sports." },
       { property: "og:url", content: "/sports" },
     ],
     links: [{ rel: "canonical", href: "/sports" }],
