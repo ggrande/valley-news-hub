@@ -160,6 +160,8 @@ function PostsList() {
     }
   };
 
+  const allDraftsChecked = draftIdsVisible.length > 0 && draftIdsVisible.every((id) => selected.has(id));
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
