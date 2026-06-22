@@ -7,11 +7,36 @@ export const Route = createFileRoute("/_authenticated/admin/settings")({
   component: Settings,
 });
 
+const DEFAULT_SYSTEM_PROMPT = `You are a senior web producer at WKNA 49 News, a local TV station serving Charleston, West Virginia and the Kanawha Valley.
+You turn raw community discussions into polished, factual local-news-style web articles.
+Voice: direct, declarative, AP-style. NEVER use Reddit slang. NEVER mention Reddit, subreddits, upvotes, or commenters as "redditors". Treat the source material as community discussion or reader correspondence.
+Attribute uncertain claims carefully. Avoid unsupported accusations or naming private individuals.
+Sound like a real local newsroom. No AI-style language.`;
+
+const DEFAULT_USER_TEMPLATE = `{{flairHint}}
+
+Source title: {{title}}
+Source body:
+{{body}}
+
+Community discussion ({{commentsUsed}} of {{commentsTotal}} used):
+{{comments}}
+
+Produce JSON with EXACTLY these fields:
+{ "headline": "...", "seo_title": "...", "seo_description": "max 160 chars", "dek": "subhead",
+  "category": "short noun phrase", "tags": ["..."], "body": "multi-paragraph plain text with \\n\\n",
+  "hero_caption": "short caption", "verification_notes": "admin-only", "comment_summary": "admin-only",
+  "risk_flags": ["minors","self-harm","doxxing","legal accusations","medical advice"] }
+
+Respond ONLY with valid JSON.`;
+
 const KEYS = [
   { key: "allow_public_comments", label: "Allow public comment submission", type: "bool", default: false },
   { key: "show_imported_discussion", label: "Show imported discussion comments on articles", type: "bool", default: true },
   { key: "ai_max_comments", label: "Max comments used in AI generation", type: "number", default: 100 },
   { key: "ai_target_length", label: "Default AI article length", type: "text", default: "500-800 words" },
+  { key: "ai_system_prompt", label: "AI system prompt (voice & rules)", type: "textarea", default: DEFAULT_SYSTEM_PROMPT, rows: 10 },
+  { key: "ai_user_prompt_template", label: "AI user prompt template — supports {{flairHint}} {{title}} {{body}} {{comments}} {{commentsUsed}} {{commentsTotal}}", type: "textarea", default: DEFAULT_USER_TEMPLATE, rows: 16 },
 ];
 
 function Settings() {
