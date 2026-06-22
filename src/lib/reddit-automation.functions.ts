@@ -170,31 +170,8 @@ export const captureRedditSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { dispatchGitHubWorkflow } = await import("@/lib/reddit-automation.server");
-    // Create a synthetic "notification" row to anchor the capture run's audit log?
-    // Instead, just trigger a session-only workflow with a sentinel id of "capture-only".
-    const { data: row, error } = await supabaseAdmin
-      .from("reddit_comment_notifications")
-      .insert({
-        post_id: "00000000-0000-0000-0000-000000000000",
-        thread_url: "(session capture)",
-        rendered_comment: "(session capture)",
-        status: "dispatched",
-        mode_at_enqueue: "off",
-        dispatched_at: new Date().toISOString(),
-      })
-      .select("id")
-      .maybeSingle();
-    // ^ The post_id FK above will fail; better: don't create a notification at all and
-    // have the workflow accept a "capture-only" sentinel. Adjust:
-    if (error || !row) {
-      // Fall back: dispatch with a sentinel id; the workflow handles it without DB row.
-      const dispatch = await dispatchGitHubWorkflow({ notificationId: "session-capture", eventType: "reddit-capture-session" });
-      if (!dispatch.ok) throw new Error(dispatch.error);
-      return { ok: true };
-    }
-    const dispatch = await dispatchGitHubWorkflow({ notificationId: row.id, eventType: "reddit-capture-session" });
+    const dispatch = await dispatchGitHubWorkflow({ notificationId: "session-capture", eventType: "reddit-capture-session" });
     if (!dispatch.ok) throw new Error(dispatch.error);
     return { ok: true };
   });
