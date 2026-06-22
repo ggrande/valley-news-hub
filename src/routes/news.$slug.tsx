@@ -108,6 +108,12 @@ function ArticlePage() {
             <p className="mt-5 text-sm text-muted-foreground">
               By <span className="font-semibold text-primary">{a.author}</span> • {formatDate(a.date)} • WKNA 49 News
             </p>
+            <ShareBar
+              className="mt-5"
+              url={`https://wkna49.com/news/${post.slug}`}
+              title={a.title}
+              summary={a.summary}
+            />
           </div>
         </div>
         {post.featured_image ? (
