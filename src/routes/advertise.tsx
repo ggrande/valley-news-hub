@@ -40,7 +40,7 @@ function Advertise() {
             <div className="mt-8 rounded-lg border bg-[color:var(--ivory)] p-5">
               <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--broadcast)]">Direct line</p>
               <p className="mt-1 font-display text-xl font-bold text-primary">advertising@wkna49.com</p>
-              <p className="text-sm text-muted-foreground">304-555-0149 (ask for Sales)</p>
+              <p className="text-sm text-muted-foreground">Email our Sales team for rates and availability.</p>
             </div>
           </div>
           <FormBlock
