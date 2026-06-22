@@ -26,8 +26,44 @@ async function loadSettings(admin: any): Promise<SettingsMap> {
 const ARCTIC_BASE = "https://arctic-shift.photon-reddit.com/api";
 const UA = "WKNA49NewsBot/1.0 (intake; +https://wkna49.com)";
 const MODERATION_HOLD_SEC = 3 * 60 * 60;
+// Browser-like UA needed for Reddit's JSON endpoints — the "bot" UA above is 403'd.
+const BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Live upvote counts from Reddit's public JSON API. api.reddit.com/api/info
+// accepts a comma-separated list of fullnames and returns current scores —
+// far more reliable than Arctic Shift's archived snapshot (which is often 0
+// because the post was archived seconds after creation). Returns a map of
+// post id -> current score. Silently returns an empty map on failure so the
+// caller can fall back to the archived value.
+async function fetchLiveScoresByIds(ids: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (!ids.length) return out;
+  for (let i = 0; i < ids.length; i += 100) {
+    const slice = ids.slice(i, i + 100);
+    const fullnames = slice.map((id) => `t3_${id}`).join(",");
+    const url = `https://api.reddit.com/api/info.json?id=${fullnames}&raw_json=1`;
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": BROWSER_UA,
+          Accept: "application/json",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      });
+      if (!res.ok) continue;
+      const json: any = await res.json().catch(() => null);
+      const children = json?.data?.children ?? [];
+      for (const c of children) {
+        const d = c?.data;
+        if (d?.id && typeof d.score === "number") out.set(d.id, d.score);
+      }
+    } catch { /* skip batch */ }
+    await sleep(250);
+  }
+  return out;
+}
 
 async function arcticFetch(path: string, params: Record<string, string>): Promise<any[]> {
   const qs = new URLSearchParams(params).toString();
@@ -313,6 +349,10 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
           if (!posts.length) continue;
           const ids = posts.map((p) => p.id);
           const titles = posts.map((p) => (p.title ?? "").trim()).filter(Boolean);
+          // Pull live upvote counts for every candidate up front so the
+          // min-score filter and the stored score reflect Reddit reality, not
+          // an archived-at-creation snapshot.
+          const liveScores = await fetchLiveScoresByIds(ids);
           const [{ data: existingById }, { data: existingByTitle }] = await Promise.all([
             admin.from("reddit_imports").select("reddit_post_id").in("reddit_post_id", ids),
             titles.length
@@ -324,14 +364,17 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
           const nowSec = Math.floor(Date.now() / 1000);
           for (const p of posts) {
             if (knownIds.has(p.id)) { summary.skipped_existing++; continue; }
-            // Wait at least 6 hours after creation so subreddit moderators
+            // Wait at least 3 hours after creation so subreddit moderators
             // have time to remove rule-breaking content before we import it.
             if (typeof p.created_utc === "number" && nowSec - p.created_utc < MODERATION_HOLD_SEC) continue;
             const body = (p.selftext ?? "").trim().toLowerCase();
             const title = (p.title ?? "").trim().toLowerCase();
             if (body === "[removed]" || body === "[deleted]" || title === "[removed]" || title === "[deleted]") continue;
             if (knownTitles.has(title)) { summary.skipped_existing++; continue; }
-            if ((p.score ?? 0) < minScore) { summary.skipped_low_score++; continue; }
+            // Prefer live score; fall back to archived score only when Reddit JSON failed.
+            const liveScore = liveScores.get(p.id);
+            const effectiveScore = typeof liveScore === "number" ? liveScore : (p.score ?? 0);
+            if (effectiveScore < minScore) { summary.skipped_low_score++; continue; }
             // Fetch comments for richer source material (Arctic Shift, by link_id).
             let comments: any[] = [];
             try {
@@ -357,7 +400,8 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
               original_body: p.selftext ?? "",
               original_author_display: p.author,
               original_created_at: p.created_utc ? new Date(p.created_utc * 1000).toISOString() : null,
-              source_score: p.score ?? null,
+              source_score: typeof liveScore === "number" ? liveScore : (p.score ?? null),
+              current_score: typeof liveScore === "number" ? liveScore : (p.score ?? null),
               link_flair_text: p.link_flair_text ?? null,
               media_paths: mediaPaths,
               import_status: "new",
@@ -380,6 +424,30 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
             summary.imported++;
           }
         }
+
+        // Refresh live upvote counts for recent imports (last 14 days) so the
+        // admin table shows a current value, not the score at import time.
+        try {
+          const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+          const { data: recent } = await admin
+            .from("reddit_imports")
+            .select("id, reddit_post_id")
+            .gte("created_at", cutoff)
+            .not("reddit_post_id", "is", null)
+            .limit(500);
+          const recentIds = (recent ?? []).map((r: any) => r.reddit_post_id).filter(Boolean);
+          if (recentIds.length) {
+            const scores = await fetchLiveScoresByIds(recentIds);
+            const byPostId = new Map((recent ?? []).map((r: any) => [r.reddit_post_id, r.id]));
+            for (const [postId, score] of scores) {
+              const rowId = byPostId.get(postId);
+              if (rowId) await admin.from("reddit_imports").update({ current_score: score }).eq("id", rowId);
+            }
+          }
+        } catch (err: any) {
+          summary.errors.push(`refresh scores: ${err?.message ?? err}`);
+        }
+
 
         if (!autoGenerate) {
           return Response.json(summary);

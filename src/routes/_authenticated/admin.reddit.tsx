@@ -252,7 +252,7 @@ function RedditIntake() {
       <div className="rounded-lg border bg-white">
         <h2 className="border-b p-4 font-display text-lg font-bold text-primary">Recent intakes</h2>
         <table className="w-full text-sm">
-          <thead className="bg-[color:var(--ivory)] text-left text-xs uppercase tracking-wide text-muted-foreground"><tr><th className="p-3">Title</th><th className="p-3">Subreddit</th><th className="p-3">Status</th><th className="p-3">Created</th><th className="p-3">Action</th></tr></thead>
+          <thead className="bg-[color:var(--ivory)] text-left text-xs uppercase tracking-wide text-muted-foreground"><tr><th className="p-3">Title</th><th className="p-3">Subreddit</th><th className="p-3">Score</th><th className="p-3">Status</th><th className="p-3">Created</th><th className="p-3">Action</th></tr></thead>
           <tbody>
             {list.data?.map((r: any) => {
               const orphan = r.import_status === "generated" && r.generated_post_id && !liveSet.has(r.generated_post_id);
@@ -265,6 +265,15 @@ function RedditIntake() {
                       <a href={r.source_url} target="_blank" rel="noreferrer" className="hover:underline">r/{r.subreddit ?? "—"}</a>
                     ) : (
                       <>r/{r.subreddit ?? "—"}</>
+                    )}
+                  </td>
+                  <td className="p-3 text-xs tabular-nums">
+                    {typeof r.current_score === "number" ? (
+                      <span title="Live upvote count">{r.current_score.toLocaleString()}</span>
+                    ) : typeof r.source_score === "number" ? (
+                      <span className="text-muted-foreground" title="Score at import time (live unavailable)">{r.source_score.toLocaleString()}</span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </td>
                   <td className="p-3">

@@ -1,0 +1,1 @@
+ALTER TABLE public.reddit_imports ADD COLUMN IF NOT EXISTS current_score integer;

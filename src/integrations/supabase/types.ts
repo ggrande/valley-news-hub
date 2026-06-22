@@ -1002,6 +1002,7 @@ export type Database = {
           candidate_hero_image_url: string | null
           created_at: string
           created_by: string | null
+          current_score: number | null
           generated_post_id: string | null
           id: string
           import_status: Database["public"]["Enums"]["import_status"]
@@ -1028,6 +1029,7 @@ export type Database = {
           candidate_hero_image_url?: string | null
           created_at?: string
           created_by?: string | null
+          current_score?: number | null
           generated_post_id?: string | null
           id?: string
           import_status?: Database["public"]["Enums"]["import_status"]
@@ -1054,6 +1056,7 @@ export type Database = {
           candidate_hero_image_url?: string | null
           created_at?: string
           created_by?: string | null
+          current_score?: number | null
           generated_post_id?: string | null
           id?: string
           import_status?: Database["public"]["Enums"]["import_status"]
