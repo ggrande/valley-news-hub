@@ -136,6 +136,7 @@ export const drainRedditIntake = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { generateOne } = await import("@/lib/cron-generate.server");
     const limit = data.limit ?? 10;
+    await resetOrphans(supabaseAdmin);
 
     const { data: pending } = await supabaseAdmin
       .from("reddit_imports")
