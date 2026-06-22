@@ -9,6 +9,8 @@ export const Route = createFileRoute("/contact")({
     meta: [
       { title: "Contact WKNA 49 News" },
       { name: "description", content: "Contact the WKNA 49 newsroom, sales, weather and sports teams in Charleston, West Virginia." },
+      { property: "og:title", content: "Contact WKNA 49 News — Charleston, WV" },
+      { property: "og:description", content: "Reach the WKNA 49 newsroom, sales, weather, and sports teams in Charleston, West Virginia. Find direct email contacts for every department." },
       { property: "og:url", content: "/contact" },
     ],
     links: [{ rel: "canonical", href: "/contact" }],

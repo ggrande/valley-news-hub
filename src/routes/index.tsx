@@ -19,6 +19,37 @@ export const Route = createFileRoute("/")({
       { property: "og:url", content: "/" },
     ],
     links: [{ rel: "canonical", href: "/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://wkna49.com/#website",
+              name: "WKNA 49 News",
+              url: "https://wkna49.com/",
+              publisher: { "@id": "https://wkna49.com/#organization" },
+            },
+            {
+              "@type": "TelevisionStation",
+              "@id": "https://wkna49.com/#organization",
+              name: "WKNA 49 News",
+              alternateName: "WKNA-TV 49",
+              url: "https://wkna49.com/",
+              areaServed: "Kanawha Valley, West Virginia",
+              address: {
+                "@type": "PostalAddress",
+                addressLocality: "Charleston",
+                addressRegion: "WV",
+                addressCountry: "US",
+              },
+            },
+          ],
+        }),
+      },
+    ],
   }),
   component: Home,
 });
@@ -31,8 +62,8 @@ function SectionHead({ title, to, kicker }: { title: string; to?: string; kicker
         <h2 className="font-display text-2xl font-black tracking-tight text-primary sm:text-3xl">{title}</h2>
       </div>
       {to && (
-        <Link to={to} className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[color:var(--broadcast)] hover:underline">
-          More <ChevronRight className="size-3" />
+        <Link to={to} className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[color:var(--broadcast)] hover:underline" aria-label={`More ${title}`}>
+          More {title} <ChevronRight className="size-3" />
         </Link>
       )}
     </div>
@@ -53,6 +84,7 @@ function Home() {
 
   return (
     <Layout>
+      <h1 className="sr-only">WKNA 49 News — Charleston's Channel 49 for the Kanawha Valley</h1>
       {hero && (
         <section className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
           <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">

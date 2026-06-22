@@ -7,6 +7,7 @@ export const Route = createFileRoute("/about")({
       { title: "About WKNA-TV 49 — Charleston's Channel 49" },
       { name: "description", content: "About WKNA-TV 49 — station history, the WKNA49.com digital relaunch, and our mission to serve the Kanawha Valley." },
       { property: "og:title", content: "About WKNA-TV 49" },
+      { property: "og:description", content: "Station history, the WKNA49.com digital relaunch, and our mission to deliver local news, weather, and sports for the Kanawha Valley." },
       { property: "og:url", content: "/about" },
     ],
     links: [{ rel: "canonical", href: "/about" }],

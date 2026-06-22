@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { articles } from "@/lib/news-data";
 
-const BASE_URL = "";
+const BASE_URL = "https://wkna49.com";
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/", "/news", "/news/local", "/weather", "/sports", "/watch-live",
           "/community", "/shows", "/about", "/submit-news-tip", "/contact",
           "/advertise", "/careers", "/corrections-policy", "/privacy-policy",
-          "/terms-of-use", "/accessibility", "/public-file",
+          "/terms-of-use", "/accessibility", "/public-file", "/rss.xml",
         ];
         const urls = [
           ...staticPaths.map((p) => `  <url><loc>${BASE_URL}${p}</loc><changefreq>weekly</changefreq></url>`),
