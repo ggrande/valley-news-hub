@@ -11,6 +11,7 @@ import {
   retryRedditNotification,
   captureRedditSession,
   debugGitHubStatus,
+  setRedditSessionCookies,
 } from "@/lib/reddit-automation.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/reddit-automation")({
@@ -74,6 +75,17 @@ function Page() {
     mutationFn: () => debugGitHubStatus({ data: {} as any }),
     onSuccess: (d) => { setDiag(d); toast.success("Diagnostics loaded"); },
     onError: (e: any) => toast.error(e?.message ?? "Diagnostics failed"),
+  });
+
+  const [cookieRaw, setCookieRaw] = useState<string>("");
+  const pasteCookies = useMutation({
+    mutationFn: () => setRedditSessionCookies({ data: { raw: cookieRaw } }),
+    onSuccess: (r: any) => {
+      toast.success(`Saved ${r.count} cookies`);
+      setCookieRaw("");
+      qc.invalidateQueries({ queryKey: ["reddit-automation-settings"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Failed to save cookies"),
   });
 
   const approve = useMutation({
@@ -173,6 +185,38 @@ function Page() {
         {s.session_last_error && (
           <p className="mt-2 text-xs text-red-700">Last error: {s.session_last_error}</p>
         )}
+      </section>
+
+      <section className="rounded-lg border bg-white p-6">
+        <h2 className="font-display text-lg font-bold text-primary">Paste session cookies</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Fastest path past Reddit's bot detection: log in as <code>u/WKNA49</code> in your own browser, export the cookies, and paste them here. The worker will reuse them and skip the headless login entirely.
+        </p>
+        <details className="mt-2 text-xs">
+          <summary className="cursor-pointer font-semibold">How to export cookies</summary>
+          <ol className="ml-5 mt-2 list-decimal space-y-1 text-muted-foreground">
+            <li>Install the <a className="underline" href="https://chromewebstore.google.com/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm" target="_blank" rel="noreferrer">Cookie-Editor</a> extension (Chrome/Firefox/Edge).</li>
+            <li>Go to <code>https://www.reddit.com</code> and make sure you're logged in as u/WKNA49.</li>
+            <li>Click the Cookie-Editor icon → <strong>Export</strong> → <strong>Export as JSON</strong> (copies to clipboard).</li>
+            <li>Paste below and click <strong>Save cookies</strong>.</li>
+          </ol>
+          <p className="mt-2 text-muted-foreground">Also accepted: a raw <code>Cookie:</code> header string copied from DevTools → Network.</p>
+        </details>
+        <textarea
+          className="mt-3 h-40 w-full rounded-md border p-3 font-mono text-xs"
+          placeholder='[{"name":"reddit_session","value":"...","domain":".reddit.com",...}, ...]'
+          value={cookieRaw}
+          onChange={(e) => setCookieRaw(e.target.value)}
+        />
+        <div className="mt-2 flex justify-end">
+          <button
+            onClick={() => pasteCookies.mutate()}
+            disabled={pasteCookies.isPending || !cookieRaw.trim()}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          >
+            {pasteCookies.isPending ? "Saving…" : "Save cookies"}
+          </button>
+        </div>
       </section>
 
       <section className="rounded-lg border bg-white p-6">
