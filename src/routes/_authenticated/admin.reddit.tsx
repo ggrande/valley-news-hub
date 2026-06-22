@@ -14,6 +14,8 @@ type Mode = "url" | "manual";
 function RedditIntake() {
   const drain = useServerFn(drainRedditIntake);
   const getStats = useServerFn(getRedditQueueStats);
+  const regenerate = useServerFn(regenerateImport);
+  const [regenBusy, setRegenBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("url");
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
