@@ -158,6 +158,13 @@ function PostsList() {
           >
             Archive
           </button>
+          <button
+            disabled={busy || selected.size === 0}
+            onClick={bulkDelete}
+            className="rounded bg-red-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+          >
+            Delete
+          </button>
           {selected.size > 0 && (
             <button onClick={() => setSelected(new Set())} className="text-xs text-muted-foreground hover:underline">
               Clear
