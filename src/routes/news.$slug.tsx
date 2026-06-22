@@ -132,6 +132,13 @@ function ArticlePage() {
           <p className="mt-8 border-t pt-5 text-sm italic text-muted-foreground">
             Have a news tip? <Link to="/submit-news-tip" className="text-[color:var(--broadcast)] underline">Send it to the WKNA 49 newsroom.</Link>
           </p>
+          <ShareBar
+            className="mt-6 justify-center"
+            url={`https://wkna49.com/news/${post.slug}`}
+            title={a.title}
+            summary={a.summary}
+            label="Share"
+          />
         </div>
       </article>
 
