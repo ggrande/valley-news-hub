@@ -26,8 +26,44 @@ async function loadSettings(admin: any): Promise<SettingsMap> {
 const ARCTIC_BASE = "https://arctic-shift.photon-reddit.com/api";
 const UA = "WKNA49NewsBot/1.0 (intake; +https://wkna49.com)";
 const MODERATION_HOLD_SEC = 3 * 60 * 60;
+// Browser-like UA needed for Reddit's JSON endpoints — the "bot" UA above is 403'd.
+const BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Live upvote counts from Reddit's public JSON API. api.reddit.com/api/info
+// accepts a comma-separated list of fullnames and returns current scores —
+// far more reliable than Arctic Shift's archived snapshot (which is often 0
+// because the post was archived seconds after creation). Returns a map of
+// post id -> current score. Silently returns an empty map on failure so the
+// caller can fall back to the archived value.
+async function fetchLiveScoresByIds(ids: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (!ids.length) return out;
+  for (let i = 0; i < ids.length; i += 100) {
+    const slice = ids.slice(i, i + 100);
+    const fullnames = slice.map((id) => `t3_${id}`).join(",");
+    const url = `https://api.reddit.com/api/info.json?id=${fullnames}&raw_json=1`;
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": BROWSER_UA,
+          Accept: "application/json",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      });
+      if (!res.ok) continue;
+      const json: any = await res.json().catch(() => null);
+      const children = json?.data?.children ?? [];
+      for (const c of children) {
+        const d = c?.data;
+        if (d?.id && typeof d.score === "number") out.set(d.id, d.score);
+      }
+    } catch { /* skip batch */ }
+    await sleep(250);
+  }
+  return out;
+}
 
 async function arcticFetch(path: string, params: Record<string, string>): Promise<any[]> {
   const qs = new URLSearchParams(params).toString();
