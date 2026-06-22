@@ -247,40 +247,29 @@ async function main() {
 
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
-    userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+    userAgent: REDDIT_UA,
     viewport: { width: 1280, height: 900 },
   });
 
   // Restore cookies if we have any
   if (Array.isArray(job.session_cookies) && job.session_cookies.length) {
-    try { await context.addCookies(job.session_cookies); } catch (e) { console.warn("addCookies failed:", e?.message); }
+    await restoreCookies(context, job.session_cookies);
   }
 
   const page = await context.newPage();
   let result = { status: "failed", log_excerpt: "unknown" };
 
   try {
-    // Verify we're logged in via Reddit's JSON API — works reliably for both
-    // old and new Reddit, no DOM scraping required. If pasted cookies are valid,
-    // /api/me.json returns the user object; otherwise it returns an empty {}.
-    let loggedInAs = null;
-    try {
-      const meResp = await context.request.get("https://www.reddit.com/api/me.json", {
-        headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" },
-      });
-      const meJson = await meResp.json().catch(() => ({}));
-      loggedInAs = meJson?.data?.name || meJson?.name || null;
-      console.log("[session-check] /api/me.json →", loggedInAs ? `logged in as ${loggedInAs}` : "anonymous");
-    } catch (e) {
-      console.warn("[session-check] me.json failed:", e?.message);
-    }
+    let loggedInAs = await getLoggedInUser(context);
+    console.log("[session-check] /api/me.json →", loggedInAs ? `logged in as ${loggedInAs}` : "anonymous");
 
     if (!loggedInAs) {
       if (!job.reddit_username || !job.reddit_password) {
         throw Object.assign(new Error("Session expired or invalid. Paste fresh cookies in the admin panel."), { kind: "login_required" });
       }
       await page.goto("https://www.reddit.com/", { waitUntil: "domcontentloaded" });
-      await loginFresh(context, page, job.reddit_username, job.reddit_password);
+      const fresh = await loginFresh(context, page, job.reddit_username, job.reddit_password);
+      loggedInAs = fresh.name;
     }
 
     const refreshedCookies = await context.cookies();
