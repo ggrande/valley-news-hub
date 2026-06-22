@@ -1,6 +1,45 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function resetOrphans(admin: any) {
+  // Find generated imports whose post was deleted, and reset them to 'new'.
+  const { data: rows } = await admin
+    .from("reddit_imports")
+    .select("id, generated_post_id")
+    .eq("import_status", "generated")
+    .not("generated_post_id", "is", null);
+  if (!rows?.length) return 0;
+  const ids = rows.map((r: any) => r.generated_post_id);
+  const { data: existing } = await admin.from("posts").select("id").in("id", ids);
+  const existingSet = new Set((existing ?? []).map((p: any) => p.id));
+  const orphans = rows.filter((r: any) => !existingSet.has(r.generated_post_id)).map((r: any) => r.id);
+  if (orphans.length) {
+    await admin
+      .from("reddit_imports")
+      .update({ import_status: "new", generated_post_id: null, processing_error: null })
+      .in("id", orphans);
+  }
+  return orphans.length;
+}
+
+export const regenerateImport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { importId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { data: roleRow } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!roleRow) throw new Response("Forbidden", { status: 403 });
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { generateOne } = await import("@/lib/cron-generate.server");
+    await supabaseAdmin
+      .from("reddit_imports")
+      .update({ import_status: "new", generated_post_id: null, processing_error: null })
+      .eq("id", data.importId);
+    return await generateOne(supabaseAdmin, data.importId);
+  });
+
+
+
 export const generateArticleFromImport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { importId: string }) => input)
@@ -79,6 +118,7 @@ export const getRedditQueueStats = createServerFn({ method: "GET" })
     if (!roleRow) throw new Response("Forbidden", { status: 403 });
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await resetOrphans(supabaseAdmin);
     const { count } = await supabaseAdmin
       .from("reddit_imports")
       .select("id", { count: "exact", head: true })
@@ -96,6 +136,7 @@ export const drainRedditIntake = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { generateOne } = await import("@/lib/cron-generate.server");
     const limit = data.limit ?? 10;
+    await resetOrphans(supabaseAdmin);
 
     const { data: pending } = await supabaseAdmin
       .from("reddit_imports")
