@@ -207,6 +207,14 @@ function PostsList() {
           >
             Delete
           </button>
+          <button
+            disabled={busy}
+            onClick={bulkGenImages}
+            className="rounded bg-indigo-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+            title={selected.size > 0 ? "Generate filler images for selected posts missing one" : "Generate filler images for all visible posts missing one"}
+          >
+            Gen filler images ({selected.size > 0 ? [...selected].filter((id) => missingImgIdsVisible.includes(id)).length : missingImgIdsVisible.length})
+          </button>
           {selected.size > 0 && (
             <button onClick={() => setSelected(new Set())} className="text-xs text-muted-foreground hover:underline">
               Clear
