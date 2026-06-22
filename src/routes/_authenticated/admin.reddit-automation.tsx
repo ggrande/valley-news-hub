@@ -69,6 +69,13 @@ function Page() {
     onError: (e: any) => toast.error(e?.message ?? "Dispatch failed"),
   });
 
+  const [diag, setDiag] = useState<any>(null);
+  const diagnose = useMutation({
+    mutationFn: () => debugGitHubStatus({ data: {} as any }),
+    onSuccess: (d) => { setDiag(d); toast.success("Diagnostics loaded"); },
+    onError: (e: any) => toast.error(e?.message ?? "Diagnostics failed"),
+  });
+
   const approve = useMutation({
     mutationFn: (id: string) => approveRedditNotification({ data: { id } }),
     onSuccess: () => { toast.success("Approved & dispatched"); qc.invalidateQueries({ queryKey: ["reddit-notifications"] }); },
