@@ -94,6 +94,7 @@ export function Header() {
             >
               <Radio className="size-4" /> Watch Live
             </Link>
+            <div className="mt-2"><SupportButton variant="block" /></div>
           </div>
         </nav>
       )}
