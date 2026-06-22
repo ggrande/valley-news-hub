@@ -382,6 +382,20 @@ function AutomationPanel() {
               />
             </label>
           );
+          if (k.type === "select") return (
+            <label key={k.key} className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold">{k.label}</span>
+              <select
+                value={String(v ?? k.default)}
+                onChange={(e) => save(k.key, e.target.value)}
+                className="h-9 rounded border px-2 text-sm"
+              >
+                {(k as any).options.map((o: any) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </label>
+          );
           return (
             <label key={k.key} className="block">
               <span className="text-sm font-semibold">{k.label}</span>
