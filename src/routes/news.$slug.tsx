@@ -4,6 +4,7 @@ import { Layout } from "@/components/site/Layout";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { ArticleImage } from "@/components/site/ArticleImage";
 import { SupportButton } from "@/components/site/SupportButton";
+import { ShareBar } from "@/components/site/ShareBar";
 import { formatDate } from "@/lib/news-data";
 import { dbPostToArticle, fetchCommentsForPost, fetchPostBySlug, fetchPublishedPosts, fetchSetting } from "@/lib/posts-queries";
 
@@ -107,6 +108,12 @@ function ArticlePage() {
             <p className="mt-5 text-sm text-muted-foreground">
               By <span className="font-semibold text-primary">{a.author}</span> • {formatDate(a.date)} • WKNA 49 News
             </p>
+            <ShareBar
+              className="mt-5"
+              url={`https://wkna49.com/news/${post.slug}`}
+              title={a.title}
+              summary={a.summary}
+            />
           </div>
         </div>
         {post.featured_image ? (
@@ -125,6 +132,13 @@ function ArticlePage() {
           <p className="mt-8 border-t pt-5 text-sm italic text-muted-foreground">
             Have a news tip? <Link to="/submit-news-tip" className="text-[color:var(--broadcast)] underline">Send it to the WKNA 49 newsroom.</Link>
           </p>
+          <ShareBar
+            className="mt-6 justify-center"
+            url={`https://wkna49.com/news/${post.slug}`}
+            title={a.title}
+            summary={a.summary}
+            label="Share"
+          />
         </div>
       </article>
 
