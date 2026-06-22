@@ -5,6 +5,7 @@ import { ArticleCard } from "@/components/site/ArticleCard";
 import { WeatherCard } from "@/components/site/WeatherCard";
 import { LivePlayer } from "@/components/site/LivePlayer";
 import { Newsletter } from "@/components/site/Newsletter";
+import { SupportButton } from "@/components/site/SupportButton";
 import { shows, schedule } from "@/lib/news-data";
 import { dbPostToArticle, fetchPublishedPosts } from "@/lib/posts-queries";
 import { Calendar, ChevronRight } from "lucide-react";
