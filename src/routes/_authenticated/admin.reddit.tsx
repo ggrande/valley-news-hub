@@ -260,7 +260,13 @@ function RedditIntake() {
               return (
                 <tr key={r.id} className="border-t">
                   <td className="p-3"><Link to="/admin/reddit/$id" params={{ id: r.id }} className="font-semibold text-primary hover:underline">{r.original_title ?? "(untitled)"}</Link></td>
-                  <td className="p-3 text-muted-foreground">r/{r.subreddit ?? "—"}</td>
+                  <td className="p-3 text-muted-foreground">
+                    {r.source_url ? (
+                      <a href={r.source_url} target="_blank" rel="noreferrer" className="hover:underline">r/{r.subreddit ?? "—"}</a>
+                    ) : (
+                      <>r/{r.subreddit ?? "—"}</>
+                    )}
+                  </td>
                   <td className="p-3">
                     <span className="rounded bg-slate-100 px-2 py-0.5 text-xs">{orphan ? "post deleted" : r.import_status}</span>
                   </td>
