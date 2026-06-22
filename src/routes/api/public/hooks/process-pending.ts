@@ -170,20 +170,25 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
           ]);
           const knownIds = new Set((existingById ?? []).map((r: any) => r.reddit_post_id));
           const knownTitles = new Set((existingByTitle ?? []).map((r: any) => (r.original_title ?? "").trim().toLowerCase()));
+          const nowSec = Math.floor(Date.now() / 1000);
           for (const p of posts) {
             if (knownIds.has(p.id)) { summary.skipped_existing++; continue; }
+            // Wait at least 6 hours after creation so subreddit moderators
+            // have time to remove rule-breaking content before we import it.
+            if (typeof p.created_utc === "number" && nowSec - p.created_utc < SIX_HOURS_SEC) continue;
             const body = (p.selftext ?? "").trim().toLowerCase();
             const title = (p.title ?? "").trim().toLowerCase();
             if (body === "[removed]" || body === "[deleted]" || title === "[removed]" || title === "[deleted]") continue;
             if (knownTitles.has(title)) { summary.skipped_existing++; continue; }
             if ((p.score ?? 0) < minScore) { summary.skipped_low_score++; continue; }
-            // Fetch comments for richer source material.
+            // Fetch comments for richer source material (Arctic Shift, by link_id).
             let comments: any[] = [];
             try {
-              const detail = await fetchPostWithComments(p.permalink);
-              if (detail) comments = detail.comments;
+              comments = await fetchPostComments(p.id);
             } catch { /* fall back to no comments */ }
-            const permalink = `https://www.reddit.com${p.permalink}`;
+            const permalink = p.permalink
+              ? (p.permalink.startsWith("http") ? p.permalink : `https://www.reddit.com${p.permalink}`)
+              : `https://www.reddit.com/r/${p.subreddit}/comments/${p.id}/`;
             const { data: imp, error: insErr } = await admin.from("reddit_imports").insert({
               source_url: permalink,
               permalink,
