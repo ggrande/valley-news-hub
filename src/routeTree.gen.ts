@@ -32,6 +32,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
+import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminSubmissionsRouteImport } from './routes/_authenticated/admin.submissions'
@@ -160,6 +161,11 @@ const NewsSlugRoute = NewsSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => NewsRoute,
 } as any)
+const ApiMediaRoute = ApiMediaRouteImport.update({
+  id: '/api/media',
+  path: '/api/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -256,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
@@ -292,6 +299,7 @@ export interface FileRoutesByTo {
   '/terms-of-use': typeof TermsOfUseRoute
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRoute
+  '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
@@ -331,6 +339,7 @@ export interface FileRoutesById {
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/_authenticated/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
@@ -370,6 +379,7 @@ export interface FileRouteTypes {
     | '/watch-live'
     | '/weather'
     | '/admin'
+    | '/api/media'
     | '/news/$slug'
     | '/news/local'
     | '/admin/ai-log'
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/terms-of-use'
     | '/watch-live'
     | '/weather'
+    | '/api/media'
     | '/news/$slug'
     | '/news/local'
     | '/admin/ai-log'
@@ -444,6 +455,7 @@ export interface FileRouteTypes {
     | '/watch-live'
     | '/weather'
     | '/_authenticated/admin'
+    | '/api/media'
     | '/news/$slug'
     | '/news/local'
     | '/_authenticated/admin/ai-log'
@@ -482,6 +494,7 @@ export interface RootRouteChildren {
   TermsOfUseRoute: typeof TermsOfUseRoute
   WatchLiveRoute: typeof WatchLiveRoute
   WeatherRoute: typeof WeatherRoute
+  ApiMediaRoute: typeof ApiMediaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -646,6 +659,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/news/$slug'
       preLoaderRoute: typeof NewsSlugRouteImport
       parentRoute: typeof NewsRoute
+    }
+    '/api/media': {
+      id: '/api/media'
+      path: '/api/media'
+      fullPath: '/api/media'
+      preLoaderRoute: typeof ApiMediaRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
@@ -843,6 +863,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfUseRoute: TermsOfUseRoute,
   WatchLiveRoute: WatchLiveRoute,
   WeatherRoute: WeatherRoute,
+  ApiMediaRoute: ApiMediaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
