@@ -119,7 +119,46 @@ function PostsList() {
     qc.invalidateQueries({ queryKey: ["admin-posts"] });
   };
 
-  const allDraftsChecked = draftIdsVisible.length > 0 && draftIdsVisible.every((id) => selected.has(id));
+  const missingImgIdsVisible = useMemo(
+    () => rows.filter((p: any) => !p.featured_image).map((p: any) => p.id as string),
+    [rows],
+  );
+  const bulkGenImages = async () => {
+    const ids = selected.size > 0
+      ? [...selected].filter((id) => missingImgIdsVisible.includes(id))
+      : missingImgIdsVisible;
+    if (ids.length === 0) { setMsg("No posts missing a header image in current view."); return; }
+    if (!confirm(`Generate filler images for ${ids.length} post(s)? This calls the AI gateway.`)) return;
+    setBusy(true);
+    setMsg(`Generating 0/${ids.length}…`);
+    let ok = 0, fail = 0;
+    for (let i = 0; i < ids.length; i++) {
+      try {
+        await generateFillerImage({ data: { postId: ids[i] } });
+        ok++;
+      } catch (e: any) {
+        fail++;
+        console.error("filler image fail", ids[i], e);
+      }
+      setMsg(`Generating ${i + 1}/${ids.length}… (${ok} ok, ${fail} fail)`);
+    }
+    setBusy(false);
+    setMsg(`Done. ${ok} generated, ${fail} failed.`);
+    qc.invalidateQueries({ queryKey: ["admin-posts"] });
+  };
+
+  const genOne = async (id: string) => {
+    setBusy(true);
+    try {
+      await generateFillerImage({ data: { postId: id, force: true } });
+      setMsg("Generated.");
+      qc.invalidateQueries({ queryKey: ["admin-posts"] });
+    } catch (e: any) {
+      setMsg(e?.message ?? "Generation failed");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <div>
