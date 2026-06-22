@@ -1,0 +1,1 @@
+UPDATE public.reddit_comment_notifications SET status='awaiting_approval', approved_at=NULL, approved_by=NULL, dispatched_at=NULL, posted_at=NULL, failure_reason=NULL, reddit_comment_id=NULL, reddit_comment_permalink=NULL, attempt_count=0 WHERE id='a0629b8f-c802-4b9e-afbd-d9fbe2b12ad6';
