@@ -86,25 +86,35 @@ export async function dispatchGitHubWorkflow(opts: {
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const pat = process.env.GH_DISPATCH_PAT;
   const repo = process.env.GITHUB_REPO; // "owner/repo"
-  if (!pat) return { ok: false, error: "GH_DISPATCH_PAT not configured" };
+  console.log("[reddit-dispatch] start", { eventType: opts.eventType, notificationId: opts.notificationId, hasPat: Boolean(pat), repo: repo ?? null });
+  if (!pat) return { ok: false, error: "GH_DISPATCH_PAT not configured in Lovable Cloud secrets" };
   if (!repo) return { ok: false, error: "GITHUB_REPO not configured (format: owner/repo)" };
 
-  const res = await fetch(`https://api.github.com/repos/${repo}/dispatches`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${pat}`,
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      event_type: opts.eventType,
-      client_payload: { notification_id: opts.notificationId, ts: Date.now() },
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`https://api.github.com/repos/${repo}/dispatches`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${pat}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json",
+        "User-Agent": "wkna49-reddit-automation",
+      },
+      body: JSON.stringify({
+        event_type: opts.eventType,
+        client_payload: { notification_id: opts.notificationId, ts: Date.now() },
+      }),
+    });
+  } catch (e: any) {
+    console.error("[reddit-dispatch] fetch threw", e?.message);
+    return { ok: false, error: `GitHub dispatch network error: ${e?.message ?? String(e)}` };
+  }
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
-    return { ok: false, error: `GitHub dispatch failed: ${res.status} ${txt.slice(0, 200)}` };
+    console.error("[reddit-dispatch] non-2xx", { status: res.status, body: txt.slice(0, 500) });
+    return { ok: false, error: `GitHub dispatch failed: ${res.status} ${txt.slice(0, 300)}` };
   }
+  console.log("[reddit-dispatch] ok", { status: res.status });
   return { ok: true };
 }
