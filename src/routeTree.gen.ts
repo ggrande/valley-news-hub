@@ -50,6 +50,7 @@ import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
 import { Route as ApiPublicHooksProcessPendingRouteImport } from './routes/api/public/hooks/process-pending'
 import { Route as ApiPublicHooksManualJsonlImportRouteImport } from './routes/api/public/hooks/manual-jsonl-import'
+import { Route as ApiPublicHooksBackfillCommentsRouteImport } from './routes/api/public/hooks/backfill-comments'
 import { Route as AuthenticatedAdminRedditIdRouteImport } from './routes/_authenticated/admin.reddit.$id'
 import { Route as AuthenticatedAdminPostsIdRouteImport } from './routes/_authenticated/admin.posts.$id'
 import { Route as AuthenticatedAdminImportBatchIdRouteImport } from './routes/_authenticated/admin.import.$batchId'
@@ -268,6 +269,12 @@ const ApiPublicHooksManualJsonlImportRoute =
     path: '/api/public/hooks/manual-jsonl-import',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksBackfillCommentsRoute =
+  ApiPublicHooksBackfillCommentsRouteImport.update({
+    id: '/api/public/hooks/backfill-comments',
+    path: '/api/public/hooks/backfill-comments',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminRedditIdRoute =
   AuthenticatedAdminRedditIdRouteImport.update({
     id: '/$id',
@@ -329,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/backfill-comments': typeof ApiPublicHooksBackfillCommentsRoute
   '/api/public/hooks/manual-jsonl-import': typeof ApiPublicHooksManualJsonlImportRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
@@ -373,6 +381,7 @@ export interface FileRoutesByTo {
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/backfill-comments': typeof ApiPublicHooksBackfillCommentsRoute
   '/api/public/hooks/manual-jsonl-import': typeof ApiPublicHooksManualJsonlImportRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
@@ -420,6 +429,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/_authenticated/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/_authenticated/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/backfill-comments': typeof ApiPublicHooksBackfillCommentsRoute
   '/api/public/hooks/manual-jsonl-import': typeof ApiPublicHooksManualJsonlImportRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
@@ -467,6 +477,7 @@ export interface FileRouteTypes {
     | '/admin/import/$batchId'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
+    | '/api/public/hooks/backfill-comments'
     | '/api/public/hooks/manual-jsonl-import'
     | '/api/public/hooks/process-pending'
   fileRoutesByTo: FileRoutesByTo
@@ -511,6 +522,7 @@ export interface FileRouteTypes {
     | '/admin/import/$batchId'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
+    | '/api/public/hooks/backfill-comments'
     | '/api/public/hooks/manual-jsonl-import'
     | '/api/public/hooks/process-pending'
   id:
@@ -557,6 +569,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/import/$batchId'
     | '/_authenticated/admin/posts/$id'
     | '/_authenticated/admin/reddit/$id'
+    | '/api/public/hooks/backfill-comments'
     | '/api/public/hooks/manual-jsonl-import'
     | '/api/public/hooks/process-pending'
   fileRoutesById: FileRoutesById
@@ -587,6 +600,7 @@ export interface RootRouteChildren {
   NewsSlugRoute: typeof NewsSlugRoute
   NewsLocalRoute: typeof NewsLocalRoute
   NewsIndexRoute: typeof NewsIndexRoute
+  ApiPublicHooksBackfillCommentsRoute: typeof ApiPublicHooksBackfillCommentsRoute
   ApiPublicHooksManualJsonlImportRoute: typeof ApiPublicHooksManualJsonlImportRoute
   ApiPublicHooksProcessPendingRoute: typeof ApiPublicHooksProcessPendingRoute
 }
@@ -880,6 +894,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksManualJsonlImportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/backfill-comments': {
+      id: '/api/public/hooks/backfill-comments'
+      path: '/api/public/hooks/backfill-comments'
+      fullPath: '/api/public/hooks/backfill-comments'
+      preLoaderRoute: typeof ApiPublicHooksBackfillCommentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/reddit/$id': {
       id: '/_authenticated/admin/reddit/$id'
       path: '/$id'
@@ -1027,9 +1048,20 @@ const rootRouteChildren: RootRouteChildren = {
   NewsSlugRoute: NewsSlugRoute,
   NewsLocalRoute: NewsLocalRoute,
   NewsIndexRoute: NewsIndexRoute,
+  ApiPublicHooksBackfillCommentsRoute: ApiPublicHooksBackfillCommentsRoute,
   ApiPublicHooksManualJsonlImportRoute: ApiPublicHooksManualJsonlImportRoute,
   ApiPublicHooksProcessPendingRoute: ApiPublicHooksProcessPendingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
