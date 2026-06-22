@@ -8,6 +8,23 @@ Voice: direct, declarative, AP-style. NEVER use Reddit slang. NEVER mention Redd
 Attribute uncertain claims carefully. Avoid unsupported accusations or naming private individuals.
 Sound like a real local newsroom. No AI-style language.`;
 
+const DEFAULT_USER_TEMPLATE = `{{flairHint}}
+
+Source title: {{title}}
+Source body:
+{{body}}
+
+Community discussion ({{commentsUsed}} of {{commentsTotal}} used):
+{{comments}}
+
+Produce JSON with EXACTLY these fields:
+{ "headline": "...", "seo_title": "...", "seo_description": "max 160 chars", "dek": "subhead",
+  "category": "short noun phrase", "tags": ["..."], "body": "multi-paragraph plain text with \\n\\n",
+  "hero_caption": "short caption", "verification_notes": "admin-only", "comment_summary": "admin-only",
+  "risk_flags": ["minors","self-harm","doxxing","legal accusations","medical advice"] }
+
+Respond ONLY with valid JSON.`;
+
 const BLOCKLIST = [
   /\bkill\s+(?:myself|yourself|himself|herself)\b/i,
   /\bsuicide\s+(?:method|how to)\b/i,
