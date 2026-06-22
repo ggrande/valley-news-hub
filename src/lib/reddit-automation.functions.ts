@@ -56,7 +56,7 @@ export const updateRedditAutomationSettings = createServerFn({ method: "POST" })
       patch.reddit_password_iv = enc.iv;
     }
 
-    const { error } = await supabaseAdmin.from("reddit_automation_settings").update(patch).eq("id", true);
+    const { error } = await supabaseAdmin.from("reddit_automation_settings").update(patch as never).eq("id", true);
     if (error) throw error;
     return { ok: true };
   });

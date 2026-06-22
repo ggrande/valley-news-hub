@@ -39,6 +39,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminSubmissionsRouteImport } from './routes/_authenticated/admin.submissions'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminRedditAutomationRouteImport } from './routes/_authenticated/admin.reddit-automation'
 import { Route as AuthenticatedAdminRedditRouteImport } from './routes/_authenticated/admin.reddit'
 import { Route as AuthenticatedAdminPostsRouteImport } from './routes/_authenticated/admin.posts'
 import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin.media'
@@ -48,6 +49,8 @@ import { Route as AuthenticatedAdminClosingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
+import { Route as ApiPublicHooksRedditCommentJobRouteImport } from './routes/api/public/hooks/reddit-comment-job'
+import { Route as ApiPublicHooksRedditCommentCallbackRouteImport } from './routes/api/public/hooks/reddit-comment-callback'
 import { Route as ApiPublicHooksProcessPendingRouteImport } from './routes/api/public/hooks/process-pending'
 import { Route as ApiPublicHooksManualJsonlImportRouteImport } from './routes/api/public/hooks/manual-jsonl-import'
 import { Route as ApiPublicHooksBackfillCommentsRouteImport } from './routes/api/public/hooks/backfill-comments'
@@ -206,6 +209,12 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminRedditAutomationRoute =
+  AuthenticatedAdminRedditAutomationRouteImport.update({
+    id: '/reddit-automation',
+    path: '/reddit-automation',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminRedditRoute =
   AuthenticatedAdminRedditRouteImport.update({
     id: '/reddit',
@@ -257,6 +266,18 @@ const AuthenticatedAdminAiLogRoute = AuthenticatedAdminAiLogRouteImport.update({
   path: '/ai-log',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const ApiPublicHooksRedditCommentJobRoute =
+  ApiPublicHooksRedditCommentJobRouteImport.update({
+    id: '/api/public/hooks/reddit-comment-job',
+    path: '/api/public/hooks/reddit-comment-job',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksRedditCommentCallbackRoute =
+  ApiPublicHooksRedditCommentCallbackRouteImport.update({
+    id: '/api/public/hooks/reddit-comment-callback',
+    path: '/api/public/hooks/reddit-comment-callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksProcessPendingRoute =
   ApiPublicHooksProcessPendingRouteImport.update({
     id: '/api/public/hooks/process-pending',
@@ -330,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
+  '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -339,6 +361,8 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/backfill-comments': typeof ApiPublicHooksBackfillCommentsRoute
   '/api/public/hooks/manual-jsonl-import': typeof ApiPublicHooksManualJsonlImportRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
+  '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
+  '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -375,6 +399,7 @@ export interface FileRoutesByTo {
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
+  '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -384,6 +409,8 @@ export interface FileRoutesByTo {
   '/api/public/hooks/backfill-comments': typeof ApiPublicHooksBackfillCommentsRoute
   '/api/public/hooks/manual-jsonl-import': typeof ApiPublicHooksManualJsonlImportRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
+  '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
+  '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -423,6 +450,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
   '/_authenticated/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/_authenticated/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
+  '/_authenticated/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -432,6 +460,8 @@ export interface FileRoutesById {
   '/api/public/hooks/backfill-comments': typeof ApiPublicHooksBackfillCommentsRoute
   '/api/public/hooks/manual-jsonl-import': typeof ApiPublicHooksManualJsonlImportRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
+  '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
+  '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -471,6 +501,7 @@ export interface FileRouteTypes {
     | '/admin/media'
     | '/admin/posts'
     | '/admin/reddit'
+    | '/admin/reddit-automation'
     | '/admin/settings'
     | '/admin/submissions'
     | '/admin/'
@@ -480,6 +511,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/backfill-comments'
     | '/api/public/hooks/manual-jsonl-import'
     | '/api/public/hooks/process-pending'
+    | '/api/public/hooks/reddit-comment-callback'
+    | '/api/public/hooks/reddit-comment-job'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -516,6 +549,7 @@ export interface FileRouteTypes {
     | '/admin/media'
     | '/admin/posts'
     | '/admin/reddit'
+    | '/admin/reddit-automation'
     | '/admin/settings'
     | '/admin/submissions'
     | '/admin'
@@ -525,6 +559,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/backfill-comments'
     | '/api/public/hooks/manual-jsonl-import'
     | '/api/public/hooks/process-pending'
+    | '/api/public/hooks/reddit-comment-callback'
+    | '/api/public/hooks/reddit-comment-job'
   id:
     | '__root__'
     | '/'
@@ -563,6 +599,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/media'
     | '/_authenticated/admin/posts'
     | '/_authenticated/admin/reddit'
+    | '/_authenticated/admin/reddit-automation'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/submissions'
     | '/_authenticated/admin/'
@@ -572,6 +609,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/backfill-comments'
     | '/api/public/hooks/manual-jsonl-import'
     | '/api/public/hooks/process-pending'
+    | '/api/public/hooks/reddit-comment-callback'
+    | '/api/public/hooks/reddit-comment-job'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -603,6 +642,8 @@ export interface RootRouteChildren {
   ApiPublicHooksBackfillCommentsRoute: typeof ApiPublicHooksBackfillCommentsRoute
   ApiPublicHooksManualJsonlImportRoute: typeof ApiPublicHooksManualJsonlImportRoute
   ApiPublicHooksProcessPendingRoute: typeof ApiPublicHooksProcessPendingRoute
+  ApiPublicHooksRedditCommentCallbackRoute: typeof ApiPublicHooksRedditCommentCallbackRoute
+  ApiPublicHooksRedditCommentJobRoute: typeof ApiPublicHooksRedditCommentJobRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -817,6 +858,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/reddit-automation': {
+      id: '/_authenticated/admin/reddit-automation'
+      path: '/reddit-automation'
+      fullPath: '/admin/reddit-automation'
+      preLoaderRoute: typeof AuthenticatedAdminRedditAutomationRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/reddit': {
       id: '/_authenticated/admin/reddit'
       path: '/reddit'
@@ -879,6 +927,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/ai-log'
       preLoaderRoute: typeof AuthenticatedAdminAiLogRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/api/public/hooks/reddit-comment-job': {
+      id: '/api/public/hooks/reddit-comment-job'
+      path: '/api/public/hooks/reddit-comment-job'
+      fullPath: '/api/public/hooks/reddit-comment-job'
+      preLoaderRoute: typeof ApiPublicHooksRedditCommentJobRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/reddit-comment-callback': {
+      id: '/api/public/hooks/reddit-comment-callback'
+      path: '/api/public/hooks/reddit-comment-callback'
+      fullPath: '/api/public/hooks/reddit-comment-callback'
+      preLoaderRoute: typeof ApiPublicHooksRedditCommentCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/process-pending': {
       id: '/api/public/hooks/process-pending'
@@ -977,6 +1039,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
   AuthenticatedAdminPostsRoute: typeof AuthenticatedAdminPostsRouteWithChildren
   AuthenticatedAdminRedditRoute: typeof AuthenticatedAdminRedditRouteWithChildren
+  AuthenticatedAdminRedditAutomationRoute: typeof AuthenticatedAdminRedditAutomationRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminSubmissionsRoute: typeof AuthenticatedAdminSubmissionsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -992,6 +1055,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
   AuthenticatedAdminPostsRoute: AuthenticatedAdminPostsRouteWithChildren,
   AuthenticatedAdminRedditRoute: AuthenticatedAdminRedditRouteWithChildren,
+  AuthenticatedAdminRedditAutomationRoute:
+    AuthenticatedAdminRedditAutomationRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminSubmissionsRoute: AuthenticatedAdminSubmissionsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -1051,6 +1116,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksBackfillCommentsRoute: ApiPublicHooksBackfillCommentsRoute,
   ApiPublicHooksManualJsonlImportRoute: ApiPublicHooksManualJsonlImportRoute,
   ApiPublicHooksProcessPendingRoute: ApiPublicHooksProcessPendingRoute,
+  ApiPublicHooksRedditCommentCallbackRoute:
+    ApiPublicHooksRedditCommentCallbackRoute,
+  ApiPublicHooksRedditCommentJobRoute: ApiPublicHooksRedditCommentJobRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
