@@ -322,13 +322,46 @@ const AUTOMATION_KEYS = [
   { key: "automation_auto_publish", label: "Auto-publish drafts that pass moderation", type: "bool", default: false },
 ] as const;
 
+function nextCronFire(): Date {
+  // Cron runs at minute 0 of every 6th UTC hour: 00, 06, 12, 18.
+  const now = new Date();
+  const next = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),
+    Math.floor(now.getUTCHours() / 6) * 6 + 6, 0, 0, 0,
+  ));
+  return next;
+}
+
+function formatCountdown(target: Date, now: Date): string {
+  const ms = target.getTime() - now.getTime();
+  if (ms <= 0) return "any moment";
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
 function AutomationPanel() {
+  const runNow = useServerFn(runRedditAutomationNow);
   const q = useQuery({
     queryKey: ["automation-settings"],
     queryFn: async () => (await supabase.from("site_settings").select("*").like("key", "automation_%")).data ?? [],
   });
   const [vals, setVals] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [runBusy, setRunBusy] = useState(false);
+  const [runMsg, setRunMsg] = useState<string | null>(null);
+  const [runErr, setRunErr] = useState<string | null>(null);
+  const [now, setNow] = useState(() => new Date());
+  const nextFire = nextCronFire();
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     if (!q.data) return;
@@ -346,9 +379,33 @@ function AutomationPanel() {
 
   const enabled = vals.automation_enabled === true;
 
+  const triggerNow = async () => {
+    setRunBusy(true); setRunErr(null); setRunMsg("Running automation…");
+    try {
+      const r: any = await runNow();
+      if (r?.skipped) {
+        setRunMsg(`Skipped: ${r.reason ?? "disabled"}. Enable automation above to run.`);
+      } else {
+        const parts: string[] = [];
+        if (typeof r?.imported === "number") parts.push(`imported ${r.imported}`);
+        if (typeof r?.generated === "number") parts.push(`generated ${r.generated}`);
+        if (typeof r?.published === "number") parts.push(`published ${r.published}`);
+        if (typeof r?.filler_images === "number") parts.push(`${r.filler_images} filler images`);
+        if (typeof r?.skipped_existing === "number") parts.push(`${r.skipped_existing} already known`);
+        if (r?.errors?.length) parts.push(`${r.errors.length} errors`);
+        setRunMsg(`Done — ${parts.join(", ") || "no changes"}.`);
+      }
+    } catch (e) {
+      setRunErr((e as Error).message);
+      setRunMsg(null);
+    } finally {
+      setRunBusy(false);
+    }
+  };
+
   return (
     <div className="rounded-lg border bg-white p-5">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <h2 className="font-display text-lg font-bold text-primary">Scheduled automation</h2>
           <p className="text-sm text-muted-foreground">Every 6 hours: import newest posts from your watched subreddits, optionally draft articles, generate hero images, and publish.</p>
@@ -357,6 +414,26 @@ function AutomationPanel() {
           {enabled ? "ON" : "OFF"}
         </span>
       </div>
+      <div className="mb-4 flex flex-col gap-3 rounded-md border bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-sm">
+          <div className="font-semibold text-primary">
+            Next scheduled run in {formatCountdown(nextFire, now)}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {nextFire.toLocaleString()} (runs at 00:00, 06:00, 12:00, 18:00 UTC)
+          </div>
+          {runMsg && <div className="mt-1 text-xs text-muted-foreground">{runMsg}</div>}
+          {runErr && <div className="mt-1 text-xs text-[color:var(--breaking)]">{runErr}</div>}
+        </div>
+        <button
+          onClick={triggerNow}
+          disabled={runBusy}
+          className="h-10 shrink-0 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {runBusy ? "Running…" : "Run automation now"}
+        </button>
+      </div>
+
       <div className="space-y-3">
         {AUTOMATION_KEYS.map((k) => {
           const v = vals[k.key] ?? k.default;
