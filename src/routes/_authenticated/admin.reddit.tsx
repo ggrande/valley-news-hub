@@ -314,13 +314,12 @@ function AutomationPanel() {
   const [vals, setVals] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState<string | null>(null);
 
-  // Hydrate once data lands.
-  if (q.data && Object.keys(vals).length === 0 && q.data.length > 0) {
+  useEffect(() => {
+    if (!q.data) return;
     const map: Record<string, any> = {};
     for (const r of q.data as any[]) map[r.key] = r.value;
-    // Use setTimeout to avoid setState in render warning.
-    queueMicrotask(() => setVals(map));
-  }
+    setVals(map);
+  }, [q.data]);
 
   const save = async (key: string, value: any) => {
     setVals((v) => ({ ...v, [key]: value }));
