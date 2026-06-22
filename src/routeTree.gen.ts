@@ -19,6 +19,7 @@ import { Route as ShowsRouteImport } from './routes/shows'
 import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
 import { Route as PublicFileRouteImport } from './routes/public-file'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as NewsSitemapDotxmlRouteImport } from './routes/news-sitemap[.]xml'
 import { Route as CorrectionsPolicyRouteImport } from './routes/corrections-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -101,6 +102,11 @@ const PublicFileRoute = PublicFileRouteImport.update({
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsSitemapDotxmlRoute = NewsSitemapDotxmlRouteImport.update({
+  id: '/news-sitemap.xml',
+  path: '/news-sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CorrectionsPolicyRoute = CorrectionsPolicyRouteImport.update({
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
   '/rss.xml': typeof RssDotxmlRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
   '/rss.xml': typeof RssDotxmlRoute
@@ -380,6 +388,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
   '/rss.xml': typeof RssDotxmlRoute
@@ -426,6 +435,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
+    | '/news-sitemap.xml'
     | '/privacy-policy'
     | '/public-file'
     | '/rss.xml'
@@ -470,6 +480,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
+    | '/news-sitemap.xml'
     | '/privacy-policy'
     | '/public-file'
     | '/rss.xml'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
+    | '/news-sitemap.xml'
     | '/privacy-policy'
     | '/public-file'
     | '/rss.xml'
@@ -560,6 +572,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ContactRoute: typeof ContactRoute
   CorrectionsPolicyRoute: typeof CorrectionsPolicyRoute
+  NewsSitemapDotxmlRoute: typeof NewsSitemapDotxmlRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   PublicFileRoute: typeof PublicFileRoute
   RssDotxmlRoute: typeof RssDotxmlRoute
@@ -648,6 +661,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news-sitemap.xml': {
+      id: '/news-sitemap.xml'
+      path: '/news-sitemap.xml'
+      fullPath: '/news-sitemap.xml'
+      preLoaderRoute: typeof NewsSitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/corrections-policy': {
@@ -992,6 +1012,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ContactRoute: ContactRoute,
   CorrectionsPolicyRoute: CorrectionsPolicyRoute,
+  NewsSitemapDotxmlRoute: NewsSitemapDotxmlRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   PublicFileRoute: PublicFileRoute,
   RssDotxmlRoute: RssDotxmlRoute,
@@ -1012,13 +1033,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
