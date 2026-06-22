@@ -77,8 +77,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800;900&family=Source+Serif+4:wght@400;600&display=swap" },
       { rel: "alternate", type: "application/rss+xml", title: "WKNA 49 News", href: "https://wkna49.com/rss.xml" },
-      { rel: "icon", type: "image/png", href: "/logo.png" },
-      { rel: "apple-touch-icon", href: "/logo.png" },
+      { rel: "icon", type: "image/png", href: "/logo-round.png" },
+      { rel: "apple-touch-icon", href: "/logo-round.png" },
     ],
     scripts: [{
       type: "application/ld+json",
