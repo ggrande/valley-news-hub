@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { generateFillerImage } from "@/lib/filler-image.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/posts")({
   component: PostsList,
@@ -21,7 +22,7 @@ function PostsList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("posts")
-        .select("id, slug, title, status, is_breaking, published_at, updated_at, category:categories(name), author:authors(name)")
+        .select("id, slug, title, status, is_breaking, featured_image, published_at, updated_at, category:categories(name), author:authors(name)")
         .order("updated_at", { ascending: false })
         .limit(500);
       if (error) throw error;
@@ -118,6 +119,47 @@ function PostsList() {
     qc.invalidateQueries({ queryKey: ["admin-posts"] });
   };
 
+  const missingImgIdsVisible = useMemo(
+    () => rows.filter((p: any) => !p.featured_image).map((p: any) => p.id as string),
+    [rows],
+  );
+  const bulkGenImages = async () => {
+    const ids = selected.size > 0
+      ? [...selected].filter((id) => missingImgIdsVisible.includes(id))
+      : missingImgIdsVisible;
+    if (ids.length === 0) { setMsg("No posts missing a header image in current view."); return; }
+    if (!confirm(`Generate filler images for ${ids.length} post(s)? This calls the AI gateway.`)) return;
+    setBusy(true);
+    setMsg(`Generating 0/${ids.length}…`);
+    let ok = 0, fail = 0;
+    for (let i = 0; i < ids.length; i++) {
+      try {
+        await generateFillerImage({ data: { postId: ids[i] } });
+        ok++;
+      } catch (e: any) {
+        fail++;
+        console.error("filler image fail", ids[i], e);
+      }
+      setMsg(`Generating ${i + 1}/${ids.length}… (${ok} ok, ${fail} fail)`);
+    }
+    setBusy(false);
+    setMsg(`Done. ${ok} generated, ${fail} failed.`);
+    qc.invalidateQueries({ queryKey: ["admin-posts"] });
+  };
+
+  const genOne = async (id: string) => {
+    setBusy(true);
+    try {
+      await generateFillerImage({ data: { postId: id, force: true } });
+      setMsg("Generated.");
+      qc.invalidateQueries({ queryKey: ["admin-posts"] });
+    } catch (e: any) {
+      setMsg(e?.message ?? "Generation failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const allDraftsChecked = draftIdsVisible.length > 0 && draftIdsVisible.every((id) => selected.has(id));
 
   return (
@@ -165,6 +207,14 @@ function PostsList() {
           >
             Delete
           </button>
+          <button
+            disabled={busy}
+            onClick={bulkGenImages}
+            className="rounded bg-indigo-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+            title={selected.size > 0 ? "Generate filler images for selected posts missing one" : "Generate filler images for all visible posts missing one"}
+          >
+            Gen filler images ({selected.size > 0 ? [...selected].filter((id) => missingImgIdsVisible.includes(id)).length : missingImgIdsVisible.length})
+          </button>
           {selected.size > 0 && (
             <button onClick={() => setSelected(new Set())} className="text-xs text-muted-foreground hover:underline">
               Clear
@@ -191,6 +241,7 @@ function PostsList() {
               <th className="p-3">Status</th>
               <th className="p-3">Category</th>
               <th className="p-3">Author</th>
+              <th className="p-3">Image</th>
               <th className="p-3">Updated</th>
             </tr>
           </thead>
@@ -213,10 +264,17 @@ function PostsList() {
                 <td className="p-3"><span className={`rounded px-2 py-0.5 text-xs font-semibold ${p.status === "published" ? "bg-emerald-100 text-emerald-800" : p.status === "draft" ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-700"}`}>{p.status}</span></td>
                 <td className="p-3">{p.category?.name ?? "—"}</td>
                 <td className="p-3">{p.author?.name ?? "—"}</td>
+                <td className="p-3">
+                  {p.featured_image ? (
+                    <button onClick={() => genOne(p.id)} disabled={busy} className="text-xs text-muted-foreground hover:underline disabled:opacity-50" title="Regenerate">✓ regen</button>
+                  ) : (
+                    <button onClick={() => genOne(p.id)} disabled={busy} className="rounded bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-800 disabled:opacity-50">Gen</button>
+                  )}
+                </td>
                 <td className="p-3 text-xs text-muted-foreground">{new Date(p.updated_at).toLocaleDateString()}</td>
               </tr>
             ))}
-            {rows.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No posts.</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No posts.</td></tr>}
           </tbody>
         </table>
       </div>
