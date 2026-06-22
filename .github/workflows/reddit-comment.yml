@@ -1,0 +1,54 @@
+name: Post Reddit comment
+
+# Triggered by Lovable Cloud via repository_dispatch.
+# Posts a notification comment on a Reddit thread using the WKNA49 account.
+
+on:
+  repository_dispatch:
+    types: [reddit-comment, reddit-capture-session]
+  workflow_dispatch:
+    inputs:
+      notification_id:
+        description: "Notification ID (or 'session-capture' to refresh cookies)"
+        required: true
+        default: "session-capture"
+      event_type:
+        description: "reddit-comment or reddit-capture-session"
+        required: true
+        default: "reddit-capture-session"
+
+jobs:
+  post-comment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null
+          npm install playwright@1.48.0
+          npx playwright install --with-deps chromium
+
+      - name: Run Reddit comment worker
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          REDDIT_WORKER_WEBHOOK_SECRET: ${{ secrets.REDDIT_WORKER_WEBHOOK_SECRET }}
+          NOTIFICATION_ID: ${{ github.event.client_payload.notification_id || github.event.inputs.notification_id }}
+          EVENT_TYPE: ${{ github.event.action || github.event.inputs.event_type }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node .github/scripts/reddit-comment.mjs
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reddit-screenshots
+          path: /tmp/reddit-shots/
+          if-no-files-found: ignore
+          retention-days: 7
