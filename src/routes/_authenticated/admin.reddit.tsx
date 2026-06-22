@@ -394,6 +394,10 @@ function AutomationPanel() {
         if (typeof r?.skipped_existing === "number") parts.push(`${r.skipped_existing} already known`);
         if (r?.errors?.length) parts.push(`${r.errors.length} errors`);
         setRunMsg(`Done — ${parts.join(", ") || "no changes"}.`);
+        if (r?.errors?.length) {
+          console.warn("[automation] errors:", r.errors);
+          setRunErr(r.errors.slice(0, 3).join(" | "));
+        }
       }
     } catch (e) {
       setRunErr((e as Error).message);
