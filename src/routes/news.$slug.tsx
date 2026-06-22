@@ -4,6 +4,7 @@ import { Layout } from "@/components/site/Layout";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { ArticleImage } from "@/components/site/ArticleImage";
 import { SupportButton } from "@/components/site/SupportButton";
+import { ShareBar } from "@/components/site/ShareBar";
 import { formatDate } from "@/lib/news-data";
 import { dbPostToArticle, fetchCommentsForPost, fetchPostBySlug, fetchPublishedPosts, fetchSetting } from "@/lib/posts-queries";
 
