@@ -48,6 +48,7 @@ import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authentic
 import { Route as ApiPublicHooksProcessPendingRouteImport } from './routes/api/public/hooks/process-pending'
 import { Route as AuthenticatedAdminRedditIdRouteImport } from './routes/_authenticated/admin.reddit.$id'
 import { Route as AuthenticatedAdminPostsIdRouteImport } from './routes/_authenticated/admin.posts.$id'
+import { Route as AuthenticatedAdminImportBatchIdRouteImport } from './routes/_authenticated/admin.import.$batchId'
 
 const WeatherRoute = WeatherRouteImport.update({
   id: '/weather',
@@ -253,6 +254,12 @@ const AuthenticatedAdminPostsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminPostsRoute,
   } as any)
+const AuthenticatedAdminImportBatchIdRoute =
+  AuthenticatedAdminImportBatchIdRouteImport.update({
+    id: '/$batchId',
+    path: '/$batchId',
+    getParentRoute: () => AuthenticatedAdminImportRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -283,13 +290,14 @@ export interface FileRoutesByFullPath {
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/comments': typeof AuthenticatedAdminCommentsRoute
-  '/admin/import': typeof AuthenticatedAdminImportRoute
+  '/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
@@ -322,13 +330,14 @@ export interface FileRoutesByTo {
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/comments': typeof AuthenticatedAdminCommentsRoute
-  '/admin/import': typeof AuthenticatedAdminImportRoute
+  '/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
@@ -364,13 +373,14 @@ export interface FileRoutesById {
   '/_authenticated/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/comments': typeof AuthenticatedAdminCommentsRoute
-  '/_authenticated/admin/import': typeof AuthenticatedAdminImportRoute
+  '/_authenticated/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
   '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
   '/_authenticated/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/_authenticated/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/_authenticated/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/_authenticated/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
@@ -413,6 +423,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/submissions'
     | '/admin/'
+    | '/admin/import/$batchId'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
     | '/api/public/hooks/process-pending'
@@ -452,6 +463,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/submissions'
     | '/admin'
+    | '/admin/import/$batchId'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
     | '/api/public/hooks/process-pending'
@@ -493,6 +505,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/submissions'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/import/$batchId'
     | '/_authenticated/admin/posts/$id'
     | '/_authenticated/admin/reddit/$id'
     | '/api/public/hooks/process-pending'
@@ -799,8 +812,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPostsIdRouteImport
       parentRoute: typeof AuthenticatedAdminPostsRoute
     }
+    '/_authenticated/admin/import/$batchId': {
+      id: '/_authenticated/admin/import/$batchId'
+      path: '/$batchId'
+      fullPath: '/admin/import/$batchId'
+      preLoaderRoute: typeof AuthenticatedAdminImportBatchIdRouteImport
+      parentRoute: typeof AuthenticatedAdminImportRoute
+    }
   }
 }
+
+interface AuthenticatedAdminImportRouteChildren {
+  AuthenticatedAdminImportBatchIdRoute: typeof AuthenticatedAdminImportBatchIdRoute
+}
+
+const AuthenticatedAdminImportRouteChildren: AuthenticatedAdminImportRouteChildren =
+  {
+    AuthenticatedAdminImportBatchIdRoute: AuthenticatedAdminImportBatchIdRoute,
+  }
+
+const AuthenticatedAdminImportRouteWithChildren =
+  AuthenticatedAdminImportRoute._addFileChildren(
+    AuthenticatedAdminImportRouteChildren,
+  )
 
 interface AuthenticatedAdminPostsRouteChildren {
   AuthenticatedAdminPostsIdRoute: typeof AuthenticatedAdminPostsIdRoute
@@ -835,7 +869,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAuthorsRoute: typeof AuthenticatedAdminAuthorsRoute
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
   AuthenticatedAdminCommentsRoute: typeof AuthenticatedAdminCommentsRoute
-  AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRoute
+  AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRouteWithChildren
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
   AuthenticatedAdminPostsRoute: typeof AuthenticatedAdminPostsRouteWithChildren
   AuthenticatedAdminRedditRoute: typeof AuthenticatedAdminRedditRouteWithChildren
@@ -849,7 +883,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAuthorsRoute: AuthenticatedAdminAuthorsRoute,
   AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
   AuthenticatedAdminCommentsRoute: AuthenticatedAdminCommentsRoute,
-  AuthenticatedAdminImportRoute: AuthenticatedAdminImportRoute,
+  AuthenticatedAdminImportRoute: AuthenticatedAdminImportRouteWithChildren,
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
   AuthenticatedAdminPostsRoute: AuthenticatedAdminPostsRouteWithChildren,
   AuthenticatedAdminRedditRoute: AuthenticatedAdminRedditRouteWithChildren,

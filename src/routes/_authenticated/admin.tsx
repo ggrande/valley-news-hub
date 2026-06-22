@@ -11,6 +11,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const NAV = [
   { to: "/admin", label: "Dashboard", exact: true },
   { to: "/admin/posts", label: "Posts" },
+  { to: "/admin/import", label: "Archive Import" },
   { to: "/admin/reddit", label: "Reddit Intake" },
   { to: "/admin/comments", label: "Comments" },
   { to: "/admin/categories", label: "Categories" },
