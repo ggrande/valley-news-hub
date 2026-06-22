@@ -243,6 +243,7 @@ function PostsList() {
               <th className="p-3">Author</th>
               <th className="p-3">Image</th>
               <th className="p-3">Updated</th>
+            </tr>
           </thead>
           <tbody>
             {rows.map((p: any) => (
@@ -263,10 +264,17 @@ function PostsList() {
                 <td className="p-3"><span className={`rounded px-2 py-0.5 text-xs font-semibold ${p.status === "published" ? "bg-emerald-100 text-emerald-800" : p.status === "draft" ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-700"}`}>{p.status}</span></td>
                 <td className="p-3">{p.category?.name ?? "—"}</td>
                 <td className="p-3">{p.author?.name ?? "—"}</td>
+                <td className="p-3">
+                  {p.featured_image ? (
+                    <button onClick={() => genOne(p.id)} disabled={busy} className="text-xs text-muted-foreground hover:underline disabled:opacity-50" title="Regenerate">✓ regen</button>
+                  ) : (
+                    <button onClick={() => genOne(p.id)} disabled={busy} className="rounded bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-800 disabled:opacity-50">Gen</button>
+                  )}
+                </td>
                 <td className="p-3 text-xs text-muted-foreground">{new Date(p.updated_at).toLocaleDateString()}</td>
               </tr>
             ))}
-            {rows.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No posts.</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No posts.</td></tr>}
           </tbody>
         </table>
       </div>
