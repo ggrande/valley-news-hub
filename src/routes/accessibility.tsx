@@ -22,7 +22,7 @@ function Page() {
         <h2 className="mt-8 font-display text-2xl font-bold text-primary">Closed Captioning</h2>
         <p className="mt-3">WKNA-TV 49 provides closed captioning on our newscasts. If you experience a captioning issue, please contact us using the information below so we can address it promptly.</p>
         <h2 className="mt-8 font-display text-2xl font-bold text-primary">Reporting accessibility issues</h2>
-        <p className="mt-3">If you encounter an accessibility barrier on WKNA49.com or on-air, contact <a className="text-[color:var(--broadcast)] underline" href="mailto:news@wkna49.com">news@wkna49.com</a> or call 304-555-0149. Please include the page URL or program details so we can investigate.</p>
+        <p className="mt-3">If you encounter an accessibility barrier on WKNA49.com or on-air, contact <a className="text-[color:var(--broadcast)] underline" href="mailto:news@wkna49.com">news@wkna49.com</a>. Please include the page URL or program details so we can investigate.</p>
       </article>
     </Layout>
   );
