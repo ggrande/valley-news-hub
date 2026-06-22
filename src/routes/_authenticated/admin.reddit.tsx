@@ -184,6 +184,10 @@ function RedditIntake() {
         <p className="text-sm text-muted-foreground">Pull source material from Reddit posts to draft a local-news article. Source material is admin-only and never appears on the public site.</p>
       </div>
 
+      <AutomationPanel />
+
+
+
       <div className="rounded-lg border bg-white p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
