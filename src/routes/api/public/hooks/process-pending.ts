@@ -109,6 +109,12 @@ async function fetchPostComments(postId: string): Promise<any[]> {
         created_utc: ts,
         depth: 0,
       });
+    }
+    if (batch.length < 100 || !isFinite(oldest)) break;
+    before = Math.floor(oldest) - 1;
+    await sleep(250);
+  }
+  return out;
 }
 
 const MEDIA_EXT_RE = /\.(jpe?g|png|gif|webp)(?:\?.*)?$/i;
@@ -181,12 +187,6 @@ async function downloadAndUploadMedia(
     await sleep(150);
   }
   return paths;
-}
-    if (batch.length < 100 || !isFinite(oldest)) break;
-    before = Math.floor(oldest) - 1;
-    await sleep(250);
-  }
-  return out;
 }
 
 export const Route = createFileRoute("/api/public/hooks/process-pending")({
