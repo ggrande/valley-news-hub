@@ -40,6 +40,7 @@ export function dbPostToArticle(p: DbPost): Article {
     summary: p.dek ?? "",
     body: (p.body ?? "").split(/\n\n+/).filter(Boolean),
     imageHue: hueFor(p.slug),
+    image: p.featured_image ?? null,
   };
 }
 

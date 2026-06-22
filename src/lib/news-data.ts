@@ -7,6 +7,7 @@ export type Article = {
   summary: string;
   body: string[];
   imageHue: number; // for placeholder
+  image?: string | null; // real hero/featured image when available
 };
 
 export const articles: Article[] = [

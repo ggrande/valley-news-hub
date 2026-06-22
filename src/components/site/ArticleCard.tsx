@@ -3,6 +3,22 @@ import type { Article } from "@/lib/news-data";
 import { formatDate } from "@/lib/news-data";
 import { ArticleImage } from "./ArticleImage";
 
+function Thumb({ a, className }: { a: Article; className: string }) {
+  if (a.image) {
+    return (
+      <div className={"relative overflow-hidden bg-muted " + className}>
+        <img
+          src={a.image}
+          alt={a.title}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+        />
+      </div>
+    );
+  }
+  return <ArticleImage hue={a.imageHue} label={a.title} className={className} />;
+}
+
 export function ArticleCard({ a, variant = "default" }: { a: Article; variant?: "default" | "compact" | "hero" }) {
   if (variant === "hero") {
     return (
@@ -11,7 +27,7 @@ export function ArticleCard({ a, variant = "default" }: { a: Article; variant?: 
         params={{ slug: a.slug }}
         className="group grid gap-6 lg:grid-cols-[1.4fr_1fr]"
       >
-        <ArticleImage hue={a.imageHue} label={a.title} className="aspect-[16/10] rounded-lg" />
+        <Thumb a={a} className="aspect-[16/10] rounded-lg" />
         <div className="flex flex-col justify-center">
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-[color:var(--breaking)]">
             {a.category}
@@ -34,7 +50,7 @@ export function ArticleCard({ a, variant = "default" }: { a: Article; variant?: 
         params={{ slug: a.slug }}
         className="group flex gap-3 border-b py-3 last:border-0"
       >
-        <ArticleImage hue={a.imageHue} label={a.title} className="aspect-square h-20 w-20 shrink-0 rounded" />
+        <Thumb a={a} className="aspect-square h-20 w-20 shrink-0 rounded" />
         <div className="min-w-0">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--broadcast)]">
             {a.category}
@@ -52,7 +68,7 @@ export function ArticleCard({ a, variant = "default" }: { a: Article; variant?: 
       params={{ slug: a.slug }}
       className="group flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
     >
-      <ArticleImage hue={a.imageHue} label={a.title} className="aspect-[16/10]" />
+      <Thumb a={a} className="aspect-[16/10]" />
       <div className="flex flex-1 flex-col p-4">
         <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--breaking)]">
           {a.category}
