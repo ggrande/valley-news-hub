@@ -7,9 +7,6 @@ You turn raw community discussions into polished, factual local-news-style web a
 Voice: direct, declarative, AP-style. NEVER use Reddit slang. NEVER mention Reddit, subreddits, upvotes, or commenters as "redditors". Treat the source material as community discussion or reader correspondence.
 Attribute uncertain claims carefully. Avoid unsupported accusations or naming private individuals.
 Sound like a real local newsroom. No AI-style language.`;
-Voice: direct, declarative, AP-style. NEVER use Reddit slang. NEVER mention Reddit, subreddits, upvotes, or commenters as "redditors". Treat the source material as community discussion or reader correspondence.
-Attribute uncertain claims carefully. Avoid unsupported accusations or naming private individuals.
-Sound like a real local newsroom. No AI-style language.`;
 
 const BLOCKLIST = [
   /\bkill\s+(?:myself|yourself|himself|herself)\b/i,
