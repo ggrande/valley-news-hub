@@ -24,7 +24,7 @@ function TipPage() {
           intro={
             <>
               The WKNA 49 newsroom reviews every tip. For time-sensitive tips, you can also email{" "}
-              <a className="text-[color:var(--broadcast)] underline" href="mailto:tips@wkna49.com">tips@wkna49.com</a> or call <a className="text-[color:var(--broadcast)] underline" href="tel:+13045550149">304-555-0149</a>.
+              <a className="text-[color:var(--broadcast)] underline" href="mailto:tips@wkna49.com">tips@wkna49.com</a>.
             </>
           }
           successTitle="Thanks — we received your tip."
