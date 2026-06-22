@@ -349,6 +349,10 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
           if (!posts.length) continue;
           const ids = posts.map((p) => p.id);
           const titles = posts.map((p) => (p.title ?? "").trim()).filter(Boolean);
+          // Pull live upvote counts for every candidate up front so the
+          // min-score filter and the stored score reflect Reddit reality, not
+          // an archived-at-creation snapshot.
+          const liveScores = await fetchLiveScoresByIds(ids);
           const [{ data: existingById }, { data: existingByTitle }] = await Promise.all([
             admin.from("reddit_imports").select("reddit_post_id").in("reddit_post_id", ids),
             titles.length
@@ -360,14 +364,17 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
           const nowSec = Math.floor(Date.now() / 1000);
           for (const p of posts) {
             if (knownIds.has(p.id)) { summary.skipped_existing++; continue; }
-            // Wait at least 6 hours after creation so subreddit moderators
+            // Wait at least 3 hours after creation so subreddit moderators
             // have time to remove rule-breaking content before we import it.
             if (typeof p.created_utc === "number" && nowSec - p.created_utc < MODERATION_HOLD_SEC) continue;
             const body = (p.selftext ?? "").trim().toLowerCase();
             const title = (p.title ?? "").trim().toLowerCase();
             if (body === "[removed]" || body === "[deleted]" || title === "[removed]" || title === "[deleted]") continue;
             if (knownTitles.has(title)) { summary.skipped_existing++; continue; }
-            if ((p.score ?? 0) < minScore) { summary.skipped_low_score++; continue; }
+            // Prefer live score; fall back to archived score only when Reddit JSON failed.
+            const liveScore = liveScores.get(p.id);
+            const effectiveScore = typeof liveScore === "number" ? liveScore : (p.score ?? 0);
+            if (effectiveScore < minScore) { summary.skipped_low_score++; continue; }
             // Fetch comments for richer source material (Arctic Shift, by link_id).
             let comments: any[] = [];
             try {
