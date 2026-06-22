@@ -16,6 +16,7 @@ import { Route as SubmitNewsTipRouteImport } from './routes/submit-news-tip'
 import { Route as SportsRouteImport } from './routes/sports'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShowsRouteImport } from './routes/shows'
+import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
 import { Route as PublicFileRouteImport } from './routes/public-file'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as NewsRouteImport } from './routes/news'
@@ -78,6 +79,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ShowsRoute = ShowsRouteImport.update({
   id: '/shows',
   path: '/shows',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RssDotxmlRoute = RssDotxmlRouteImport.update({
+  id: '/rss.xml',
+  path: '/rss.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicFileRoute = PublicFileRouteImport.update({
@@ -241,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/news': typeof NewsRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/shows': typeof ShowsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sports': typeof SportsRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/news': typeof NewsRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/shows': typeof ShowsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sports': typeof SportsRoute
@@ -314,6 +322,7 @@ export interface FileRoutesById {
   '/news': typeof NewsRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/shows': typeof ShowsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sports': typeof SportsRoute
@@ -352,6 +361,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/privacy-policy'
     | '/public-file'
+    | '/rss.xml'
     | '/shows'
     | '/sitemap.xml'
     | '/sports'
@@ -388,6 +398,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/privacy-policy'
     | '/public-file'
+    | '/rss.xml'
     | '/shows'
     | '/sitemap.xml'
     | '/sports'
@@ -424,6 +435,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/privacy-policy'
     | '/public-file'
+    | '/rss.xml'
     | '/shows'
     | '/sitemap.xml'
     | '/sports'
@@ -462,6 +474,7 @@ export interface RootRouteChildren {
   NewsRoute: typeof NewsRouteWithChildren
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   PublicFileRoute: typeof PublicFileRoute
+  RssDotxmlRoute: typeof RssDotxmlRoute
   ShowsRoute: typeof ShowsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SportsRoute: typeof SportsRoute
@@ -520,6 +533,13 @@ declare module '@tanstack/react-router' {
       path: '/shows'
       fullPath: '/shows'
       preLoaderRoute: typeof ShowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rss.xml': {
+      id: '/rss.xml'
+      path: '/rss.xml'
+      fullPath: '/rss.xml'
+      preLoaderRoute: typeof RssDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/public-file': {
@@ -815,6 +835,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewsRoute: NewsRouteWithChildren,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   PublicFileRoute: PublicFileRoute,
+  RssDotxmlRoute: RssDotxmlRoute,
   ShowsRoute: ShowsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SportsRoute: SportsRoute,
