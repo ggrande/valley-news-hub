@@ -22,9 +22,13 @@ async function loadSettings(admin: any): Promise<SettingsMap> {
 
 interface RedditChild { kind: string; data: any }
 
-async function fetchSubredditListing(sub: string, limit: number): Promise<any[]> {
-  const url = `https://www.reddit.com/r/${encodeURIComponent(sub)}/new.json?limit=${limit}&raw_json=1`;
-  const res = await fetch(url, { headers: { "User-Agent": "WKNA49NewsBot/1.0 (intake)" } });
+async function fetchSubredditListing(sub: string, limit: number, sort: string, topWindow: string): Promise<any[]> {
+  const validSort = ["new", "hot", "top", "rising", "best"].includes(sort) ? sort : "new";
+  const sortPath = validSort === "best" ? "" : validSort; // /r/x/.json defaults to hot; use explicit sort otherwise
+  const base = `https://www.reddit.com/r/${encodeURIComponent(sub)}/${sortPath}.json`;
+  const params = new URLSearchParams({ limit: String(limit), raw_json: "1" });
+  if (validSort === "top") params.set("t", ["hour","day","week","month","year","all"].includes(topWindow) ? topWindow : "day");
+  const res = await fetch(`${base}?${params.toString()}`, { headers: { "User-Agent": "WKNA49NewsBot/1.0 (intake)" } });
   if (!res.ok) return [];
   const data = await res.json();
   const children: RedditChild[] = data?.data?.children ?? [];
@@ -79,34 +83,43 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
         const subsRaw = String(settings.automation_subreddits ?? "WestVirginia,Charleston");
         const subs = subsRaw.split(/[,\s]+/).map((s) => s.replace(/^r\//i, "").trim()).filter(Boolean);
         const perSub = Math.max(1, Math.min(50, Number(settings.automation_posts_per_sub ?? 10)));
+        const sortBy = String(settings.automation_sort_by ?? "new");
+        const topWindow = String(settings.automation_top_window ?? "day");
+        const minScore = Math.max(0, Number(settings.automation_min_score ?? 0));
         const autoGenerate = settings.automation_auto_generate === true;
         const autoFillerImage = settings.automation_auto_filler_image === true;
         const autoPublish = settings.automation_auto_publish === true;
         const generateLimit = Math.max(1, Math.min(50, Number(settings.automation_generate_limit ?? 20)));
 
-        const summary: any = { imported: 0, skipped_existing: 0, generated: 0, published: 0, filler_images: 0, errors: [] as string[] };
+        const summary: any = { imported: 0, skipped_existing: 0, skipped_low_score: 0, generated: 0, published: 0, filler_images: 0, errors: [] as string[] };
 
         // 1. Auto-import recent posts from configured subreddits
         for (const sub of subs) {
           let posts: any[] = [];
           try {
-            posts = await fetchSubredditListing(sub, perSub);
+            posts = await fetchSubredditListing(sub, perSub, sortBy, topWindow);
           } catch (err: any) {
             summary.errors.push(`listing r/${sub}: ${err?.message ?? err}`);
             continue;
           }
           if (!posts.length) continue;
           const ids = posts.map((p) => p.id);
-          const { data: existing } = await admin
-            .from("reddit_imports")
-            .select("reddit_post_id")
-            .in("reddit_post_id", ids);
-          const known = new Set((existing ?? []).map((r: any) => r.reddit_post_id));
+          const titles = posts.map((p) => (p.title ?? "").trim()).filter(Boolean);
+          const [{ data: existingById }, { data: existingByTitle }] = await Promise.all([
+            admin.from("reddit_imports").select("reddit_post_id").in("reddit_post_id", ids),
+            titles.length
+              ? admin.from("reddit_imports").select("original_title").in("original_title", titles)
+              : Promise.resolve({ data: [] as any[] }),
+          ]);
+          const knownIds = new Set((existingById ?? []).map((r: any) => r.reddit_post_id));
+          const knownTitles = new Set((existingByTitle ?? []).map((r: any) => (r.original_title ?? "").trim().toLowerCase()));
           for (const p of posts) {
-            if (known.has(p.id)) { summary.skipped_existing++; continue; }
+            if (knownIds.has(p.id)) { summary.skipped_existing++; continue; }
             const body = (p.selftext ?? "").trim().toLowerCase();
             const title = (p.title ?? "").trim().toLowerCase();
             if (body === "[removed]" || body === "[deleted]" || title === "[removed]" || title === "[deleted]") continue;
+            if (knownTitles.has(title)) { summary.skipped_existing++; continue; }
+            if ((p.score ?? 0) < minScore) { summary.skipped_low_score++; continue; }
             // Fetch comments for richer source material.
             let comments: any[] = [];
             try {

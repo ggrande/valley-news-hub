@@ -299,7 +299,23 @@ function RedditIntake() {
 const AUTOMATION_KEYS = [
   { key: "automation_enabled", label: "Enable automation (runs every 6 hours)", type: "bool", default: false },
   { key: "automation_subreddits", label: "Subreddits to monitor (comma-separated, e.g. WestVirginia, Charleston)", type: "text", default: "WestVirginia, Charleston" },
-  { key: "automation_posts_per_sub", label: "Newest posts to pull per subreddit", type: "number", default: 10 },
+  { key: "automation_posts_per_sub", label: "Posts to pull per subreddit per run", type: "number", default: 10 },
+  { key: "automation_sort_by", label: "Prioritize which posts to pull", type: "select", default: "new", options: [
+    { value: "new", label: "Newest first" },
+    { value: "hot", label: "Hot (trending now)" },
+    { value: "top", label: "Top (most upvoted)" },
+    { value: "rising", label: "Rising (gaining momentum)" },
+    { value: "best", label: "Best (Reddit's blended ranking)" },
+  ] },
+  { key: "automation_top_window", label: "Time window (only used for Top)", type: "select", default: "day", options: [
+    { value: "hour", label: "Past hour" },
+    { value: "day", label: "Past 24 hours" },
+    { value: "week", label: "Past week" },
+    { value: "month", label: "Past month" },
+    { value: "year", label: "Past year" },
+    { value: "all", label: "All time" },
+  ] },
+  { key: "automation_min_score", label: "Minimum upvote score (skip below)", type: "number", default: 0 },
   { key: "automation_auto_generate", label: "Auto-generate article drafts from imports", type: "bool", default: false },
   { key: "automation_generate_limit", label: "Max drafts to generate per run", type: "number", default: 20 },
   { key: "automation_auto_filler_image", label: "Auto-generate AI hero image when none was provided (only for drafts that pass moderation)", type: "bool", default: false },
@@ -364,6 +380,20 @@ function AutomationPanel() {
                 onChange={(e) => save(k.key, Number(e.target.value))}
                 className="h-9 w-24 rounded border px-2 text-sm"
               />
+            </label>
+          );
+          if (k.type === "select") return (
+            <label key={k.key} className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold">{k.label}</span>
+              <select
+                value={String(v ?? k.default)}
+                onChange={(e) => save(k.key, e.target.value)}
+                className="h-9 rounded border px-2 text-sm"
+              >
+                {(k as any).options.map((o: any) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
             </label>
           );
           return (
