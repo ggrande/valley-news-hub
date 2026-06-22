@@ -30,6 +30,12 @@ Produce JSON with EXACTLY these fields:
 
 Respond ONLY with valid JSON.`;
 
+const DEFAULT_FILLER_PROMPT = `Photorealistic editorial news photograph for a local TV news web article.
+Headline: "{{title}}".
+Subhead: "{{dek}}".
+Category: {{category}}.
+Style: real-life documentary photojournalism, natural lighting, true-to-life colors, candid composition, shallow depth of field where appropriate, looks like it was captured by a working news photographer with a DSLR. NOT an illustration, NOT a cartoon, NOT a painting, NOT stylized, NOT a render. No text, no logos, no watermarks, no captions, no on-screen graphics. 16:9 framing suitable as a hero image.`;
+
 const KEYS = [
   { key: "allow_public_comments", label: "Allow public comment submission", type: "bool", default: false },
   { key: "show_imported_discussion", label: "Show imported discussion comments on articles", type: "bool", default: true },
@@ -37,6 +43,7 @@ const KEYS = [
   { key: "ai_target_length", label: "Default AI article length", type: "text", default: "500-800 words" },
   { key: "ai_system_prompt", label: "AI system prompt (voice & rules)", type: "textarea", default: DEFAULT_SYSTEM_PROMPT, rows: 10 },
   { key: "ai_user_prompt_template", label: "AI user prompt template — supports {{flairHint}} {{title}} {{body}} {{comments}} {{commentsUsed}} {{commentsTotal}}", type: "textarea", default: DEFAULT_USER_TEMPLATE, rows: 16 },
+  { key: "filler_image_prompt_template", label: "Filler image prompt — supports {{title}} {{dek}} {{category}}", type: "textarea", default: DEFAULT_FILLER_PROMPT, rows: 10 },
 ];
 
 function Settings() {
