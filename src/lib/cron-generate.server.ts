@@ -19,7 +19,7 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
-async function callAi(prompt: string) {
+async function callAi(systemPrompt: string, prompt: string) {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -28,7 +28,7 @@ async function callAi(prompt: string) {
     body: JSON.stringify({
       model: "google/gemini-3-flash-preview",
       messages: [
-        { role: "system", content: SYSTEM },
+        { role: "system", content: systemPrompt },
         { role: "user", content: prompt },
       ],
       response_format: { type: "json_object" },
@@ -38,6 +38,14 @@ async function callAi(prompt: string) {
   const j = await res.json();
   const raw = j?.choices?.[0]?.message?.content ?? "{}";
   try { return JSON.parse(raw); } catch { return { body: raw }; }
+}
+
+async function getSetting(admin: SupabaseClient, key: string): Promise<string | null> {
+  const { data } = await admin.from("site_settings").select("value").eq("key", key).maybeSingle();
+  const v = (data as any)?.value;
+  if (typeof v === "string") return v;
+  if (v && typeof v === "object" && typeof v.value === "string") return v.value;
+  return null;
 }
 
 export async function generateOne(admin: SupabaseClient, importId: string) {
@@ -53,25 +61,19 @@ export async function generateOne(admin: SupabaseClient, importId: string) {
     ? `Category hint (from source tagging): "${imp.link_flair_text}". Use it when reasonable.`
     : "Pick the best fit category as a short noun phrase.";
 
-  const prompt = `${flairHint}
+  const systemPrompt = (await getSetting(admin, "ai_system_prompt")) || DEFAULT_SYSTEM;
+  const userTemplate = (await getSetting(admin, "ai_user_prompt_template")) || DEFAULT_USER_TEMPLATE;
 
-Source title: ${imp.original_title ?? ""}
-Source body:
-${imp.original_body ?? "(no body text)"}
-
-Community discussion (${usedComments.length} of ${comments.length} used):
-${commentText || "(none)"}
-
-Produce JSON with EXACTLY these fields:
-{ "headline": "...", "seo_title": "...", "seo_description": "max 160 chars", "dek": "subhead",
-  "category": "short noun phrase", "tags": ["..."], "body": "multi-paragraph plain text with \\n\\n",
-  "hero_caption": "short caption", "verification_notes": "admin-only", "comment_summary": "admin-only",
-  "risk_flags": ["minors","self-harm","doxxing","legal accusations","medical advice"] }
-
-Respond ONLY with valid JSON.`;
+  const prompt = userTemplate
+    .replace(/\{\{flairHint\}\}/g, flairHint)
+    .replace(/\{\{title\}\}/g, imp.original_title ?? "")
+    .replace(/\{\{body\}\}/g, imp.original_body ?? "(no body text)")
+    .replace(/\{\{commentsUsed\}\}/g, String(usedComments.length))
+    .replace(/\{\{commentsTotal\}\}/g, String(comments.length))
+    .replace(/\{\{comments\}\}/g, commentText || "(none)");
 
   let generated: any;
-  try { generated = await callAi(prompt); }
+  try { generated = await callAi(systemPrompt, prompt); }
   catch (err: any) {
     await admin.from("reddit_imports").update({ processing_error: String(err?.message ?? err) }).eq("id", imp.id);
     throw err;
