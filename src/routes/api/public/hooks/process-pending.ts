@@ -25,7 +25,7 @@ async function loadSettings(admin: any): Promise<SettingsMap> {
 // return 403 from worker/edge environments).
 const ARCTIC_BASE = "https://arctic-shift.photon-reddit.com/api";
 const UA = "WKNA49NewsBot/1.0 (intake; +https://wkna49.com)";
-const SIX_HOURS_SEC = 6 * 60 * 60;
+const MODERATION_HOLD_SEC = 3 * 60 * 60;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
