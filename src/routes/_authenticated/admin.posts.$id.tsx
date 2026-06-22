@@ -65,7 +65,19 @@ function PostEditor() {
       verification_notes: form.verification_notes || null,
       updated_at: new Date().toISOString(),
     };
-    if (publish && !form.published_at) payload.published_at = new Date().toISOString();
+    if (publish && !form.published_at) {
+      // Back-date to the originating Reddit post date when available.
+      let backDate: string | null = null;
+      if (!isNew) {
+        const { data: p } = await supabase
+          .from("posts")
+          .select("reddit_imports:reddit_imports(original_created_at)")
+          .eq("id", id!)
+          .maybeSingle();
+        backDate = (p as any)?.reddit_imports?.original_created_at ?? null;
+      }
+      payload.published_at = backDate ?? new Date().toISOString();
+    }
 
     let result;
     if (isNew) {
