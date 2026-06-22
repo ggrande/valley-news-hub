@@ -194,6 +194,13 @@ export const setRedditSessionCookies = createServerFn({ method: "POST" })
 
     type C = { name: string; value: string; domain?: string; path?: string; expires?: number; httpOnly?: boolean; secure?: boolean; sameSite?: "Strict" | "Lax" | "None" };
     let cookies: C[] = [];
+    const normalizeSameSite = (value: unknown): "Strict" | "Lax" | "None" | undefined => {
+      const v = String(value ?? "").toLowerCase();
+      if (v === "strict") return "Strict";
+      if (v === "none" || v === "no_restriction") return "None";
+      if (v === "lax") return "Lax";
+      return undefined;
+    };
 
     if (raw.startsWith("[") || raw.startsWith("{")) {
       let parsed: any;
@@ -207,7 +214,7 @@ export const setRedditSessionCookies = createServerFn({ method: "POST" })
         expires: typeof c.expires === "number" ? c.expires : (typeof c.expirationDate === "number" ? Math.floor(c.expirationDate) : undefined),
         httpOnly: Boolean(c.httpOnly),
         secure: c.secure !== false,
-        sameSite: (["Strict","Lax","None"].includes(c.sameSite) ? c.sameSite : "Lax") as "Strict" | "Lax" | "None",
+        sameSite: normalizeSameSite(c.sameSite),
       })).filter((c: C) => c.name && c.value);
     } else {
       const stripped = raw.replace(/^cookie:\s*/i, "");
@@ -219,8 +226,11 @@ export const setRedditSessionCookies = createServerFn({ method: "POST" })
     }
 
     if (!cookies.length) throw new Error("No valid cookies found in input");
-    const hasSession = cookies.some((c) => /reddit_session|token_v2|session_tracker|edgebucket|loid/i.test(c.name));
-    if (!hasSession) throw new Error(`Cookies don't look like a Reddit session (found: ${cookies.map(c=>c.name).slice(0,10).join(", ")})`);
+    const authCookies = cookies.filter((c) => /(^|[_-])(reddit_session|token_v2)$/i.test(c.name) || /^(reddit_session|token_v2)$/i.test(c.name));
+    if (!authCookies.length) throw new Error(`Cookies are missing Reddit's login cookie. Export cookies from a logged-in reddit.com tab; found: ${cookies.map(c=>c.name).slice(0,10).join(", ")}`);
+    const now = Math.floor(Date.now() / 1000);
+    const expiredAuth = authCookies.every((c) => typeof c.expires === "number" && c.expires > 0 && c.expires <= now);
+    if (expiredAuth) throw new Error("Reddit login cookies are already expired. Log in again, then export cookies immediately.");
 
     const enc = encryptString(JSON.stringify(cookies));
     const { error } = await supabaseAdmin
