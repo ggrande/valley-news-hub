@@ -142,7 +142,7 @@ export async function generateOne(admin: SupabaseClient, importId: string) {
       title: generated.headline ?? imp.original_title ?? "Untitled",
       dek: generated.dek ?? null,
       body: (generated.body ?? "").toString(),
-      status: "draft",
+      status: /reject/i.test(catName) ? "archived" : "draft",
       source_type: "reddit_import",
       source_url: imp.permalink,
       source_subreddit: imp.subreddit,
