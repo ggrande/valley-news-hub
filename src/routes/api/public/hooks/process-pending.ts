@@ -44,49 +44,114 @@ async function arcticFetch(path: string, params: Record<string, string>): Promis
   return Array.isArray(data) ? data : [];
 }
 
+// Reddit's RSS/Atom feed for /new is served from www.reddit.com and, unlike
+// the JSON endpoints, returns 200 from edge/worker environments. We parse it
+// to get the newest post IDs in near-real-time, then enrich each entry with
+// Arctic Shift (for selftext, score, media metadata, etc.). Arctic Shift's
+// archive lags Reddit by hours/days, so RSS-first is essential for catching
+// today's threads.
+async function fetchRedditRssIds(sub: string, limit: number): Promise<{ ids: string[]; error?: string }> {
+  try {
+    const url = `https://www.reddit.com/r/${encodeURIComponent(sub)}/new.rss?limit=${Math.min(100, limit)}`;
+    const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/atom+xml,application/xml" } });
+    if (!res.ok) return { ids: [], error: `RSS HTTP ${res.status}` };
+    const xml = await res.text();
+    const ids: string[] = [];
+    // Atom <id>t3_XXXXX</id> entries identify each post.
+    const re = /<id>\s*t3_([a-z0-9]+)\s*<\/id>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(xml)) !== null) {
+      const id = m[1];
+      if (!ids.includes(id)) ids.push(id);
+      if (ids.length >= limit) break;
+    }
+    return { ids };
+  } catch (err: any) {
+    return { ids: [], error: err?.message ?? String(err) };
+  }
+}
+
+async function fetchPostsByIds(ids: string[]): Promise<any[]> {
+  if (!ids.length) return [];
+  // Arctic Shift accepts comma-separated ids on /posts/ids
+  const out: any[] = [];
+  // Batch in chunks of 50 to keep URLs small.
+  for (let i = 0; i < ids.length; i += 50) {
+    const slice = ids.slice(i, i + 50);
+    try {
+      const batch = await arcticFetch("/posts/ids", { ids: slice.join(",") });
+      for (const p of batch) out.push(p);
+    } catch { /* skip this batch */ }
+    await sleep(200);
+  }
+  return out;
+}
+
 async function fetchSubredditListing(
   sub: string,
   limit: number,
   _sort: string,
   _topWindow: string,
 ): Promise<{ posts: any[]; error?: string }> {
-  try {
-    const out: any[] = [];
-    const seen = new Set<string>();
-    let before: number | null = null;
-    // Cap pages defensively so a misbehaving feed cannot loop forever.
-    for (let page = 0; page < 5 && out.length < limit; page++) {
-      // sort=desc + sort_type=created_utc ensures the FIRST page is the most
-      // recent posts. Without this, Arctic Shift defaults to ascending order
-      // (oldest first), which made the automation re-scan the oldest 100
-      // posts on every run and never reach today's threads.
-      const params: Record<string, string> = {
-        subreddit: sub,
-        limit: "100",
-        sort: "desc",
-        sort_type: "created_utc",
-      };
-      if (before != null) params.before = String(before);
-      const batch = await arcticFetch("/posts/search", params);
-      if (!batch.length) break;
-      let oldest = Infinity;
-      for (const p of batch) {
-        const ts = typeof p?.created_utc === "number" ? p.created_utc : null;
-        if (ts != null && ts < oldest) oldest = ts;
-        const key = p?.id ?? p?.name;
-        if (!key || seen.has(key)) continue;
-        seen.add(key);
-        out.push(p);
+  // Strategy: RSS for freshness, Arctic Shift archive for backfill. Merge,
+  // de-dup, sort newest-first. RSS gives us today's posts; Arctic Shift
+  // covers older posts within the requested limit.
+  const errors: string[] = [];
+  const seen = new Set<string>();
+  const out: any[] = [];
+
+  // 1. RSS-driven recent posts (newest first)
+  const rss = await fetchRedditRssIds(sub, Math.min(limit, 100));
+  if (rss.error) errors.push(`rss: ${rss.error}`);
+  if (rss.ids.length) {
+    const enriched = await fetchPostsByIds(rss.ids);
+    const byId = new Map(enriched.map((p) => [p.id, p]));
+    for (const id of rss.ids) {
+      const p = byId.get(id);
+      if (!p) {
+        // Arctic Shift hasn't indexed this post yet — stub a minimal record
+        // so the next run can still re-attempt with proper metadata.
+        // We skip these for now; they'll be picked up once archived.
+        continue;
       }
-      if (batch.length < 100 || !isFinite(oldest)) break;
-      before = Math.floor(oldest) - 1;
-      await sleep(250);
+      if (seen.has(p.id)) continue;
+      seen.add(p.id);
+      out.push(p);
     }
-    return { posts: out.slice(0, limit) };
-  } catch (err: any) {
-    return { posts: [], error: err?.message ?? String(err) };
   }
+
+  // 2. Arctic Shift archive backfill (only if we still need more)
+  if (out.length < limit) {
+    try {
+      let before: number | null = null;
+      for (let page = 0; page < 5 && out.length < limit; page++) {
+        const params: Record<string, string> = {
+          subreddit: sub, limit: "100", sort: "desc", sort_type: "created_utc",
+        };
+        if (before != null) params.before = String(before);
+        const batch = await arcticFetch("/posts/search", params);
+        if (!batch.length) break;
+        let oldest = Infinity;
+        for (const p of batch) {
+          const ts = typeof p?.created_utc === "number" ? p.created_utc : null;
+          if (ts != null && ts < oldest) oldest = ts;
+          const key = p?.id;
+          if (!key || seen.has(key)) continue;
+          seen.add(key);
+          out.push(p);
+        }
+        if (batch.length < 100 || !isFinite(oldest)) break;
+        before = Math.floor(oldest) - 1;
+        await sleep(250);
+      }
+    } catch (err: any) {
+      errors.push(`arctic: ${err?.message ?? err}`);
+    }
+  }
+
+  return { posts: out.slice(0, limit), error: errors.length ? errors.join("; ") : undefined };
 }
+
 
 async function fetchPostComments(postId: string): Promise<any[]> {
   const out: any[] = [];
