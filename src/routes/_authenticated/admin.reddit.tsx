@@ -129,6 +129,7 @@ function RedditIntake() {
     e.preventDefault();
     setBusy(true); setErr(null);
     try {
+      const heroUrl = await uploadHero();
       const { data, error } = await supabase.functions.invoke("reddit-fetch", { body: { url } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -141,9 +142,11 @@ function RedditIntake() {
         original_author_display: data.post.author,
         original_created_at: data.post.created_utc ? new Date(data.post.created_utc * 1000).toISOString() : null,
         source_score: data.post.score,
+        candidate_hero_image_url: heroUrl,
         import_status: "parsed",
       }, data.comments ?? []);
       setUrl("");
+      setHeroFile(null);
     } catch (e) {
       setErr((e as Error).message + " — try manual paste mode.");
     } finally { setBusy(false); }
@@ -153,6 +156,7 @@ function RedditIntake() {
     e.preventDefault();
     setBusy(true); setErr(null);
     try {
+      const heroUrl = await uploadHero();
       const parsed = manual.comments.split(/\n+/).filter(Boolean).map((line, i) => {
         const m = line.match(/^([^:]+):\s*(.*)$/);
         return { id: `m${i}`, author: m?.[1]?.trim() ?? "redditor", body: m?.[2]?.trim() ?? line.trim(), depth: 0 };
@@ -164,9 +168,11 @@ function RedditIntake() {
         original_body: manual.body,
         raw_comment_text: manual.comments,
         parsed_comments: parsed,
+        candidate_hero_image_url: heroUrl,
         import_status: "parsed",
       }, parsed);
       setManual({ url: "", subreddit: "", title: "", body: "", comments: "" });
+      setHeroFile(null);
     } catch (e) { setErr((e as Error).message); }
     finally { setBusy(false); }
   };
