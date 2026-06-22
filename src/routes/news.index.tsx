@@ -4,7 +4,7 @@ import { Layout, PageHeader } from "@/components/site/Layout";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { dbPostToArticle, fetchPublishedPosts } from "@/lib/posts-queries";
 
-export const Route = createFileRoute("/news")({
+export const Route = createFileRoute("/news/")({
   head: () => ({
     meta: [
       { title: "Local News — WKNA 49 News" },
