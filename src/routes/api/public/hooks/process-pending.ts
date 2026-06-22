@@ -26,7 +26,7 @@ async function loadSettings(admin: any): Promise<SettingsMap> {
 const ARCTIC_BASE = "https://arctic-shift.photon-reddit.com/api";
 const UA = "WKNA49NewsBot/1.0 (intake; +https://wkna49.com)";
 const SIX_HOURS_SEC = 6 * 60 * 60;
-const TWENTY_FOUR_HOURS_SEC = 24 * 60 * 60;
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function arcticFetch(path: string, params: Record<string, string>): Promise<any[]> {
