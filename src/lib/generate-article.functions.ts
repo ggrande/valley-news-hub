@@ -214,5 +214,15 @@ export const publishPost = createServerFn({ method: "POST" })
       .update({ status: "published" })
       .eq("id", data.postId);
     if (error) throw error;
-    return { ok: true };
+
+    // Fire-and-forget Reddit notification enqueue (never block publish on it).
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { enqueueRedditNotification } = await import("@/lib/reddit-enqueue.server");
+      const result = await enqueueRedditNotification(supabaseAdmin, data.postId);
+      return { ok: true, redditNotification: result };
+    } catch (err: any) {
+      console.warn("Reddit notification enqueue failed:", err?.message ?? err);
+      return { ok: true, redditNotification: { enqueued: false, reason: String(err?.message ?? err) } };
+    }
   });

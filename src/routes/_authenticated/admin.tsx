@@ -12,6 +12,7 @@ const NAV = [
   { to: "/admin", label: "Dashboard", exact: true },
   { to: "/admin/posts", label: "Posts" },
   { to: "/admin/reddit", label: "Reddit Intake" },
+  { to: "/admin/reddit-automation", label: "Reddit Automation" },
   { to: "/admin/comments", label: "Comments" },
   { to: "/admin/categories", label: "Categories" },
   { to: "/admin/authors", label: "Authors" },
