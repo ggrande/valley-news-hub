@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/site/Layout";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { ArticleImage } from "@/components/site/ArticleImage";
+import { SupportButton } from "@/components/site/SupportButton";
 import { formatDate } from "@/lib/news-data";
 import { dbPostToArticle, fetchCommentsForPost, fetchPostBySlug, fetchPublishedPosts, fetchSetting } from "@/lib/posts-queries";
 
