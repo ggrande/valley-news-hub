@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Layout, PageHeader } from "@/components/site/Layout";
 import { FormBlock } from "@/components/site/Form";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -53,10 +53,6 @@ function ContactPage() {
               <p className="mt-3 flex items-start gap-2 text-sm">
                 <MapPin className="mt-0.5 size-4 text-[color:var(--broadcast)]" />
                 Charleston, West Virginia
-              </p>
-              <p className="mt-2 flex items-center gap-2 text-sm">
-                <Phone className="size-4 text-[color:var(--broadcast)]" />
-                <a href="tel:+13045550149" className="hover:underline">304-555-0149</a>
               </p>
             </div>
             <div className="rounded-lg border bg-card p-5">

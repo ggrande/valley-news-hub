@@ -24,7 +24,7 @@ function TipPage() {
           intro={
             <>
               The WKNA 49 newsroom reviews every tip. For time-sensitive tips, you can also email{" "}
-              <a className="text-[color:var(--broadcast)] underline" href="mailto:tips@wkna49.com">tips@wkna49.com</a> or call <a className="text-[color:var(--broadcast)] underline" href="tel:+13045550149">304-555-0149</a>.
+              <a className="text-[color:var(--broadcast)] underline" href="mailto:tips@wkna49.com">tips@wkna49.com</a>.
             </>
           }
           successTitle="Thanks — we received your tip."
@@ -32,7 +32,7 @@ function TipPage() {
           submitLabel="Send News Tip"
           onSubmitValues={async (v) => {
             const { error } = await supabase.from("news_tips").insert({
-              name: v.name, email: v.email, phone: v.phone, location: v.location,
+              name: v.name, email: v.email, location: v.location,
               category: v.topic, summary: v.details.slice(0, 200), details: v.details,
             });
             if (error) throw error;
@@ -40,7 +40,6 @@ function TipPage() {
           fields={[
             { name: "name", label: "Your Name" },
             { name: "email", label: "Email", type: "email" },
-            { name: "phone", label: "Phone", type: "tel" },
             { name: "location", label: "Location / Neighborhood" },
             { name: "topic", label: "Topic", type: "select", options: ["Local News", "Traffic", "Weather", "Community", "Sports", "Investigative", "Other"] },
             { name: "details", label: "Tip Details", type: "textarea", required: true, placeholder: "What's happening and how did you hear about it?" },

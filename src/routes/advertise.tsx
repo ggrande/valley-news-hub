@@ -40,7 +40,7 @@ function Advertise() {
             <div className="mt-8 rounded-lg border bg-[color:var(--ivory)] p-5">
               <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--broadcast)]">Direct line</p>
               <p className="mt-1 font-display text-xl font-bold text-primary">advertising@wkna49.com</p>
-              <p className="text-sm text-muted-foreground">304-555-0149 (ask for Sales)</p>
+              <p className="text-sm text-muted-foreground">Email our Sales team for rates and availability.</p>
             </div>
           </div>
           <FormBlock
@@ -49,7 +49,7 @@ function Advertise() {
             successTitle="Thanks — we'll be in touch."
             onSubmitValues={async (v) => {
               const { error } = await supabase.from("ad_inquiries").insert({
-                contact_name: v.name, company: v.company, email: v.email, phone: v.phone,
+                contact_name: v.name, company: v.company, email: v.email,
                 budget_range: v.budget, details: v.message,
               });
               if (error) throw error;
@@ -58,7 +58,6 @@ function Advertise() {
               { name: "name", label: "Your Name", required: true },
               { name: "company", label: "Company", required: true },
               { name: "email", label: "Email", type: "email", required: true },
-              { name: "phone", label: "Phone", type: "tel" },
               { name: "budget", label: "Estimated Budget", type: "select", options: ["Under $1,000", "$1,000–$5,000", "$5,000–$25,000", "$25,000+"] },
               { name: "message", label: "Tell us about your goals", type: "textarea", required: true },
             ]}

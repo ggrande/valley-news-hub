@@ -48,8 +48,6 @@ export function Footer() {
           <address className="mt-4 text-sm not-italic text-white/70">
             Charleston, West Virginia
             <br />
-            Main line: <a href="tel:+13045550149" className="hover:text-white">304-555-0149</a>
-            <br />
             Newsroom: <a href="mailto:news@wkna49.com" className="hover:text-white">news@wkna49.com</a>
           </address>
         </div>
