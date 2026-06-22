@@ -108,7 +108,9 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
         for (const sub of subs) {
           let posts: any[] = [];
           try {
-            posts = await fetchSubredditListing(sub, perSub, sortBy, topWindow);
+            const result = await fetchSubredditListing(sub, perSub, sortBy, topWindow);
+            posts = result.posts;
+            if (result.error) summary.errors.push(`listing r/${sub}: ${result.error}`);
           } catch (err: any) {
             summary.errors.push(`listing r/${sub}: ${err?.message ?? err}`);
             continue;
