@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getBatch } from "@/lib/import-archive.functions";
 import { drainBatch, generateArticleFromImport, publishPost } from "@/lib/generate-article.functions";
@@ -19,6 +19,8 @@ function BatchPage() {
   const [data, setData] = useState<any>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
+  const [queueRunning, setQueueRunning] = useState(false);
+  const queueAbort = useRef(false);
 
   async function refresh() {
     try { setData(await get({ data: { id: batchId } })); }
@@ -34,10 +36,41 @@ function BatchPage() {
   }
 
   async function onDrain() {
-    setBusy("drain"); setMsg("Generating 5 articles...");
-    try { const r: any = await drain({ data: { batchId, limit: 5 } }); setMsg(`Processed ${r.processed} items.`); await refresh(); }
-    catch (err: any) { setMsg(`Error: ${err.message}`); }
+    setBusy("drain"); setMsg("Generating 10 articles (most recent first)...");
+    try {
+      const r: any = await drain({ data: { batchId, limit: 10 } });
+      setMsg(`Processed ${r.processed}${r.discarded ? `, auto-discarded ${r.discarded} removed/deleted` : ""}. ${r.remaining} pending.`);
+      await refresh();
+    } catch (err: any) { setMsg(`Error: ${err.message}`); }
     finally { setBusy(null); }
+  }
+
+  async function onQueueAll() {
+    if (queueRunning) {
+      queueAbort.current = true;
+      setMsg("Stopping queue after current batch...");
+      return;
+    }
+    queueAbort.current = false;
+    setQueueRunning(true);
+    let totalProcessed = 0;
+    let totalDiscarded = 0;
+    try {
+      while (!queueAbort.current) {
+        const r: any = await drain({ data: { batchId, limit: 10 } });
+        totalProcessed += r.processed;
+        totalDiscarded += r.discarded ?? 0;
+        setMsg(`Queue: ${totalProcessed} processed, ${totalDiscarded} discarded, ${r.remaining} pending...`);
+        await refresh();
+        if (r.processed === 0 || r.remaining === 0) break;
+      }
+      setMsg(`Queue done. ${totalProcessed} generated, ${totalDiscarded} discarded.`);
+    } catch (err: any) {
+      setMsg(`Queue error: ${err.message}`);
+    } finally {
+      setQueueRunning(false);
+      queueAbort.current = false;
+    }
   }
 
   async function onPublish(postId: string) {
@@ -61,13 +94,22 @@ function BatchPage() {
             {batch.total_posts} threads · {batch.total_comments} comments · {batch.total_media} media · {batch.status}
           </p>
         </div>
-        <button
-          onClick={onDrain}
-          disabled={!!busy || pendingCount === 0}
-          className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-        >
-          {busy === "drain" ? "Working..." : `Generate 5 more (${pendingCount} pending)`}
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button
+            onClick={onDrain}
+            disabled={!!busy || queueRunning || pendingCount === 0}
+            className="h-10 rounded-md border border-primary px-4 text-sm font-semibold text-primary disabled:opacity-50"
+          >
+            {busy === "drain" ? "Working..." : `Generate next 10 (${pendingCount} pending)`}
+          </button>
+          <button
+            onClick={onQueueAll}
+            disabled={!!busy && !queueRunning}
+            className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          >
+            {queueRunning ? "Stop queue" : `Generate all (${pendingCount})`}
+          </button>
+        </div>
       </div>
       {msg && <p className="mt-2 text-xs text-muted-foreground">{msg}</p>}
 
