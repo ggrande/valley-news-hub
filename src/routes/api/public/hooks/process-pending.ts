@@ -6,7 +6,8 @@ import { createClient } from "@supabase/supabase-js";
 //   2. (optional) generate AI article drafts for pending intakes
 //   3. (optional) generate a photorealistic filler hero image when missing
 //   4. (optional) auto-publish drafts that passed moderation
-// Authenticated via Supabase anon `apikey` header (which pg_cron sends).
+// Authenticated via a private `x-cron-secret` header that matches the
+// CRON_SECRET secret (never exposed to the client bundle).
 
 type SettingsMap = Record<string, any>;
 
@@ -67,8 +68,9 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apikey = request.headers.get("apikey");
-        if (!apikey || apikey !== process.env.SUPABASE_PUBLISHABLE_KEY) {
+        const provided = request.headers.get("x-cron-secret");
+        const expected = process.env.CRON_SECRET;
+        if (!expected || !provided || provided !== expected) {
           return new Response("Forbidden", { status: 403 });
         }
 

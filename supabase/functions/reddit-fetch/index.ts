@@ -1,8 +1,14 @@
-// Public Reddit JSON fetch. No auth required (admin gate is enforced in the app).
+// Admin-only Reddit JSON fetch. Requires a valid Supabase JWT belonging to
+// a user with the `admin` role; the public anon key alone is rejected.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 function normalizeUrl(input: string): string | null {
   try {
@@ -45,25 +51,49 @@ function flatten(node: any, parent: string | null, depth: number, out: Comment[]
   }
 }
 
+function jsonErr(message: string, status: number) {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { ...cors, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
+    // 1) Require a real Supabase user JWT (anon key alone is rejected).
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.toLowerCase().startsWith("bearer ")) {
+      return jsonErr("Unauthorized", 401);
+    }
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData?.user) return jsonErr("Unauthorized", 401);
+
+    // 2) Require admin role (server-side, via has_role RPC).
+    const { data: isAdmin, error: roleErr } = await userClient.rpc("has_role", {
+      _user_id: userData.user.id,
+      _role: "admin",
+    });
+    if (roleErr || isAdmin !== true) return jsonErr("Forbidden", 403);
+
     const { url } = await req.json();
-    if (!url) return new Response(JSON.stringify({ error: "url required" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+    if (!url) return jsonErr("url required", 400);
     const target = normalizeUrl(url);
-    if (!target) return new Response(JSON.stringify({ error: "Not a valid Reddit URL" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+    if (!target) return jsonErr("Not a valid Reddit URL", 400);
 
     const res = await fetch(target, {
       headers: { "User-Agent": "WKNA49NewsBot/1.0 (intake)" },
     });
-    if (!res.ok) {
-      return new Response(JSON.stringify({ error: `Reddit returned ${res.status}. Try manual paste.` }), { status: 502, headers: { ...cors, "Content-Type": "application/json" } });
-    }
+    if (!res.ok) return jsonErr(`Reddit returned ${res.status}. Try manual paste.`, 502);
+
     const data = await res.json();
     const postData = data?.[0]?.data?.children?.[0]?.data;
-    if (!postData) {
-      return new Response(JSON.stringify({ error: "Could not parse Reddit response. Try manual paste." }), { status: 502, headers: { ...cors, "Content-Type": "application/json" } });
-    }
+    if (!postData) return jsonErr("Could not parse Reddit response. Try manual paste.", 502);
+
     const comments: Comment[] = [];
     const children = data?.[1]?.data?.children ?? [];
     for (const c of children) flatten(c, null, 0, comments);
@@ -85,6 +115,6 @@ Deno.serve(async (req) => {
       { headers: { ...cors, "Content-Type": "application/json" } },
     );
   } catch (e) {
-    return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
+    return jsonErr((e as Error).message, 500);
   }
 });
