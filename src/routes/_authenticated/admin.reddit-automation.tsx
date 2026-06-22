@@ -263,7 +263,13 @@ function Page() {
                       <span>{n.posts?.title ?? "—"}</span>
                     )}
                   </td>
-                  <td className="py-2 pr-3 text-xs">{n.subreddit ? `r/${n.subreddit}` : "—"}</td>
+                  <td className="py-2 pr-3 text-xs">
+                    {n.reddit_thread_url ? (
+                      <a href={n.reddit_thread_url} target="_blank" rel="noreferrer" className="font-medium hover:underline">{n.subreddit ? `r/${n.subreddit}` : "—"}</a>
+                    ) : (
+                      n.subreddit ? `r/${n.subreddit}` : "—"
+                    )}
+                  </td>
                   <td className="py-2 pr-3"><StatusPill status={n.status} mode={n.mode_at_enqueue} /></td>
                   <td className="py-2 pr-3 text-xs">{n.attempt_count}</td>
                   <td className="py-2 pr-3">
