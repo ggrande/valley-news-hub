@@ -36,9 +36,15 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
-async function callAi(systemPrompt: string, prompt: string) {
+async function callAi(systemPrompt: string, userText: string, imageDataUrl: string | null) {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+  const userContent: any = imageDataUrl
+    ? [
+        { type: "text", text: userText },
+        { type: "image_url", image_url: { url: imageDataUrl } },
+      ]
+    : userText;
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
@@ -46,7 +52,7 @@ async function callAi(systemPrompt: string, prompt: string) {
       model: "google/gemini-3-flash-preview",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: prompt },
+        { role: "user", content: userContent },
       ],
       response_format: { type: "json_object" },
     }),
@@ -65,6 +71,48 @@ async function getSetting(admin: SupabaseClient, key: string): Promise<string | 
   return null;
 }
 
+async function loadCandidateImageDataUrl(
+  admin: SupabaseClient,
+  imp: any,
+): Promise<{ dataUrl: string | null; storagePath: string | null; mediaUrl: string | null }> {
+  // Prefer the explicit candidate field; fall back to the first archive media file.
+  const candidate: string | null = imp.candidate_hero_image_url ?? null;
+  const firstMedia = (imp.media_paths as string[] | null)?.[0] ?? null;
+  let storagePath: string | null = null;
+  let mediaUrl: string | null = null;
+
+  if (candidate) {
+    // candidate is stored as `/api/media?p=<path>`; extract the storage path.
+    try {
+      const u = new URL(candidate, "http://x");
+      storagePath = u.searchParams.get("p");
+    } catch {
+      storagePath = null;
+    }
+    mediaUrl = candidate;
+  } else if (firstMedia) {
+    storagePath = firstMedia;
+    mediaUrl = `/api/media?p=${encodeURIComponent(firstMedia)}`;
+  }
+
+  if (!storagePath) return { dataUrl: null, storagePath: null, mediaUrl: null };
+
+  try {
+    const { data, error } = await admin.storage.from("news-media").download(storagePath);
+    if (error || !data) return { dataUrl: null, storagePath, mediaUrl };
+    const buf = new Uint8Array(await data.arrayBuffer());
+    if (buf.length > 6 * 1024 * 1024) return { dataUrl: null, storagePath, mediaUrl }; // skip huge files
+    const mime = (data as any).type || "image/jpeg";
+    // base64 encode
+    let bin = "";
+    for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+    const b64 = btoa(bin);
+    return { dataUrl: `data:${mime};base64,${b64}`, storagePath, mediaUrl };
+  } catch {
+    return { dataUrl: null, storagePath, mediaUrl };
+  }
+}
+
 export async function generateOne(admin: SupabaseClient, importId: string) {
   const { data: imp, error } = await admin.from("reddit_imports").select("*").eq("id", importId).single();
   if (error || !imp) throw new Error("Import not found");
@@ -81,6 +129,8 @@ export async function generateOne(admin: SupabaseClient, importId: string) {
   const systemPrompt = (await getSetting(admin, "ai_system_prompt")) || DEFAULT_SYSTEM;
   const userTemplate = (await getSetting(admin, "ai_user_prompt_template")) || DEFAULT_USER_TEMPLATE;
 
+  const { dataUrl: imageDataUrl, mediaUrl: candidateMediaUrl } = await loadCandidateImageDataUrl(admin, imp);
+
   const prompt = userTemplate
     .replace(/\{\{flairHint\}\}/g, flairHint)
     .replace(/\{\{title\}\}/g, imp.original_title ?? "")
@@ -88,10 +138,11 @@ export async function generateOne(admin: SupabaseClient, importId: string) {
     .replace(/\{\{author\}\}/g, imp.original_author_display ?? "unknown")
     .replace(/\{\{commentsUsed\}\}/g, String(usedComments.length))
     .replace(/\{\{commentsTotal\}\}/g, String(comments.length))
-    .replace(/\{\{comments\}\}/g, commentText || "(none)");
+    .replace(/\{\{comments\}\}/g, commentText || "(none)")
+    .replace(/\{\{hasImage\}\}/g, imageDataUrl ? "yes" : "no");
 
   let generated: any;
-  try { generated = await callAi(systemPrompt, prompt); }
+  try { generated = await callAi(systemPrompt, prompt, imageDataUrl); }
   catch (err: any) {
     await admin.from("reddit_imports").update({ processing_error: String(err?.message ?? err) }).eq("id", imp.id);
     throw err;
@@ -123,8 +174,10 @@ export async function generateOne(admin: SupabaseClient, importId: string) {
     if (n > 25) { slug = `${baseSlug}-${imp.reddit_post_id?.slice(0, 6) ?? Date.now()}`; break; }
   }
 
-  const firstMedia = (imp.media_paths as string[] | null)?.[0] ?? null;
-  const featuredImage = firstMedia ? `/api/media?p=${encodeURIComponent(firstMedia)}` : null;
+  // Hero image decision from AI
+  const heroDecision = String(generated.hero_image_use ?? "").toLowerCase().trim();
+  const heroApproved = candidateMediaUrl && /^approved(_with_crop)?$/.test(heroDecision);
+  const featuredImage = heroApproved ? candidateMediaUrl : null;
 
   const fullText = `${generated.headline ?? ""}\n${generated.body ?? ""}`;
   const detReasons = BLOCKLIST.filter((re) => re.test(fullText)).map((re) => ({ source: "deterministic", reason: re.source }));
@@ -153,10 +206,15 @@ export async function generateOne(admin: SupabaseClient, importId: string) {
       original_flair: imp.link_flair_text,
       category_id: categoryId,
       featured_image: featuredImage,
-      hero_caption: generated.hero_caption ?? null,
+      og_image: featuredImage,
+      candidate_hero_image_url: candidateMediaUrl,
+      hero_image_decision: heroDecision || null,
+      hero_image_reason: generated.hero_image_reason ?? null,
+      hero_image_alt: generated.hero_image_alt ?? null,
+      hero_crop_hint: generated.hero_crop_hint ?? null,
+      hero_caption: heroApproved ? (generated.hero_caption ?? null) : null,
       seo_title: generated.seo_title ?? null,
       seo_description: generated.seo_description ?? null,
-      og_image: featuredImage,
       verification_notes: generated.verification_notes ?? null,
       editor_notes: generated.comment_summary ?? null,
       published_at: imp.original_created_at,
