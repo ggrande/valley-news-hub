@@ -219,17 +219,43 @@ function RedditIntake() {
       <div className="rounded-lg border bg-white">
         <h2 className="border-b p-4 font-display text-lg font-bold text-primary">Recent intakes</h2>
         <table className="w-full text-sm">
-          <thead className="bg-[color:var(--ivory)] text-left text-xs uppercase tracking-wide text-muted-foreground"><tr><th className="p-3">Title</th><th className="p-3">Subreddit</th><th className="p-3">Status</th><th className="p-3">Created</th></tr></thead>
+          <thead className="bg-[color:var(--ivory)] text-left text-xs uppercase tracking-wide text-muted-foreground"><tr><th className="p-3">Title</th><th className="p-3">Subreddit</th><th className="p-3">Status</th><th className="p-3">Created</th><th className="p-3">Action</th></tr></thead>
           <tbody>
-            {list.data?.map((r: any) => (
-              <tr key={r.id} className="border-t">
-                <td className="p-3"><Link to="/admin/reddit/$id" params={{ id: r.id }} className="font-semibold text-primary hover:underline">{r.original_title ?? "(untitled)"}</Link></td>
-                <td className="p-3 text-muted-foreground">r/{r.subreddit ?? "—"}</td>
-                <td className="p-3"><span className="rounded bg-slate-100 px-2 py-0.5 text-xs">{r.import_status}</span></td>
-                <td className="p-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
-              </tr>
-            ))}
-            {list.data?.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No intakes yet.</td></tr>}
+            {list.data?.map((r: any) => {
+              const orphan = r.import_status === "generated" && r.generated_post_id && !liveSet.has(r.generated_post_id);
+              const canRegen = r.import_status === "discarded" || r.import_status === "error" || orphan;
+              return (
+                <tr key={r.id} className="border-t">
+                  <td className="p-3"><Link to="/admin/reddit/$id" params={{ id: r.id }} className="font-semibold text-primary hover:underline">{r.original_title ?? "(untitled)"}</Link></td>
+                  <td className="p-3 text-muted-foreground">r/{r.subreddit ?? "—"}</td>
+                  <td className="p-3">
+                    <span className="rounded bg-slate-100 px-2 py-0.5 text-xs">{orphan ? "post deleted" : r.import_status}</span>
+                  </td>
+                  <td className="p-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
+                  <td className="p-3">
+                    {canRegen && (
+                      <button
+                        disabled={regenBusy === r.id}
+                        onClick={async () => {
+                          setRegenBusy(r.id);
+                          setErr(null);
+                          try {
+                            await regenerate({ data: { importId: r.id } });
+                            await refreshQueue();
+                            await livePosts.refetch();
+                          } catch (e) { setErr((e as Error).message); }
+                          finally { setRegenBusy(null); }
+                        }}
+                        className="rounded border border-primary px-2 py-1 text-xs font-semibold text-primary disabled:opacity-50"
+                      >
+                        {regenBusy === r.id ? "Regenerating…" : "Regenerate"}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {list.data?.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No intakes yet.</td></tr>}
           </tbody>
         </table>
       </div>
