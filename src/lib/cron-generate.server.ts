@@ -85,6 +85,7 @@ export async function generateOne(admin: SupabaseClient, importId: string) {
     .replace(/\{\{flairHint\}\}/g, flairHint)
     .replace(/\{\{title\}\}/g, imp.original_title ?? "")
     .replace(/\{\{body\}\}/g, imp.original_body ?? "(no body text)")
+    .replace(/\{\{author\}\}/g, imp.original_author_display ?? "unknown")
     .replace(/\{\{commentsUsed\}\}/g, String(usedComments.length))
     .replace(/\{\{commentsTotal\}\}/g, String(comments.length))
     .replace(/\{\{comments\}\}/g, commentText || "(none)");
