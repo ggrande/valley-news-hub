@@ -1,9 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/site/Layout";
 import { WeatherCard } from "@/components/site/WeatherCard";
 import { forecast as fallbackForecast } from "@/lib/news-data";
 import { useWeather } from "@/lib/use-weather";
-import { AlertTriangle, Droplets, Radar, School, Waves, ShieldCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { AlertTriangle, Droplets, Radar, School, Waves, ShieldCheck, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/weather")({
   head: () => ({
@@ -73,8 +75,7 @@ function WeatherPage() {
               <p className="mt-2 text-xs text-muted-foreground">Source: WKNA 49 Weather Center</p>
             </Panel>
             <Panel icon={<School className="size-4" />} title="School Closings & Delays">
-              <p className="text-sm text-muted-foreground">No closings or delays reported.</p>
-              <p className="mt-2 text-xs text-muted-foreground">Updated continuously during severe weather.</p>
+              <ClosingsSummary />
             </Panel>
             <Panel icon={<Waves className="size-4" />} title="River Levels">
               <ul className="space-y-1 text-sm">
@@ -104,5 +105,32 @@ function Panel({ icon, title, children, tone }: { icon: React.ReactNode; title: 
       </h3>
       <div className="mt-3 text-sm">{children}</div>
     </div>
+  );
+}
+
+function ClosingsSummary() {
+  const q = useQuery({
+    queryKey: ["closings-summary"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("closings" as never).select("id,status");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; status: string }[];
+    },
+    refetchInterval: 60_000,
+  });
+  const count = q.data?.length ?? 0;
+  return (
+    <>
+      {count === 0 ? (
+        <p className="text-sm text-muted-foreground">No closings or delays reported.</p>
+      ) : (
+        <p className="text-sm">
+          <span className="font-bold text-[color:var(--breaking)]">{count}</span> active {count === 1 ? "closing or delay" : "closings and delays"} across the Kanawha Valley.
+        </p>
+      )}
+      <Link to="/weather/closings" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[color:var(--broadcast)] hover:underline">
+        View full WV closings tracker <ChevronRight className="size-3" />
+      </Link>
+    </>
   );
 }
