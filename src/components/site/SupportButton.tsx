@@ -90,7 +90,7 @@ function SupportDialogBody() {
         >
           <span className="flex items-center gap-2 font-semibold">
             <Coffee className="size-5" />
-            Buy us a coffee
+            Fuel our journalism
           </span>
           <ExternalLink className="size-4 opacity-70" />
         </a>
