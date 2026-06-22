@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
+import { SupportButton } from "./SupportButton";
 
 const COLS: { title: string; links: { to: string; label: string }[] }[] = [
   {
