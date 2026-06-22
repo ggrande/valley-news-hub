@@ -248,7 +248,7 @@ function PostsList() {
               <th className="p-3">Category</th>
               <th className="p-3">Author</th>
               <th className="p-3">Image</th>
-              <th className="p-3">Updated</th>
+              <th className="p-3">Published</th>
             </tr>
           </thead>
           <tbody>
