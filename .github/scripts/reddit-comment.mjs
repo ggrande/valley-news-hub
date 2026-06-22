@@ -26,6 +26,7 @@ const NOTIFICATION_ID = mustEnv("NOTIFICATION_ID");
 const EVENT_TYPE = process.env.EVENT_TYPE || "reddit-comment";
 const GITHUB_RUN_ID = process.env.GITHUB_RUN_ID || "";
 const GITHUB_RUN_URL = process.env.GITHUB_RUN_URL || "";
+const REDDIT_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36";
 
 function mustEnv(name) {
   const v = process.env[name];
@@ -72,31 +73,103 @@ async function shot(page, name) {
   try { await page.screenshot({ path: `${SHOT_DIR}/${name}.png`, fullPage: false }); } catch {}
 }
 
+function normalizeSameSite(value) {
+  const v = String(value || "").toLowerCase();
+  if (v === "strict") return "Strict";
+  if (v === "none" || v === "no_restriction") return "None";
+  if (v === "lax") return "Lax";
+  return undefined;
+}
+
+function normalizeRedditCookie(cookie) {
+  if (!cookie?.name || !cookie?.value) return null;
+  const out = {
+    name: String(cookie.name),
+    value: String(cookie.value),
+    path: cookie.path || "/",
+    secure: cookie.secure !== false,
+    httpOnly: Boolean(cookie.httpOnly),
+  };
+  const expires = Number(cookie.expires ?? cookie.expirationDate);
+  if (Number.isFinite(expires) && expires > 0) out.expires = Math.floor(expires);
+  const sameSite = normalizeSameSite(cookie.sameSite);
+  if (sameSite) out.sameSite = sameSite;
+  if (out.sameSite === "None") out.secure = true;
+
+  const rawDomain = String(cookie.domain || "").replace(/^\./, "").toLowerCase();
+  if (out.name.startsWith("__Host-")) {
+    out.url = "https://www.reddit.com";
+  } else if (rawDomain.endsWith("reddit.com")) {
+    out.domain = ".reddit.com";
+  } else if (cookie.url) {
+    out.url = cookie.url;
+  } else {
+    out.domain = ".reddit.com";
+  }
+  return out;
+}
+
+async function restoreCookies(context, cookies) {
+  let restored = 0;
+  for (const raw of Array.isArray(cookies) ? cookies : []) {
+    const cookie = normalizeRedditCookie(raw);
+    if (!cookie) continue;
+    try {
+      await context.addCookies([cookie]);
+      restored += 1;
+    } catch (e) {
+      console.warn(`[cookies] skipped ${cookie.name}:`, e?.message);
+    }
+  }
+  console.log(`[cookies] restored ${restored} Reddit cookies`);
+  return restored;
+}
+
+async function getLoggedInUser(context) {
+  for (const url of ["https://www.reddit.com/api/me.json", "https://old.reddit.com/api/me.json"]) {
+    try {
+      const res = await context.request.get(url, { headers: { "User-Agent": REDDIT_UA, Accept: "application/json" } });
+      const json = await res.json().catch(() => ({}));
+      const name = json?.data?.name || json?.name || null;
+      if (name) return name;
+    } catch (e) {
+      console.warn(`[session-check] ${url} failed:`, e?.message);
+    }
+  }
+  return null;
+}
+
+async function waitForLoginForm(page) {
+  const userInput = page.locator('input[name="username"], input[name="user"]').first();
+  const passInput = page.locator('input[name="password"], input[name="passwd"], input[type="password"]').first();
+  for (let i = 0; i < 30; i += 1) {
+    if (await userInput.isVisible().catch(() => false)) return { userInput, passInput };
+    const bodyText = (await page.locator("body").innerText({ timeout: 1000 }).catch(() => "")) || "";
+    if (/blocked|captcha|robot|challenge|verify|two[-\s]?factor|too many requests/i.test(bodyText)) {
+      throw Object.assign(new Error(`Reddit did not show a login form; manual verification appears required at ${page.url()}`), { kind: "challenge_required" });
+    }
+    await page.waitForTimeout(1000);
+  }
+  await shot(page, "01-login-form-missing");
+  throw Object.assign(new Error(`Reddit login form did not load at ${page.url()}; use pasted cookies instead of headless login`), { kind: "challenge_required" });
+}
+
 async function loginFresh(context, page, username, password) {
-  // Use old.reddit.com — the new login form lives in a shadow DOM
-  // (faceplate-tabpanel) which Playwright can't reliably target with
-  // input[name=...] locators. old.reddit.com is plain HTML and the
-  // resulting session cookie (reddit_session) is valid across all
-  // *.reddit.com subdomains.
-  await page.goto("https://old.reddit.com/login", { waitUntil: "domcontentloaded" });
+  await page.goto("https://www.reddit.com/login/", { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(1000);
   await shot(page, "01-login-page");
 
-  // old.reddit has two side-by-side forms (login + register). Target the login one.
-  const userInput = page.locator('#login_login-main input[name="user"]').first();
-  const passInput = page.locator('#login_login-main input[name="passwd"]').first();
-  const submitBtn = page.locator('#login_login-main button[type="submit"], #login_login-main button.btn').first();
-  await userInput.waitFor({ timeout: 15000 });
+  const { userInput, passInput } = await waitForLoginForm(page);
   await userInput.fill(username);
   await passInput.fill(password);
   await shot(page, "01b-login-filled");
-  await submitBtn.click().catch(async () => { await passInput.press("Enter"); });
+  const submitBtn = page.locator('button[type="submit"], faceplate-button[type="submit"]').first();
+  await submitBtn.click({ timeout: 5000 }).catch(async () => { await passInput.press("Enter"); });
 
   await page.waitForLoadState("networkidle", { timeout: 20000 }).catch(() => {});
   await shot(page, "02-after-login");
 
-  // old.reddit shows inline errors inside #login_login-main on failure.
-  const errText = (await page.locator('#login_login-main .status, #login_login-main .error').first().innerText().catch(() => "")) || "";
+  const errText = (await page.locator('.status, .error, faceplate-form-helper-text, [role="alert"]').first().innerText().catch(() => "")) || "";
   if (/incorrect|wrong password|invalid/i.test(errText)) {
     throw Object.assign(new Error(`Reddit rejected credentials: ${errText}`), { kind: "login_required" });
   }
@@ -104,17 +177,12 @@ async function loginFresh(context, page, username, password) {
     throw Object.assign(new Error(`Reddit requires a manual verification step: ${errText}`), { kind: "challenge_required" });
   }
 
-  // Verify via JSON API that we're actually signed in.
-  const meResp = await context.request.get("https://www.reddit.com/api/me.json", {
-    headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" },
-  });
-  const meJson = await meResp.json().catch(() => ({}));
-  const name = meJson?.data?.name || meJson?.name || null;
+  const name = await getLoggedInUser(context);
   if (!name) {
     throw Object.assign(new Error("Login submitted but session is not active (likely captcha / 2FA challenge)"), { kind: "challenge_required" });
   }
   console.log("[loginFresh] logged in as", name);
-  return await context.cookies();
+  return { name, cookies: await context.cookies() };
 }
 
 async function postComment(page, threadUrl, text) {
@@ -179,40 +247,29 @@ async function main() {
 
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
-    userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+    userAgent: REDDIT_UA,
     viewport: { width: 1280, height: 900 },
   });
 
   // Restore cookies if we have any
   if (Array.isArray(job.session_cookies) && job.session_cookies.length) {
-    try { await context.addCookies(job.session_cookies); } catch (e) { console.warn("addCookies failed:", e?.message); }
+    await restoreCookies(context, job.session_cookies);
   }
 
   const page = await context.newPage();
   let result = { status: "failed", log_excerpt: "unknown" };
 
   try {
-    // Verify we're logged in via Reddit's JSON API — works reliably for both
-    // old and new Reddit, no DOM scraping required. If pasted cookies are valid,
-    // /api/me.json returns the user object; otherwise it returns an empty {}.
-    let loggedInAs = null;
-    try {
-      const meResp = await context.request.get("https://www.reddit.com/api/me.json", {
-        headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" },
-      });
-      const meJson = await meResp.json().catch(() => ({}));
-      loggedInAs = meJson?.data?.name || meJson?.name || null;
-      console.log("[session-check] /api/me.json →", loggedInAs ? `logged in as ${loggedInAs}` : "anonymous");
-    } catch (e) {
-      console.warn("[session-check] me.json failed:", e?.message);
-    }
+    let loggedInAs = await getLoggedInUser(context);
+    console.log("[session-check] /api/me.json →", loggedInAs ? `logged in as ${loggedInAs}` : "anonymous");
 
     if (!loggedInAs) {
       if (!job.reddit_username || !job.reddit_password) {
         throw Object.assign(new Error("Session expired or invalid. Paste fresh cookies in the admin panel."), { kind: "login_required" });
       }
       await page.goto("https://www.reddit.com/", { waitUntil: "domcontentloaded" });
-      await loginFresh(context, page, job.reddit_username, job.reddit_password);
+      const fresh = await loginFresh(context, page, job.reddit_username, job.reddit_password);
+      loggedInAs = fresh.name;
     }
 
     const refreshedCookies = await context.cookies();
