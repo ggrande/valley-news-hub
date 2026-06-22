@@ -30,6 +30,14 @@ function RedditIntake() {
     queryFn: async () => (await supabase.from("reddit_imports").select("*").order("original_created_at", { ascending: false, nullsFirst: false }).limit(100)).data ?? [],
   });
 
+  const linkedPostIds = (list.data ?? []).map((r: any) => r.generated_post_id).filter(Boolean);
+  const livePosts = useQuery({
+    queryKey: ["reddit-linked-posts", linkedPostIds.sort().join(",")],
+    enabled: linkedPostIds.length > 0,
+    queryFn: async () => (await supabase.from("posts").select("id").in("id", linkedPostIds)).data ?? [],
+  });
+  const liveSet = new Set((livePosts.data ?? []).map((p: any) => p.id));
+
   const stats = useQuery({
     queryKey: ["reddit-queue-stats"],
     queryFn: async () => getStats(),
