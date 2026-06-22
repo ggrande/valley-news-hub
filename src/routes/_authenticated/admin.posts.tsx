@@ -101,6 +101,23 @@ function PostsList() {
     qc.invalidateQueries({ queryKey: ["admin-posts"] });
   };
 
+  const bulkDelete = async () => {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    if (!confirm(`PERMANENTLY DELETE ${ids.length} post(s)? This cannot be undone.`)) return;
+    setBusy(true);
+    setMsg(null);
+    await supabase.from("post_tags").delete().in("post_id", ids);
+    await supabase.from("post_versions").delete().in("post_id", ids);
+    await supabase.from("comments").delete().in("post_id", ids);
+    const { error } = await supabase.from("posts").delete().in("id", ids);
+    setBusy(false);
+    if (error) { setMsg(error.message); return; }
+    setMsg(`Deleted ${ids.length} post(s).`);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["admin-posts"] });
+  };
+
   const allDraftsChecked = draftIdsVisible.length > 0 && draftIdsVisible.every((id) => selected.has(id));
 
   return (
