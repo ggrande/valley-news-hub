@@ -54,10 +54,6 @@ function ContactPage() {
                 <MapPin className="mt-0.5 size-4 text-[color:var(--broadcast)]" />
                 Charleston, West Virginia
               </p>
-              <p className="mt-2 flex items-center gap-2 text-sm">
-                <Phone className="size-4 text-[color:var(--broadcast)]" />
-                <a href="tel:+13045550149" className="hover:underline">304-555-0149</a>
-              </p>
             </div>
             <div className="rounded-lg border bg-card p-5">
               <h2 className="font-display text-lg font-bold text-primary">Team Contacts</h2>
