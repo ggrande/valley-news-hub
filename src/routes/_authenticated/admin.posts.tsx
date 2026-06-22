@@ -23,7 +23,7 @@ function PostsList() {
       const { data, error } = await supabase
         .from("posts")
         .select("id, slug, title, status, is_breaking, featured_image, published_at, updated_at, category:categories(name), author:authors(name)")
-        .order("updated_at", { ascending: false })
+        .order("published_at", { ascending: false, nullsFirst: false })
         .limit(500);
       if (error) throw error;
       return data ?? [];
