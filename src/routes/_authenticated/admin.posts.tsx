@@ -67,21 +67,27 @@ function PostsList() {
     if (!confirm(`Publish ${selectedDraftIds.length} draft post(s)?`)) return;
     setBusy(true);
     setMsg(null);
-    const nowIso = new Date().toISOString();
-    // Set published_at where null, and flip status.
-    const { error: e1 } = await supabase
+    // For posts missing published_at, backfill from the originating
+    // reddit_imports.original_created_at so the article publishes under the
+    // original Reddit post date (back-dated by design).
+    const { data: needDate } = await supabase
       .from("posts")
-      .update({ status: "published", published_at: nowIso })
+      .select("id, reddit_imports:reddit_imports(original_created_at)")
       .in("id", selectedDraftIds)
       .is("published_at", null);
+    const nowIso = new Date().toISOString();
+    for (const row of (needDate ?? []) as any[]) {
+      const dt = row.reddit_imports?.original_created_at ?? nowIso;
+      await supabase.from("posts").update({ status: "published", published_at: dt }).eq("id", row.id);
+    }
     const { error: e2 } = await supabase
       .from("posts")
       .update({ status: "published" })
       .in("id", selectedDraftIds)
       .not("published_at", "is", null);
     setBusy(false);
-    if (e1 || e2) {
-      setMsg(e1?.message ?? e2?.message ?? "Publish failed");
+    if (e2) {
+      setMsg(e2.message);
       return;
     }
     setMsg(`Published ${selectedDraftIds.length} post(s).`);
