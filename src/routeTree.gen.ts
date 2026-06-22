@@ -19,7 +19,6 @@ import { Route as ShowsRouteImport } from './routes/shows'
 import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
 import { Route as PublicFileRouteImport } from './routes/public-file'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
-import { Route as NewsRouteImport } from './routes/news'
 import { Route as CorrectionsPolicyRouteImport } from './routes/corrections-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -30,6 +29,7 @@ import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as NewsIndexRouteImport } from './routes/news.index'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
@@ -101,11 +101,6 @@ const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NewsRoute = NewsRouteImport.update({
-  id: '/news',
-  path: '/news',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CorrectionsPolicyRoute = CorrectionsPolicyRouteImport.update({
   id: '/corrections-policy',
   path: '/corrections-policy',
@@ -155,15 +150,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewsIndexRoute = NewsIndexRouteImport.update({
+  id: '/news/',
+  path: '/news/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewsLocalRoute = NewsLocalRouteImport.update({
-  id: '/local',
-  path: '/local',
-  getParentRoute: () => NewsRoute,
+  id: '/news/local',
+  path: '/news/local',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const NewsSlugRoute = NewsSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => NewsRoute,
+  id: '/news/$slug',
+  path: '/news/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMediaRoute = ApiMediaRouteImport.update({
   id: '/api/media',
@@ -278,7 +278,6 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
-  '/news': typeof NewsRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
   '/rss.xml': typeof RssDotxmlRoute
@@ -293,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
+  '/news/': typeof NewsIndexRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -320,7 +320,6 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
-  '/news': typeof NewsRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
   '/rss.xml': typeof RssDotxmlRoute
@@ -334,6 +333,7 @@ export interface FileRoutesByTo {
   '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
+  '/news': typeof NewsIndexRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -363,7 +363,6 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
-  '/news': typeof NewsRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
   '/rss.xml': typeof RssDotxmlRoute
@@ -378,6 +377,7 @@ export interface FileRoutesById {
   '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
+  '/news/': typeof NewsIndexRoute
   '/_authenticated/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/_authenticated/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -407,7 +407,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
-    | '/news'
     | '/privacy-policy'
     | '/public-file'
     | '/rss.xml'
@@ -422,6 +421,7 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/news/$slug'
     | '/news/local'
+    | '/news/'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
@@ -449,7 +449,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
-    | '/news'
     | '/privacy-policy'
     | '/public-file'
     | '/rss.xml'
@@ -463,6 +462,7 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/news/$slug'
     | '/news/local'
+    | '/news'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
@@ -491,7 +491,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
-    | '/news'
     | '/privacy-policy'
     | '/public-file'
     | '/rss.xml'
@@ -506,6 +505,7 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/news/$slug'
     | '/news/local'
+    | '/news/'
     | '/_authenticated/admin/ai-log'
     | '/_authenticated/admin/authors'
     | '/_authenticated/admin/categories'
@@ -535,7 +535,6 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ContactRoute: typeof ContactRoute
   CorrectionsPolicyRoute: typeof CorrectionsPolicyRoute
-  NewsRoute: typeof NewsRouteWithChildren
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   PublicFileRoute: typeof PublicFileRoute
   RssDotxmlRoute: typeof RssDotxmlRoute
@@ -547,6 +546,9 @@ export interface RootRouteChildren {
   WatchLiveRoute: typeof WatchLiveRoute
   WeatherRoute: typeof WeatherRoute
   ApiMediaRoute: typeof ApiMediaRoute
+  NewsSlugRoute: typeof NewsSlugRoute
+  NewsLocalRoute: typeof NewsLocalRoute
+  NewsIndexRoute: typeof NewsIndexRoute
   ApiPublicHooksManualJsonlImportRoute: typeof ApiPublicHooksManualJsonlImportRoute
   ApiPublicHooksProcessPendingRoute: typeof ApiPublicHooksProcessPendingRoute
 }
@@ -623,13 +625,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/news': {
-      id: '/news'
-      path: '/news'
-      fullPath: '/news'
-      preLoaderRoute: typeof NewsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/corrections-policy': {
       id: '/corrections-policy'
       path: '/corrections-policy'
@@ -700,19 +695,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/news/': {
+      id: '/news/'
+      path: '/news'
+      fullPath: '/news/'
+      preLoaderRoute: typeof NewsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/news/local': {
       id: '/news/local'
-      path: '/local'
+      path: '/news/local'
       fullPath: '/news/local'
       preLoaderRoute: typeof NewsLocalRouteImport
-      parentRoute: typeof NewsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/news/$slug': {
       id: '/news/$slug'
-      path: '/$slug'
+      path: '/news/$slug'
       fullPath: '/news/$slug'
       preLoaderRoute: typeof NewsSlugRouteImport
-      parentRoute: typeof NewsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/media': {
       id: '/api/media'
@@ -927,18 +929,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface NewsRouteChildren {
-  NewsSlugRoute: typeof NewsSlugRoute
-  NewsLocalRoute: typeof NewsLocalRoute
-}
-
-const NewsRouteChildren: NewsRouteChildren = {
-  NewsSlugRoute: NewsSlugRoute,
-  NewsLocalRoute: NewsLocalRoute,
-}
-
-const NewsRouteWithChildren = NewsRoute._addFileChildren(NewsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -950,7 +940,6 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ContactRoute: ContactRoute,
   CorrectionsPolicyRoute: CorrectionsPolicyRoute,
-  NewsRoute: NewsRouteWithChildren,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   PublicFileRoute: PublicFileRoute,
   RssDotxmlRoute: RssDotxmlRoute,
@@ -962,6 +951,9 @@ const rootRouteChildren: RootRouteChildren = {
   WatchLiveRoute: WatchLiveRoute,
   WeatherRoute: WeatherRoute,
   ApiMediaRoute: ApiMediaRoute,
+  NewsSlugRoute: NewsSlugRoute,
+  NewsLocalRoute: NewsLocalRoute,
+  NewsIndexRoute: NewsIndexRoute,
   ApiPublicHooksManualJsonlImportRoute: ApiPublicHooksManualJsonlImportRoute,
   ApiPublicHooksProcessPendingRoute: ApiPublicHooksProcessPendingRoute,
 }
