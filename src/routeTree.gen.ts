@@ -40,6 +40,7 @@ import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminRedditRouteImport } from './routes/_authenticated/admin.reddit'
 import { Route as AuthenticatedAdminPostsRouteImport } from './routes/_authenticated/admin.posts'
 import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin.media'
+import { Route as AuthenticatedAdminImportRouteImport } from './routes/_authenticated/admin.import'
 import { Route as AuthenticatedAdminCommentsRouteImport } from './routes/_authenticated/admin.comments'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
@@ -205,6 +206,12 @@ const AuthenticatedAdminMediaRoute = AuthenticatedAdminMediaRouteImport.update({
   path: '/media',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminImportRoute =
+  AuthenticatedAdminImportRouteImport.update({
+    id: '/import',
+    path: '/import',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminCommentsRoute =
   AuthenticatedAdminCommentsRouteImport.update({
     id: '/comments',
@@ -276,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/comments': typeof AuthenticatedAdminCommentsRoute
+  '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
@@ -314,6 +322,7 @@ export interface FileRoutesByTo {
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/comments': typeof AuthenticatedAdminCommentsRoute
+  '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
@@ -355,6 +364,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/comments': typeof AuthenticatedAdminCommentsRoute
+  '/_authenticated/admin/import': typeof AuthenticatedAdminImportRoute
   '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
   '/_authenticated/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/_authenticated/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
@@ -396,6 +406,7 @@ export interface FileRouteTypes {
     | '/admin/authors'
     | '/admin/categories'
     | '/admin/comments'
+    | '/admin/import'
     | '/admin/media'
     | '/admin/posts'
     | '/admin/reddit'
@@ -434,6 +445,7 @@ export interface FileRouteTypes {
     | '/admin/authors'
     | '/admin/categories'
     | '/admin/comments'
+    | '/admin/import'
     | '/admin/media'
     | '/admin/posts'
     | '/admin/reddit'
@@ -474,6 +486,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/authors'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/comments'
+    | '/_authenticated/admin/import'
     | '/_authenticated/admin/media'
     | '/_authenticated/admin/posts'
     | '/_authenticated/admin/reddit'
@@ -730,6 +743,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMediaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/import': {
+      id: '/_authenticated/admin/import'
+      path: '/import'
+      fullPath: '/admin/import'
+      preLoaderRoute: typeof AuthenticatedAdminImportRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/comments': {
       id: '/_authenticated/admin/comments'
       path: '/comments'
@@ -815,6 +835,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAuthorsRoute: typeof AuthenticatedAdminAuthorsRoute
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
   AuthenticatedAdminCommentsRoute: typeof AuthenticatedAdminCommentsRoute
+  AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRoute
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
   AuthenticatedAdminPostsRoute: typeof AuthenticatedAdminPostsRouteWithChildren
   AuthenticatedAdminRedditRoute: typeof AuthenticatedAdminRedditRouteWithChildren
@@ -828,6 +849,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAuthorsRoute: AuthenticatedAdminAuthorsRoute,
   AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
   AuthenticatedAdminCommentsRoute: AuthenticatedAdminCommentsRoute,
+  AuthenticatedAdminImportRoute: AuthenticatedAdminImportRoute,
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
   AuthenticatedAdminPostsRoute: AuthenticatedAdminPostsRouteWithChildren,
   AuthenticatedAdminRedditRoute: AuthenticatedAdminRedditRouteWithChildren,
