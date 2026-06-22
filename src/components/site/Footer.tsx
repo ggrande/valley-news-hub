@@ -73,7 +73,10 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-2 px-4 py-5 text-xs text-white/60 sm:flex-row">
           <p>© {new Date().getFullYear()} WKNA-TV 49 • WKNA49.com • Charleston, West Virginia</p>
-          <p>Local News for the Kanawha Valley</p>
+          <div className="flex items-center gap-4">
+            <p>Local News for the Kanawha Valley</p>
+            <Link to="/auth" className="hover:text-white">Staff</Link>
+          </div>
         </div>
       </div>
     </footer>
