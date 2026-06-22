@@ -109,7 +109,79 @@ async function fetchPostComments(postId: string): Promise<any[]> {
         created_utc: ts,
         depth: 0,
       });
+}
+
+const MEDIA_EXT_RE = /\.(jpe?g|png|gif|webp)(?:\?.*)?$/i;
+const ALLOWED_CT = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
+
+function decodeRedditUrl(u: string): string {
+  return u.replace(/&amp;/g, "&");
+}
+
+function extractMediaUrls(p: any): string[] {
+  const urls: string[] = [];
+  const push = (u?: string | null) => {
+    if (!u) return;
+    const clean = decodeRedditUrl(u);
+    if (!urls.includes(clean)) urls.push(clean);
+  };
+
+  if (typeof p?.url === "string" && MEDIA_EXT_RE.test(p.url)) push(p.url);
+  if (typeof p?.url_overridden_by_dest === "string" && MEDIA_EXT_RE.test(p.url_overridden_by_dest)) {
+    push(p.url_overridden_by_dest);
+  }
+
+  // Gallery posts
+  if (p?.is_gallery && p?.media_metadata && typeof p.media_metadata === "object") {
+    const order: string[] = Array.isArray(p?.gallery_data?.items)
+      ? p.gallery_data.items.map((it: any) => it?.media_id).filter(Boolean)
+      : Object.keys(p.media_metadata);
+    for (const id of order) {
+      const m = p.media_metadata[id];
+      const src = m?.s?.u || m?.s?.gif || m?.p?.[m.p.length - 1]?.u;
+      if (src) push(src);
     }
+  }
+
+  // Preview images fallback
+  const previews = p?.preview?.images;
+  if (Array.isArray(previews)) {
+    for (const img of previews) {
+      const src = img?.source?.url;
+      if (src) push(src);
+    }
+  }
+
+  return urls.slice(0, 6);
+}
+
+async function downloadAndUploadMedia(
+  admin: any,
+  postId: string,
+  urls: string[],
+): Promise<string[]> {
+  const paths: string[] = [];
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    try {
+      const res = await fetch(url, { headers: { "User-Agent": UA } });
+      if (!res.ok) continue;
+      const ct = (res.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+      if (!ALLOWED_CT.has(ct)) continue;
+      const buf = new Uint8Array(await res.arrayBuffer());
+      if (buf.byteLength === 0 || buf.byteLength > 15 * 1024 * 1024) continue;
+      const ext = ct === "image/jpeg" ? "jpg" : ct.split("/")[1];
+      const path = `reddit/${postId}/${i}.${ext}`;
+      const { error } = await admin.storage
+        .from("news-media")
+        .upload(path, buf, { contentType: ct, upsert: true });
+      if (error) continue;
+      paths.push(path);
+    } catch { /* skip this asset */ }
+    await sleep(150);
+  }
+  return paths;
+}
     if (batch.length < 100 || !isFinite(oldest)) break;
     before = Math.floor(oldest) - 1;
     await sleep(250);
