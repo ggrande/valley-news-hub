@@ -19,6 +19,8 @@ function BatchPage() {
   const [data, setData] = useState<any>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
+  const [queueRunning, setQueueRunning] = useState(false);
+  const queueAbort = useRef(false);
 
   async function refresh() {
     try { setData(await get({ data: { id: batchId } })); }
@@ -34,10 +36,41 @@ function BatchPage() {
   }
 
   async function onDrain() {
-    setBusy("drain"); setMsg("Generating 5 articles...");
-    try { const r: any = await drain({ data: { batchId, limit: 5 } }); setMsg(`Processed ${r.processed} items.`); await refresh(); }
-    catch (err: any) { setMsg(`Error: ${err.message}`); }
+    setBusy("drain"); setMsg("Generating 10 articles (most recent first)...");
+    try {
+      const r: any = await drain({ data: { batchId, limit: 10 } });
+      setMsg(`Processed ${r.processed}${r.discarded ? `, auto-discarded ${r.discarded} removed/deleted` : ""}. ${r.remaining} pending.`);
+      await refresh();
+    } catch (err: any) { setMsg(`Error: ${err.message}`); }
     finally { setBusy(null); }
+  }
+
+  async function onQueueAll() {
+    if (queueRunning) {
+      queueAbort.current = true;
+      setMsg("Stopping queue after current batch...");
+      return;
+    }
+    queueAbort.current = false;
+    setQueueRunning(true);
+    let totalProcessed = 0;
+    let totalDiscarded = 0;
+    try {
+      while (!queueAbort.current) {
+        const r: any = await drain({ data: { batchId, limit: 10 } });
+        totalProcessed += r.processed;
+        totalDiscarded += r.discarded ?? 0;
+        setMsg(`Queue: ${totalProcessed} processed, ${totalDiscarded} discarded, ${r.remaining} pending...`);
+        await refresh();
+        if (r.processed === 0 || r.remaining === 0) break;
+      }
+      setMsg(`Queue done. ${totalProcessed} generated, ${totalDiscarded} discarded.`);
+    } catch (err: any) {
+      setMsg(`Queue error: ${err.message}`);
+    } finally {
+      setQueueRunning(false);
+      queueAbort.current = false;
+    }
   }
 
   async function onPublish(postId: string) {
