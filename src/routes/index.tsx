@@ -98,6 +98,12 @@ function Home() {
               <div className="rounded-lg border bg-card p-4">
                 {headlines.map((a) => <ArticleCard key={a.slug} a={a} variant="compact" />)}
               </div>
+              <div className="mt-5 rounded-lg border bg-[color:var(--ivory)] p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--breaking)]">Reader-supported</p>
+                <h3 className="mt-1 font-display text-lg font-black text-primary">Help keep WKNA 49 independent</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground">Tips and crypto contributions fund local reporting in the Kanawha Valley.</p>
+                <div className="mt-3"><SupportButton variant="inline" /></div>
+              </div>
             </aside>
           </div>
         </section>
