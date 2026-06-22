@@ -258,6 +258,14 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
             try {
               comments = await fetchPostComments(p.id);
             } catch { /* fall back to no comments */ }
+            // Download referenced media in the same pass so generation can use it.
+            let mediaPaths: string[] = [];
+            try {
+              const urls = extractMediaUrls(p);
+              if (urls.length) mediaPaths = await downloadAndUploadMedia(admin, p.id, urls);
+            } catch (err: any) {
+              summary.errors.push(`media ${p.id}: ${err?.message ?? err}`);
+            }
             const permalink = p.permalink
               ? (p.permalink.startsWith("http") ? p.permalink : `https://www.reddit.com${p.permalink}`)
               : `https://www.reddit.com/r/${p.subreddit}/comments/${p.id}/`;
@@ -272,6 +280,7 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
               original_created_at: p.created_utc ? new Date(p.created_utc * 1000).toISOString() : null,
               source_score: p.score ?? null,
               link_flair_text: p.link_flair_text ?? null,
+              media_paths: mediaPaths,
               import_status: "new",
             }).select("id").single();
             if (insErr || !imp) { summary.errors.push(`insert ${p.id}: ${insErr?.message}`); continue; }
