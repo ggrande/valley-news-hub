@@ -425,6 +425,30 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
           }
         }
 
+        // Refresh live upvote counts for recent imports (last 14 days) so the
+        // admin table shows a current value, not the score at import time.
+        try {
+          const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+          const { data: recent } = await admin
+            .from("reddit_imports")
+            .select("id, reddit_post_id")
+            .gte("created_at", cutoff)
+            .not("reddit_post_id", "is", null)
+            .limit(500);
+          const recentIds = (recent ?? []).map((r: any) => r.reddit_post_id).filter(Boolean);
+          if (recentIds.length) {
+            const scores = await fetchLiveScoresByIds(recentIds);
+            const byPostId = new Map((recent ?? []).map((r: any) => [r.reddit_post_id, r.id]));
+            for (const [postId, score] of scores) {
+              const rowId = byPostId.get(postId);
+              if (rowId) await admin.from("reddit_imports").update({ current_score: score }).eq("id", rowId);
+            }
+          }
+        } catch (err: any) {
+          summary.errors.push(`refresh scores: ${err?.message ?? err}`);
+        }
+
+
         if (!autoGenerate) {
           return Response.json(summary);
         }
