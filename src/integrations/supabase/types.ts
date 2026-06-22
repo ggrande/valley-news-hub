@@ -604,6 +604,9 @@ export type Database = {
           original_source_body: string | null
           original_source_title: string | null
           published_at: string | null
+          reddit_comment_error: string | null
+          reddit_comment_posted_at: string | null
+          reddit_comment_url: string | null
           reddit_import_id: string | null
           related_post_ids: string[] | null
           seo_description: string | null
@@ -644,6 +647,9 @@ export type Database = {
           original_source_body?: string | null
           original_source_title?: string | null
           published_at?: string | null
+          reddit_comment_error?: string | null
+          reddit_comment_posted_at?: string | null
+          reddit_comment_url?: string | null
           reddit_import_id?: string | null
           related_post_ids?: string[] | null
           seo_description?: string | null
@@ -684,6 +690,9 @@ export type Database = {
           original_source_body?: string | null
           original_source_title?: string | null
           published_at?: string | null
+          reddit_comment_error?: string | null
+          reddit_comment_posted_at?: string | null
+          reddit_comment_url?: string | null
           reddit_import_id?: string | null
           related_post_ids?: string[] | null
           seo_description?: string | null
