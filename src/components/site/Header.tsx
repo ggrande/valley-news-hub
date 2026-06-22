@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Menu, Search, Radio, X } from "lucide-react";
 import { Logo } from "./Logo";
+import { SupportButton } from "./SupportButton";
 
 const NAV = [
   { to: "/news", label: "News" },
