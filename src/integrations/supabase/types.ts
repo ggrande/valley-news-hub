@@ -170,6 +170,45 @@ export type Database = {
         }
         Relationships: []
       }
+      closings: {
+        Row: {
+          county: string | null
+          created_at: string
+          effective_date: string
+          expires_at: string | null
+          id: string
+          name: string
+          note: string | null
+          status: Database["public"]["Enums"]["closing_status"]
+          type: Database["public"]["Enums"]["closing_type"]
+          updated_at: string
+        }
+        Insert: {
+          county?: string | null
+          created_at?: string
+          effective_date?: string
+          expires_at?: string | null
+          id?: string
+          name: string
+          note?: string | null
+          status?: Database["public"]["Enums"]["closing_status"]
+          type?: Database["public"]["Enums"]["closing_type"]
+          updated_at?: string
+        }
+        Update: {
+          county?: string | null
+          created_at?: string
+          effective_date?: string
+          expires_at?: string | null
+          id?: string
+          name?: string
+          note?: string | null
+          status?: Database["public"]["Enums"]["closing_status"]
+          type?: Database["public"]["Enums"]["closing_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           body: string
@@ -929,6 +968,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "editor" | "user"
+      closing_status:
+        | "closed"
+        | "delayed"
+        | "early_dismissal"
+        | "virtual"
+        | "normal"
+      closing_type: "school" | "government" | "business" | "other"
       comment_source_type: "reddit" | "public" | "staff"
       import_status: "new" | "parsed" | "generated" | "published" | "discarded"
       moderation_status: "pending" | "approved" | "hidden" | "removed"
@@ -1067,6 +1113,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "editor", "user"],
+      closing_status: [
+        "closed",
+        "delayed",
+        "early_dismissal",
+        "virtual",
+        "normal",
+      ],
+      closing_type: ["school", "government", "business", "other"],
       comment_source_type: ["reddit", "public", "staff"],
       import_status: ["new", "parsed", "generated", "published", "discarded"],
       moderation_status: ["pending", "approved", "hidden", "removed"],
