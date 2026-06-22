@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Menu, Search, Radio, X } from "lucide-react";
 import { Logo } from "./Logo";
+import { SupportButton } from "./SupportButton";
 
 const NAV = [
   { to: "/news", label: "News" },
@@ -39,6 +40,7 @@ export function Header() {
               <Radio className="size-4" />
               Watch Live
             </Link>
+            <SupportButton variant="navy" label="Support" />
             <Link
               to="/auth"
               className="inline-flex h-9 items-center rounded-md border border-white/15 px-3 text-xs font-semibold uppercase tracking-wide text-white/80 hover:bg-white/5"
@@ -92,6 +94,7 @@ export function Header() {
             >
               <Radio className="size-4" /> Watch Live
             </Link>
+            <div className="mt-2"><SupportButton variant="block" /></div>
           </div>
         </nav>
       )}

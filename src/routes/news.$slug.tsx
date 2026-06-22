@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/site/Layout";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { ArticleImage } from "@/components/site/ArticleImage";
+import { SupportButton } from "@/components/site/SupportButton";
 import { formatDate } from "@/lib/news-data";
 import { dbPostToArticle, fetchCommentsForPost, fetchPostBySlug, fetchPublishedPosts, fetchSetting } from "@/lib/posts-queries";
 
@@ -115,6 +116,12 @@ function ArticlePage() {
         )}
         <div className="mx-auto max-w-2xl px-4 py-10 font-news text-lg leading-relaxed text-foreground">
           {a.body.map((p: string, i: number) => <p key={i} className="mb-5">{p}</p>)}
+          <aside className="mt-8 rounded-lg border bg-[color:var(--ivory)] p-5 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--breaking)]">Support local journalism</p>
+            <h3 className="mt-1 font-display text-xl font-black text-primary">Like this story? Chip in.</h3>
+            <p className="mt-1.5 text-sm text-muted-foreground">WKNA 49 News is reader-supported. Buy us a coffee or send crypto to keep Kanawha Valley reporting going.</p>
+            <div className="mt-3 flex justify-center"><SupportButton variant="inline" /></div>
+          </aside>
           <p className="mt-8 border-t pt-5 text-sm italic text-muted-foreground">
             Have a news tip? <Link to="/submit-news-tip" className="text-[color:var(--broadcast)] underline">Send it to the WKNA 49 newsroom.</Link>
           </p>
