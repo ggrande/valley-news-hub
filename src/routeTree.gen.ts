@@ -16,6 +16,7 @@ import { Route as SubmitNewsTipRouteImport } from './routes/submit-news-tip'
 import { Route as SportsRouteImport } from './routes/sports'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShowsRouteImport } from './routes/shows'
+import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
 import { Route as PublicFileRouteImport } from './routes/public-file'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as NewsRouteImport } from './routes/news'
@@ -31,6 +32,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
+import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminSubmissionsRouteImport } from './routes/_authenticated/admin.submissions'
@@ -38,12 +40,15 @@ import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminRedditRouteImport } from './routes/_authenticated/admin.reddit'
 import { Route as AuthenticatedAdminPostsRouteImport } from './routes/_authenticated/admin.posts'
 import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin.media'
+import { Route as AuthenticatedAdminImportRouteImport } from './routes/_authenticated/admin.import'
 import { Route as AuthenticatedAdminCommentsRouteImport } from './routes/_authenticated/admin.comments'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
+import { Route as ApiPublicHooksProcessPendingRouteImport } from './routes/api/public/hooks/process-pending'
 import { Route as AuthenticatedAdminRedditIdRouteImport } from './routes/_authenticated/admin.reddit.$id'
 import { Route as AuthenticatedAdminPostsIdRouteImport } from './routes/_authenticated/admin.posts.$id'
+import { Route as AuthenticatedAdminImportBatchIdRouteImport } from './routes/_authenticated/admin.import.$batchId'
 
 const WeatherRoute = WeatherRouteImport.update({
   id: '/weather',
@@ -78,6 +83,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ShowsRoute = ShowsRouteImport.update({
   id: '/shows',
   path: '/shows',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RssDotxmlRoute = RssDotxmlRouteImport.update({
+  id: '/rss.xml',
+  path: '/rss.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicFileRoute = PublicFileRouteImport.update({
@@ -154,6 +164,11 @@ const NewsSlugRoute = NewsSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => NewsRoute,
 } as any)
+const ApiMediaRoute = ApiMediaRouteImport.update({
+  id: '/api/media',
+  path: '/api/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -192,6 +207,12 @@ const AuthenticatedAdminMediaRoute = AuthenticatedAdminMediaRouteImport.update({
   path: '/media',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminImportRoute =
+  AuthenticatedAdminImportRouteImport.update({
+    id: '/import',
+    path: '/import',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminCommentsRoute =
   AuthenticatedAdminCommentsRouteImport.update({
     id: '/comments',
@@ -215,6 +236,12 @@ const AuthenticatedAdminAiLogRoute = AuthenticatedAdminAiLogRouteImport.update({
   path: '/ai-log',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const ApiPublicHooksProcessPendingRoute =
+  ApiPublicHooksProcessPendingRouteImport.update({
+    id: '/api/public/hooks/process-pending',
+    path: '/api/public/hooks/process-pending',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminRedditIdRoute =
   AuthenticatedAdminRedditIdRouteImport.update({
     id: '/$id',
@@ -226,6 +253,12 @@ const AuthenticatedAdminPostsIdRoute =
     id: '/$id',
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminPostsRoute,
+  } as any)
+const AuthenticatedAdminImportBatchIdRoute =
+  AuthenticatedAdminImportBatchIdRouteImport.update({
+    id: '/$batchId',
+    path: '/$batchId',
+    getParentRoute: () => AuthenticatedAdminImportRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -241,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/news': typeof NewsRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/shows': typeof ShowsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sports': typeof SportsRoute
@@ -249,20 +283,24 @@ export interface FileRoutesByFullPath {
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/comments': typeof AuthenticatedAdminCommentsRoute
+  '/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -277,6 +315,7 @@ export interface FileRoutesByTo {
   '/news': typeof NewsRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/shows': typeof ShowsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sports': typeof SportsRoute
@@ -284,20 +323,24 @@ export interface FileRoutesByTo {
   '/terms-of-use': typeof TermsOfUseRoute
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRoute
+  '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/comments': typeof AuthenticatedAdminCommentsRoute
+  '/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -314,6 +357,7 @@ export interface FileRoutesById {
   '/news': typeof NewsRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/shows': typeof ShowsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sports': typeof SportsRoute
@@ -322,20 +366,24 @@ export interface FileRoutesById {
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/media': typeof ApiMediaRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/_authenticated/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/_authenticated/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/comments': typeof AuthenticatedAdminCommentsRoute
+  '/_authenticated/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
   '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
   '/_authenticated/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/_authenticated/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/_authenticated/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/_authenticated/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
+  '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -352,6 +400,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/privacy-policy'
     | '/public-file'
+    | '/rss.xml'
     | '/shows'
     | '/sitemap.xml'
     | '/sports'
@@ -360,20 +409,24 @@ export interface FileRouteTypes {
     | '/watch-live'
     | '/weather'
     | '/admin'
+    | '/api/media'
     | '/news/$slug'
     | '/news/local'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
     | '/admin/comments'
+    | '/admin/import'
     | '/admin/media'
     | '/admin/posts'
     | '/admin/reddit'
     | '/admin/settings'
     | '/admin/submissions'
     | '/admin/'
+    | '/admin/import/$batchId'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
+    | '/api/public/hooks/process-pending'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -388,6 +441,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/privacy-policy'
     | '/public-file'
+    | '/rss.xml'
     | '/shows'
     | '/sitemap.xml'
     | '/sports'
@@ -395,20 +449,24 @@ export interface FileRouteTypes {
     | '/terms-of-use'
     | '/watch-live'
     | '/weather'
+    | '/api/media'
     | '/news/$slug'
     | '/news/local'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
     | '/admin/comments'
+    | '/admin/import'
     | '/admin/media'
     | '/admin/posts'
     | '/admin/reddit'
     | '/admin/settings'
     | '/admin/submissions'
     | '/admin'
+    | '/admin/import/$batchId'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
+    | '/api/public/hooks/process-pending'
   id:
     | '__root__'
     | '/'
@@ -424,6 +482,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/privacy-policy'
     | '/public-file'
+    | '/rss.xml'
     | '/shows'
     | '/sitemap.xml'
     | '/sports'
@@ -432,20 +491,24 @@ export interface FileRouteTypes {
     | '/watch-live'
     | '/weather'
     | '/_authenticated/admin'
+    | '/api/media'
     | '/news/$slug'
     | '/news/local'
     | '/_authenticated/admin/ai-log'
     | '/_authenticated/admin/authors'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/comments'
+    | '/_authenticated/admin/import'
     | '/_authenticated/admin/media'
     | '/_authenticated/admin/posts'
     | '/_authenticated/admin/reddit'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/submissions'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/import/$batchId'
     | '/_authenticated/admin/posts/$id'
     | '/_authenticated/admin/reddit/$id'
+    | '/api/public/hooks/process-pending'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -462,6 +525,7 @@ export interface RootRouteChildren {
   NewsRoute: typeof NewsRouteWithChildren
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   PublicFileRoute: typeof PublicFileRoute
+  RssDotxmlRoute: typeof RssDotxmlRoute
   ShowsRoute: typeof ShowsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SportsRoute: typeof SportsRoute
@@ -469,6 +533,8 @@ export interface RootRouteChildren {
   TermsOfUseRoute: typeof TermsOfUseRoute
   WatchLiveRoute: typeof WatchLiveRoute
   WeatherRoute: typeof WeatherRoute
+  ApiMediaRoute: typeof ApiMediaRoute
+  ApiPublicHooksProcessPendingRoute: typeof ApiPublicHooksProcessPendingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -520,6 +586,13 @@ declare module '@tanstack/react-router' {
       path: '/shows'
       fullPath: '/shows'
       preLoaderRoute: typeof ShowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rss.xml': {
+      id: '/rss.xml'
+      path: '/rss.xml'
+      fullPath: '/rss.xml'
+      preLoaderRoute: typeof RssDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/public-file': {
@@ -627,6 +700,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsSlugRouteImport
       parentRoute: typeof NewsRoute
     }
+    '/api/media': {
+      id: '/api/media'
+      path: '/api/media'
+      fullPath: '/api/media'
+      preLoaderRoute: typeof ApiMediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -676,6 +756,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMediaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/import': {
+      id: '/_authenticated/admin/import'
+      path: '/import'
+      fullPath: '/admin/import'
+      preLoaderRoute: typeof AuthenticatedAdminImportRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/comments': {
       id: '/_authenticated/admin/comments'
       path: '/comments'
@@ -704,6 +791,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAiLogRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/api/public/hooks/process-pending': {
+      id: '/api/public/hooks/process-pending'
+      path: '/api/public/hooks/process-pending'
+      fullPath: '/api/public/hooks/process-pending'
+      preLoaderRoute: typeof ApiPublicHooksProcessPendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/reddit/$id': {
       id: '/_authenticated/admin/reddit/$id'
       path: '/$id'
@@ -718,8 +812,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPostsIdRouteImport
       parentRoute: typeof AuthenticatedAdminPostsRoute
     }
+    '/_authenticated/admin/import/$batchId': {
+      id: '/_authenticated/admin/import/$batchId'
+      path: '/$batchId'
+      fullPath: '/admin/import/$batchId'
+      preLoaderRoute: typeof AuthenticatedAdminImportBatchIdRouteImport
+      parentRoute: typeof AuthenticatedAdminImportRoute
+    }
   }
 }
+
+interface AuthenticatedAdminImportRouteChildren {
+  AuthenticatedAdminImportBatchIdRoute: typeof AuthenticatedAdminImportBatchIdRoute
+}
+
+const AuthenticatedAdminImportRouteChildren: AuthenticatedAdminImportRouteChildren =
+  {
+    AuthenticatedAdminImportBatchIdRoute: AuthenticatedAdminImportBatchIdRoute,
+  }
+
+const AuthenticatedAdminImportRouteWithChildren =
+  AuthenticatedAdminImportRoute._addFileChildren(
+    AuthenticatedAdminImportRouteChildren,
+  )
 
 interface AuthenticatedAdminPostsRouteChildren {
   AuthenticatedAdminPostsIdRoute: typeof AuthenticatedAdminPostsIdRoute
@@ -754,6 +869,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAuthorsRoute: typeof AuthenticatedAdminAuthorsRoute
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
   AuthenticatedAdminCommentsRoute: typeof AuthenticatedAdminCommentsRoute
+  AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRouteWithChildren
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
   AuthenticatedAdminPostsRoute: typeof AuthenticatedAdminPostsRouteWithChildren
   AuthenticatedAdminRedditRoute: typeof AuthenticatedAdminRedditRouteWithChildren
@@ -767,6 +883,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAuthorsRoute: AuthenticatedAdminAuthorsRoute,
   AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
   AuthenticatedAdminCommentsRoute: AuthenticatedAdminCommentsRoute,
+  AuthenticatedAdminImportRoute: AuthenticatedAdminImportRouteWithChildren,
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
   AuthenticatedAdminPostsRoute: AuthenticatedAdminPostsRouteWithChildren,
   AuthenticatedAdminRedditRoute: AuthenticatedAdminRedditRouteWithChildren,
@@ -815,6 +932,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewsRoute: NewsRouteWithChildren,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   PublicFileRoute: PublicFileRoute,
+  RssDotxmlRoute: RssDotxmlRoute,
   ShowsRoute: ShowsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SportsRoute: SportsRoute,
@@ -822,17 +940,9 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfUseRoute: TermsOfUseRoute,
   WatchLiveRoute: WatchLiveRoute,
   WeatherRoute: WeatherRoute,
+  ApiMediaRoute: ApiMediaRoute,
+  ApiPublicHooksProcessPendingRoute: ApiPublicHooksProcessPendingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

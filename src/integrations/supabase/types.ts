@@ -317,6 +317,51 @@ export type Database = {
         }
         Relationships: []
       }
+      import_batches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          label: string | null
+          size_bytes: number | null
+          source_filename: string | null
+          status: string
+          total_comments: number
+          total_media: number
+          total_posts: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          label?: string | null
+          size_bytes?: number | null
+          source_filename?: string | null
+          status?: string
+          total_comments?: number
+          total_media?: number
+          total_posts?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          label?: string | null
+          size_bytes?: number | null
+          source_filename?: string | null
+          status?: string
+          total_comments?: number
+          total_media?: number
+          total_posts?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       media_assets: {
         Row: {
           alt_text: string | null
@@ -510,6 +555,8 @@ export type Database = {
           is_pinned: boolean
           is_weather_alert: boolean
           og_image: string | null
+          original_flair: string | null
+          original_permalink: string | null
           original_source_body: string | null
           original_source_title: string | null
           published_at: string | null
@@ -543,6 +590,8 @@ export type Database = {
           is_pinned?: boolean
           is_weather_alert?: boolean
           og_image?: string | null
+          original_flair?: string | null
+          original_permalink?: string | null
           original_source_body?: string | null
           original_source_title?: string | null
           published_at?: string | null
@@ -576,6 +625,8 @@ export type Database = {
           is_pinned?: boolean
           is_weather_alert?: boolean
           og_image?: string | null
+          original_flair?: string | null
+          original_permalink?: string | null
           original_source_body?: string | null
           original_source_title?: string | null
           published_at?: string | null
@@ -693,16 +744,23 @@ export type Database = {
       }
       reddit_imports: {
         Row: {
+          batch_id: string | null
           created_at: string
           created_by: string | null
           generated_post_id: string | null
           id: string
           import_status: Database["public"]["Enums"]["import_status"]
+          link_flair_text: string | null
+          media_paths: string[]
+          moderation_reasons: Json
+          moderation_status: string
           original_author_display: string | null
           original_body: string | null
           original_created_at: string | null
           original_title: string | null
           parsed_comments: Json | null
+          permalink: string | null
+          processing_error: string | null
           raw_comment_text: string | null
           reddit_post_id: string | null
           source_score: number | null
@@ -711,16 +769,23 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          batch_id?: string | null
           created_at?: string
           created_by?: string | null
           generated_post_id?: string | null
           id?: string
           import_status?: Database["public"]["Enums"]["import_status"]
+          link_flair_text?: string | null
+          media_paths?: string[]
+          moderation_reasons?: Json
+          moderation_status?: string
           original_author_display?: string | null
           original_body?: string | null
           original_created_at?: string | null
           original_title?: string | null
           parsed_comments?: Json | null
+          permalink?: string | null
+          processing_error?: string | null
           raw_comment_text?: string | null
           reddit_post_id?: string | null
           source_score?: number | null
@@ -729,16 +794,23 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          batch_id?: string | null
           created_at?: string
           created_by?: string | null
           generated_post_id?: string | null
           id?: string
           import_status?: Database["public"]["Enums"]["import_status"]
+          link_flair_text?: string | null
+          media_paths?: string[]
+          moderation_reasons?: Json
+          moderation_status?: string
           original_author_display?: string | null
           original_body?: string | null
           original_created_at?: string | null
           original_title?: string | null
           parsed_comments?: Json | null
+          permalink?: string | null
+          processing_error?: string | null
           raw_comment_text?: string | null
           reddit_post_id?: string | null
           source_score?: number | null
@@ -747,6 +819,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reddit_imports_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "import_batches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reddit_imports_generated_post_id_fkey"
             columns: ["generated_post_id"]
