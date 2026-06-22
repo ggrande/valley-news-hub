@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { drainRedditIntake, getRedditQueueStats } from "@/lib/generate-article.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/reddit")({
   component: RedditIntake,
@@ -10,15 +12,25 @@ export const Route = createFileRoute("/_authenticated/admin/reddit")({
 type Mode = "url" | "manual";
 
 function RedditIntake() {
+  const drain = useServerFn(drainRedditIntake);
+  const getStats = useServerFn(getRedditQueueStats);
   const [mode, setMode] = useState<Mode>("url");
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
+  const [queueBusy, setQueueBusy] = useState<"next" | "all" | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [queueMsg, setQueueMsg] = useState("");
   const [manual, setManual] = useState({ url: "", subreddit: "", title: "", body: "", comments: "" });
+  const queueAbort = useRef(false);
 
   const list = useQuery({
     queryKey: ["reddit-imports"],
-    queryFn: async () => (await supabase.from("reddit_imports").select("*").order("created_at", { ascending: false }).limit(100)).data ?? [],
+    queryFn: async () => (await supabase.from("reddit_imports").select("*").order("original_created_at", { ascending: false, nullsFirst: false }).limit(100)).data ?? [],
+  });
+
+  const stats = useQuery({
+    queryKey: ["reddit-queue-stats"],
+    queryFn: async () => getStats(),
   });
 
   const createImport = async (payload: any, comments: any[]) => {
@@ -38,7 +50,56 @@ function RedditIntake() {
       await supabase.from("reddit_import_comments").insert(rows);
     }
     list.refetch();
+    stats.refetch();
     return imp.id;
+  };
+
+  const refreshQueue = async () => {
+    await Promise.all([list.refetch(), stats.refetch()]);
+  };
+
+  const generateNext = async () => {
+    setQueueBusy("next");
+    setErr(null);
+    setQueueMsg("Generating next 10 newest intakes...");
+    try {
+      const r: any = await drain({ data: { limit: 10 } });
+      setQueueMsg(`Processed ${r.processed}${r.discarded ? `, auto-discarded ${r.discarded} removed/deleted` : ""}. ${r.remaining} pending.`);
+      await refreshQueue();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setQueueBusy(null);
+    }
+  };
+
+  const generateAll = async () => {
+    if (queueBusy === "all") {
+      queueAbort.current = true;
+      setQueueMsg("Stopping queue after the current 10 finish...");
+      return;
+    }
+    queueAbort.current = false;
+    setQueueBusy("all");
+    setErr(null);
+    let totalProcessed = 0;
+    let totalDiscarded = 0;
+    try {
+      while (!queueAbort.current) {
+        const r: any = await drain({ data: { limit: 10 } });
+        totalProcessed += r.processed;
+        totalDiscarded += r.discarded ?? 0;
+        setQueueMsg(`Queue: ${totalProcessed} generated, ${totalDiscarded} discarded, ${r.remaining} pending...`);
+        await refreshQueue();
+        if (r.processed === 0 || r.remaining === 0) break;
+      }
+      setQueueMsg(`Queue done. ${totalProcessed} generated, ${totalDiscarded} discarded.`);
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setQueueBusy(null);
+      queueAbort.current = false;
+    }
   };
 
   const submitUrl = async (e: React.FormEvent) => {
@@ -92,6 +153,32 @@ function RedditIntake() {
       <div>
         <h1 className="font-display text-3xl font-black text-primary">Reddit Intake</h1>
         <p className="text-sm text-muted-foreground">Pull source material from Reddit posts to draft a local-news article. Source material is admin-only and never appears on the public site.</p>
+      </div>
+
+      <div className="rounded-lg border bg-white p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-display text-lg font-bold text-primary">Generation queue</h2>
+            <p className="text-sm text-muted-foreground">Works newest to oldest in batches of 10 and skips removed/deleted posts.</p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              onClick={generateNext}
+              disabled={!!queueBusy || (stats.data?.pending ?? 0) === 0}
+              className="h-10 rounded-md border border-primary px-4 text-sm font-semibold text-primary disabled:opacity-50"
+            >
+              {queueBusy === "next" ? "Working..." : `Generate next 10 (${stats.data?.pending ?? 0} pending)`}
+            </button>
+            <button
+              onClick={generateAll}
+              disabled={queueBusy === "next" || ((stats.data?.pending ?? 0) === 0 && queueBusy !== "all")}
+              className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              {queueBusy === "all" ? "Stop queue" : `Generate all (${stats.data?.pending ?? 0})`}
+            </button>
+          </div>
+        </div>
+        {queueMsg && <p className="mt-3 text-sm text-muted-foreground">{queueMsg}</p>}
       </div>
 
       <div className="rounded-lg border bg-white p-6">

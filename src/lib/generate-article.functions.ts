@@ -72,6 +72,74 @@ export const drainBatch = createServerFn({ method: "POST" })
     return { processed: results.length, results, remaining: remaining ?? 0, discarded: removedIds.length };
   });
 
+export const getRedditQueueStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: roleRow } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!roleRow) throw new Response("Forbidden", { status: 403 });
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { count } = await supabaseAdmin
+      .from("reddit_imports")
+      .select("id", { count: "exact", head: true })
+      .in("import_status", ["new", "parsed"]);
+    return { pending: count ?? 0 };
+  });
+
+export const drainRedditIntake = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { limit?: number }) => input)
+  .handler(async ({ data, context }) => {
+    const { data: roleRow } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!roleRow) throw new Response("Forbidden", { status: 403 });
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { generateOne } = await import("@/lib/cron-generate.server");
+    const limit = data.limit ?? 10;
+
+    const { data: pending } = await supabaseAdmin
+      .from("reddit_imports")
+      .select("id, original_body, original_title")
+      .in("import_status", ["new", "parsed"]);
+    const removedIds = (pending ?? [])
+      .filter((r: any) => {
+        const b = (r.original_body ?? "").trim().toLowerCase();
+        const t = (r.original_title ?? "").trim().toLowerCase();
+        return b === "[removed]" || b === "[deleted]" || t === "[removed]" || t === "[deleted]";
+      })
+      .map((r: any) => r.id);
+    if (removedIds.length) {
+      await supabaseAdmin
+        .from("reddit_imports")
+        .update({ import_status: "discarded", processing_error: "Source removed/deleted" })
+        .in("id", removedIds);
+    }
+
+    const { data: rows } = await supabaseAdmin
+      .from("reddit_imports")
+      .select("id")
+      .in("import_status", ["new", "parsed"])
+      .order("original_created_at", { ascending: false, nullsFirst: false })
+      .limit(limit);
+
+    const results: { id: string; ok: boolean; error?: string }[] = [];
+    for (const r of rows ?? []) {
+      try {
+        await generateOne(supabaseAdmin, r.id);
+        results.push({ id: r.id, ok: true });
+      } catch (err: any) {
+        results.push({ id: r.id, ok: false, error: String(err?.message ?? err) });
+      }
+    }
+
+    const { count: remaining } = await supabaseAdmin
+      .from("reddit_imports")
+      .select("id", { count: "exact", head: true })
+      .in("import_status", ["new", "parsed"]);
+
+    return { processed: results.length, results, remaining: remaining ?? 0, discarded: removedIds.length };
+  });
+
 export const publishPost = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { postId: string }) => input)
