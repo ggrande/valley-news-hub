@@ -22,9 +22,13 @@ async function loadSettings(admin: any): Promise<SettingsMap> {
 
 interface RedditChild { kind: string; data: any }
 
-async function fetchSubredditListing(sub: string, limit: number): Promise<any[]> {
-  const url = `https://www.reddit.com/r/${encodeURIComponent(sub)}/new.json?limit=${limit}&raw_json=1`;
-  const res = await fetch(url, { headers: { "User-Agent": "WKNA49NewsBot/1.0 (intake)" } });
+async function fetchSubredditListing(sub: string, limit: number, sort: string, topWindow: string): Promise<any[]> {
+  const validSort = ["new", "hot", "top", "rising", "best"].includes(sort) ? sort : "new";
+  const sortPath = validSort === "best" ? "" : validSort; // /r/x/.json defaults to hot; use explicit sort otherwise
+  const base = `https://www.reddit.com/r/${encodeURIComponent(sub)}/${sortPath}.json`;
+  const params = new URLSearchParams({ limit: String(limit), raw_json: "1" });
+  if (validSort === "top") params.set("t", ["hour","day","week","month","year","all"].includes(topWindow) ? topWindow : "day");
+  const res = await fetch(`${base}?${params.toString()}`, { headers: { "User-Agent": "WKNA49NewsBot/1.0 (intake)" } });
   if (!res.ok) return [];
   const data = await res.json();
   const children: RedditChild[] = data?.data?.children ?? [];
