@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Layout, PageHeader } from "@/components/site/Layout";
 import { WeatherCard } from "@/components/site/WeatherCard";
-import { forecast } from "@/lib/news-data";
+import { forecast as fallbackForecast } from "@/lib/news-data";
+import { useWeather } from "@/lib/use-weather";
 import { AlertTriangle, Droplets, Radar, School, Waves, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/weather")({
@@ -19,6 +20,9 @@ export const Route = createFileRoute("/weather")({
 });
 
 function WeatherPage() {
+  const { data, isLoading } = useWeather();
+  const days = data?.daily ?? fallbackForecast.map((f) => ({ ...f, code: -1 }));
+
   return (
     <Layout>
       <PageHeader eyebrow="WKNA 49 Weather" title="Kanawha Valley Forecast" description="Charleston, Saint Albans, South Charleston, Dunbar and the surrounding valley." />
@@ -27,9 +31,12 @@ function WeatherPage() {
           <div className="space-y-6">
             <WeatherCard />
             <div className="rounded-lg border bg-card p-6">
-              <h2 className="mb-4 font-display text-xl font-bold text-primary">7-Day Forecast</h2>
+              <h2 className="mb-1 font-display text-xl font-bold text-primary">7-Day Forecast</h2>
+              <p className="mb-4 text-xs text-muted-foreground">
+                Live data from Open-Meteo · Charleston, WV {isLoading && "· loading…"}
+              </p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-                {forecast.map((d) => (
+                {days.slice(0, 7).map((d) => (
                   <div key={d.day} className="rounded-md border bg-[color:var(--ivory)] p-3 text-center">
                     <p className="text-xs font-bold uppercase tracking-wider text-[color:var(--broadcast)]">{d.day}</p>
                     <p className="mt-2 text-2xl font-black text-primary">{d.hi}°</p>
@@ -39,12 +46,25 @@ function WeatherPage() {
                 ))}
               </div>
             </div>
-            <div className="aspect-[16/9] overflow-hidden rounded-lg border bg-gradient-to-br from-[color:var(--navy)] to-[color:var(--broadcast)] p-6 text-white">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--gold)]">
-                <Radar className="mr-1 inline size-3.5" /> WKNA 49 Live Radar
+            <div className="overflow-hidden rounded-lg border bg-[color:var(--navy-dark)]">
+              <div className="flex items-center justify-between px-4 py-2 text-white">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--gold)]">
+                  <Radar className="mr-1 inline size-3.5" /> WKNA 49 Live Radar
+                </p>
+                <p className="text-[10px] text-white/60">Powered by Windy.com</p>
+              </div>
+              <div className="aspect-[16/9] w-full">
+                <iframe
+                  title="Kanawha Valley live radar"
+                  src="https://embed.windy.com/embed2.html?lat=38.35&lon=-81.63&detailLat=38.35&detailLon=-81.63&zoom=8&level=surface&overlay=radar&product=radar&menu=&message=true&marker=true&calendar=&pressure=&type=map&location=coordinates&metricWind=mph&metricTemp=%C2%B0F&radarRange=-1"
+                  className="h-full w-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+              <p className="px-4 py-2 text-xs text-white/70">
+                Animated radar coverage for Kanawha, Putnam, Boone, Clay, Lincoln and Fayette counties.
               </p>
-              <p className="mt-2 font-display text-2xl font-bold">Interactive radar loads here</p>
-              <p className="mt-2 text-sm text-white/80">Animated radar coverage for Kanawha, Putnam, Boone, Clay, Lincoln and Fayette counties.</p>
             </div>
           </div>
           <aside className="space-y-6">
