@@ -542,6 +542,7 @@ export type Database = {
         Row: {
           author_id: string | null
           body: string | null
+          candidate_hero_image_url: string | null
           category_id: string | null
           created_at: string
           created_by: string | null
@@ -550,6 +551,10 @@ export type Database = {
           featured_image: string | null
           generated_version: string | null
           hero_caption: string | null
+          hero_crop_hint: string | null
+          hero_image_alt: string | null
+          hero_image_decision: string | null
+          hero_image_reason: string | null
           id: string
           is_breaking: boolean
           is_pinned: boolean
@@ -577,6 +582,7 @@ export type Database = {
         Insert: {
           author_id?: string | null
           body?: string | null
+          candidate_hero_image_url?: string | null
           category_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -585,6 +591,10 @@ export type Database = {
           featured_image?: string | null
           generated_version?: string | null
           hero_caption?: string | null
+          hero_crop_hint?: string | null
+          hero_image_alt?: string | null
+          hero_image_decision?: string | null
+          hero_image_reason?: string | null
           id?: string
           is_breaking?: boolean
           is_pinned?: boolean
@@ -612,6 +622,7 @@ export type Database = {
         Update: {
           author_id?: string | null
           body?: string | null
+          candidate_hero_image_url?: string | null
           category_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -620,6 +631,10 @@ export type Database = {
           featured_image?: string | null
           generated_version?: string | null
           hero_caption?: string | null
+          hero_crop_hint?: string | null
+          hero_image_alt?: string | null
+          hero_image_decision?: string | null
+          hero_image_reason?: string | null
           id?: string
           is_breaking?: boolean
           is_pinned?: boolean
@@ -745,6 +760,7 @@ export type Database = {
       reddit_imports: {
         Row: {
           batch_id: string | null
+          candidate_hero_image_url: string | null
           created_at: string
           created_by: string | null
           generated_post_id: string | null
@@ -770,6 +786,7 @@ export type Database = {
         }
         Insert: {
           batch_id?: string | null
+          candidate_hero_image_url?: string | null
           created_at?: string
           created_by?: string | null
           generated_post_id?: string | null
@@ -795,6 +812,7 @@ export type Database = {
         }
         Update: {
           batch_id?: string | null
+          candidate_hero_image_url?: string | null
           created_at?: string
           created_by?: string | null
           generated_post_id?: string | null

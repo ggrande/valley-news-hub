@@ -23,7 +23,20 @@ function RedditIntake() {
   const [err, setErr] = useState<string | null>(null);
   const [queueMsg, setQueueMsg] = useState("");
   const [manual, setManual] = useState({ url: "", subreddit: "", title: "", body: "", comments: "" });
+  const [heroFile, setHeroFile] = useState<File | null>(null);
   const queueAbort = useRef(false);
+
+  const uploadHero = async (): Promise<string | null> => {
+    if (!heroFile) return null;
+    const ext = (heroFile.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `intake/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("news-media").upload(path, heroFile, {
+      contentType: heroFile.type || "image/jpeg",
+      upsert: false,
+    });
+    if (error) throw error;
+    return `/api/media?p=${encodeURIComponent(path)}`;
+  };
 
   const list = useQuery({
     queryKey: ["reddit-imports"],
@@ -116,6 +129,7 @@ function RedditIntake() {
     e.preventDefault();
     setBusy(true); setErr(null);
     try {
+      const heroUrl = await uploadHero();
       const { data, error } = await supabase.functions.invoke("reddit-fetch", { body: { url } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -128,9 +142,11 @@ function RedditIntake() {
         original_author_display: data.post.author,
         original_created_at: data.post.created_utc ? new Date(data.post.created_utc * 1000).toISOString() : null,
         source_score: data.post.score,
+        candidate_hero_image_url: heroUrl,
         import_status: "parsed",
       }, data.comments ?? []);
       setUrl("");
+      setHeroFile(null);
     } catch (e) {
       setErr((e as Error).message + " — try manual paste mode.");
     } finally { setBusy(false); }
@@ -140,6 +156,7 @@ function RedditIntake() {
     e.preventDefault();
     setBusy(true); setErr(null);
     try {
+      const heroUrl = await uploadHero();
       const parsed = manual.comments.split(/\n+/).filter(Boolean).map((line, i) => {
         const m = line.match(/^([^:]+):\s*(.*)$/);
         return { id: `m${i}`, author: m?.[1]?.trim() ?? "redditor", body: m?.[2]?.trim() ?? line.trim(), depth: 0 };
@@ -151,9 +168,11 @@ function RedditIntake() {
         original_body: manual.body,
         raw_comment_text: manual.comments,
         parsed_comments: parsed,
+        candidate_hero_image_url: heroUrl,
         import_status: "parsed",
       }, parsed);
       setManual({ url: "", subreddit: "", title: "", body: "", comments: "" });
+      setHeroFile(null);
     } catch (e) { setErr((e as Error).message); }
     finally { setBusy(false); }
   };
@@ -213,6 +232,16 @@ function RedditIntake() {
             <button disabled={busy} className="h-10 rounded bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-60">{busy ? "Saving…" : "Save Intake"}</button>
           </form>
         )}
+        <div className="mt-4 rounded border border-dashed bg-slate-50 p-3">
+          <label className="text-xs font-semibold uppercase text-muted-foreground">Candidate hero image (optional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setHeroFile(e.target.files?.[0] ?? null)}
+            className="mt-2 block w-full text-sm"
+          />
+          {heroFile && <p className="mt-1 text-xs text-muted-foreground">{heroFile.name} — {(heroFile.size / 1024).toFixed(0)} KB. The AI will judge whether to use it as the hero.</p>}
+        </div>
         {err && <p className="mt-3 text-sm text-[color:var(--breaking)]">{err}</p>}
       </div>
 
