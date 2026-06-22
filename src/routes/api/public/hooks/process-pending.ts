@@ -23,17 +23,26 @@ async function loadSettings(admin: any): Promise<SettingsMap> {
 
 interface RedditChild { kind: string; data: any }
 
-async function fetchSubredditListing(sub: string, limit: number, sort: string, topWindow: string): Promise<any[]> {
+async function fetchSubredditListing(sub: string, limit: number, sort: string, topWindow: string): Promise<{ posts: any[]; error?: string }> {
   const validSort = ["new", "hot", "top", "rising", "best"].includes(sort) ? sort : "new";
-  const sortPath = validSort === "best" ? "" : validSort; // /r/x/.json defaults to hot; use explicit sort otherwise
+  const sortPath = validSort === "best" ? "" : validSort;
   const base = `https://www.reddit.com/r/${encodeURIComponent(sub)}/${sortPath}.json`;
   const params = new URLSearchParams({ limit: String(limit), raw_json: "1" });
   if (validSort === "top") params.set("t", ["hour","day","week","month","year","all"].includes(topWindow) ? topWindow : "day");
-  const res = await fetch(`${base}?${params.toString()}`, { headers: { "User-Agent": "WKNA49NewsBot/1.0 (intake)" } });
-  if (!res.ok) return [];
-  const data = await res.json();
+  const url = `${base}?${params.toString()}`;
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: { "User-Agent": "WKNA49NewsBot/1.0 (intake; +https://wkna49.com)", "Accept": "application/json" } });
+  } catch (err: any) {
+    return { posts: [], error: `fetch threw: ${err?.message ?? err}` };
+  }
+  if (!res.ok) {
+    const snippet = (await res.text().catch(() => "")).slice(0, 200);
+    return { posts: [], error: `HTTP ${res.status} from ${url} :: ${snippet}` };
+  }
+  const data = await res.json().catch(() => null);
   const children: RedditChild[] = data?.data?.children ?? [];
-  return children.filter((c) => c.kind === "t3").map((c) => c.data);
+  return { posts: children.filter((c) => c.kind === "t3").map((c) => c.data) };
 }
 
 async function fetchPostWithComments(permalink: string): Promise<{ post: any; comments: any[] } | null> {
