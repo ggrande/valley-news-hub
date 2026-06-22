@@ -51,6 +51,7 @@ export function Footer() {
             <br />
             Newsroom: <a href="mailto:news@wkna49.com" className="hover:text-white">news@wkna49.com</a>
           </address>
+          <div className="mt-5"><SupportButton variant="navy" /></div>
         </div>
         {COLS.map((col) => (
           <div key={col.title}>
