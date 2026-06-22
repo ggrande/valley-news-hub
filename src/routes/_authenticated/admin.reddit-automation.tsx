@@ -10,6 +10,7 @@ import {
   skipRedditNotification,
   retryRedditNotification,
   captureRedditSession,
+  debugGitHubStatus,
 } from "@/lib/reddit-automation.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/reddit-automation")({
@@ -66,6 +67,13 @@ function Page() {
     mutationFn: () => captureRedditSession({ data: {} as any }),
     onSuccess: () => toast.success("Session capture dispatched to GitHub Actions"),
     onError: (e: any) => toast.error(e?.message ?? "Dispatch failed"),
+  });
+
+  const [diag, setDiag] = useState<any>(null);
+  const diagnose = useMutation({
+    mutationFn: () => debugGitHubStatus({ data: {} as any }),
+    onSuccess: (d) => { setDiag(d); toast.success("Diagnostics loaded"); },
+    onError: (e: any) => toast.error(e?.message ?? "Diagnostics failed"),
   });
 
   const approve = useMutation({
@@ -284,6 +292,29 @@ function Page() {
           </table>
         </div>
       </section>
+
+      <section className="rounded-lg border bg-white p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold text-primary">GitHub Actions diagnostics</h2>
+          <button
+            onClick={() => diagnose.mutate()}
+            disabled={diagnose.isPending}
+            className="rounded-md border px-3 py-1.5 text-sm font-semibold disabled:opacity-50"
+          >
+            {diagnose.isPending ? "Checking…" : "Diagnose GitHub"}
+          </button>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Verifies the PAT can reach the repo, lists workflows GitHub sees on the default branch, shows recent runs, and fires a test dispatch.
+        </p>
+        {diag && (
+          <pre className="mt-3 max-h-96 overflow-auto rounded bg-gray-50 p-3 text-xs">
+{JSON.stringify(diag, null, 2)}
+          </pre>
+        )}
+      </section>
+
+
 
       <section className="rounded-lg border bg-amber-50 p-4 text-xs text-amber-900">
         <p className="font-semibold">Setup checklist</p>
