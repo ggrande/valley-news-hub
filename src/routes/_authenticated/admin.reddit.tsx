@@ -23,7 +23,20 @@ function RedditIntake() {
   const [err, setErr] = useState<string | null>(null);
   const [queueMsg, setQueueMsg] = useState("");
   const [manual, setManual] = useState({ url: "", subreddit: "", title: "", body: "", comments: "" });
+  const [heroFile, setHeroFile] = useState<File | null>(null);
   const queueAbort = useRef(false);
+
+  const uploadHero = async (): Promise<string | null> => {
+    if (!heroFile) return null;
+    const ext = (heroFile.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `intake/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("news-media").upload(path, heroFile, {
+      contentType: heroFile.type || "image/jpeg",
+      upsert: false,
+    });
+    if (error) throw error;
+    return `/api/media?p=${encodeURIComponent(path)}`;
+  };
 
   const list = useQuery({
     queryKey: ["reddit-imports"],
