@@ -254,5 +254,15 @@ export async function generateOne(admin: SupabaseClient, importId: string) {
     })
     .eq("id", imp.id);
 
+  // Populate the public Reader Discussion thread from the source comments,
+  // filtered to in-world chatter only and preserving original timestamps.
+  try {
+    const { curateAndInsertComments } = await import("./comment-curation.server");
+    await curateAndInsertComments(admin, post.id, comments, imp.original_created_at ?? null);
+  } catch (err) {
+    // Don't fail generation just because comments couldn't be saved.
+    console.warn(`comment curation failed for ${post.id}:`, err);
+  }
+
   return { postId: post.id, moderationStatus };
 }
