@@ -23,7 +23,7 @@ function PostsList() {
       const { data, error } = await supabase
         .from("posts")
         .select("id, slug, title, status, is_breaking, featured_image, published_at, updated_at, category:categories(name), author:authors(name)")
-        .order("updated_at", { ascending: false })
+        .order("published_at", { ascending: false, nullsFirst: false })
         .limit(500);
       if (error) throw error;
       return data ?? [];
@@ -248,7 +248,7 @@ function PostsList() {
               <th className="p-3">Category</th>
               <th className="p-3">Author</th>
               <th className="p-3">Image</th>
-              <th className="p-3">Updated</th>
+              <th className="p-3">Published</th>
             </tr>
           </thead>
           <tbody>
@@ -277,7 +277,7 @@ function PostsList() {
                     <button onClick={() => genOne(p.id)} disabled={busy} className="rounded bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-800 disabled:opacity-50">Gen</button>
                   )}
                 </td>
-                <td className="p-3 text-xs text-muted-foreground">{new Date(p.updated_at).toLocaleDateString()}</td>
+                <td className="p-3 text-xs text-muted-foreground">{p.published_at ? new Date(p.published_at).toLocaleDateString() : "—"}</td>
               </tr>
             ))}
             {rows.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No posts.</td></tr>}
