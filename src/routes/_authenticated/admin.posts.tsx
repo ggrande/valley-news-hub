@@ -101,6 +101,23 @@ function PostsList() {
     qc.invalidateQueries({ queryKey: ["admin-posts"] });
   };
 
+  const bulkDelete = async () => {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    if (!confirm(`PERMANENTLY DELETE ${ids.length} post(s)? This cannot be undone.`)) return;
+    setBusy(true);
+    setMsg(null);
+    await supabase.from("post_tags").delete().in("post_id", ids);
+    await supabase.from("post_versions").delete().in("post_id", ids);
+    await supabase.from("comments").delete().in("post_id", ids);
+    const { error } = await supabase.from("posts").delete().in("id", ids);
+    setBusy(false);
+    if (error) { setMsg(error.message); return; }
+    setMsg(`Deleted ${ids.length} post(s).`);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["admin-posts"] });
+  };
+
   const allDraftsChecked = draftIdsVisible.length > 0 && draftIdsVisible.every((id) => selected.has(id));
 
   return (
@@ -140,6 +157,13 @@ function PostsList() {
             className="rounded border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 disabled:opacity-50"
           >
             Archive
+          </button>
+          <button
+            disabled={busy || selected.size === 0}
+            onClick={bulkDelete}
+            className="rounded bg-red-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+          >
+            Delete
           </button>
           {selected.size > 0 && (
             <button onClick={() => setSelected(new Set())} className="text-xs text-muted-foreground hover:underline">
