@@ -63,6 +63,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:site_name", content: "WKNA 49 News" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:title", content: "WKNA 49 News — Local News for the Kanawha Valley" },
+      { name: "twitter:title", content: "WKNA 49 News — Local News for the Kanawha Valley" },
+      { property: "og:description", content: "WKNA-TV 49 — Charleston's Channel 49. Local news, weather, sports, and live coverage from the Kanawha Valley." },
+      { name: "twitter:description", content: "WKNA-TV 49 — Charleston's Channel 49. Local news, weather, sports, and live coverage from the Kanawha Valley." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/423ff38d-1525-4183-9e13-5cd353f92abb/id-preview-81d154c2--354111e0-8b0b-4250-b183-df5baf2db5bd.lovable.app-1782104617433.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/423ff38d-1525-4183-9e13-5cd353f92abb/id-preview-81d154c2--354111e0-8b0b-4250-b183-df5baf2db5bd.lovable.app-1782104617433.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
