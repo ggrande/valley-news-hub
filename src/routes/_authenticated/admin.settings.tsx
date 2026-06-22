@@ -57,10 +57,10 @@ function Settings() {
   };
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-6">
       <h1 className="font-display text-3xl font-black text-primary">Site Settings</h1>
       <div className="space-y-4 rounded-lg border bg-white p-6">
-        {KEYS.map((k) => {
+        {KEYS.map((k: any) => {
           const v = vals[k.key] ?? k.default;
           if (k.type === "bool") return (
             <label key={k.key} className="flex items-center justify-between gap-3">
@@ -72,6 +72,24 @@ function Settings() {
             <label key={k.key} className="block">
               <span className="text-sm font-semibold">{k.label}</span>
               <input type="number" value={v ?? ""} onChange={(e) => save(k.key, Number(e.target.value))} className="mt-1 h-10 w-full rounded border px-3 text-sm" />
+            </label>
+          );
+          if (k.type === "textarea") return (
+            <label key={k.key} className="block">
+              <span className="text-sm font-semibold">{k.label}</span>
+              <textarea
+                rows={k.rows ?? 6}
+                value={v ?? ""}
+                onChange={(e) => save(k.key, e.target.value)}
+                className="mt-1 w-full rounded border px-3 py-2 font-mono text-xs"
+              />
+              <button
+                type="button"
+                onClick={() => save(k.key, k.default)}
+                className="mt-1 text-xs text-muted-foreground hover:underline"
+              >
+                Reset to default
+              </button>
             </label>
           );
           return (
