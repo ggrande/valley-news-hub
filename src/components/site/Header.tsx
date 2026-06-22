@@ -40,6 +40,7 @@ export function Header() {
               <Radio className="size-4" />
               Watch Live
             </Link>
+            <SupportButton variant="navy" label="Support" />
             <Link
               to="/auth"
               className="inline-flex h-9 items-center rounded-md border border-white/15 px-3 text-xs font-semibold uppercase tracking-wide text-white/80 hover:bg-white/5"
