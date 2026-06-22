@@ -175,3 +175,77 @@ export const captureRedditSession = createServerFn({ method: "POST" })
     if (!dispatch.ok) throw new Error(dispatch.error);
     return { ok: true };
   });
+
+// Diagnostic: query GitHub Actions for this repo and return recent workflow runs
+// so an admin can see whether dispatches are actually starting workflows.
+export const debugGitHubStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const pat = process.env.GH_DISPATCH_PAT;
+    const repo = process.env.GITHUB_REPO;
+    if (!pat) return { ok: false, error: "GH_DISPATCH_PAT not set" };
+    if (!repo) return { ok: false, error: "GITHUB_REPO not set" };
+
+    // 1. Repo metadata (verifies PAT can read this repo, and tells us the default branch)
+    const repoRes = await fetch(`https://api.github.com/repos/${repo}`, {
+      headers: { Authorization: `Bearer ${pat}`, Accept: "application/vnd.github+json", "User-Agent": "wkna49" },
+    });
+    const repoBody: any = await repoRes.json().catch(() => ({}));
+
+    // 2. Workflows list (does GH see reddit-comment.yml on the default branch?)
+    const wfRes = await fetch(`https://api.github.com/repos/${repo}/actions/workflows`, {
+      headers: { Authorization: `Bearer ${pat}`, Accept: "application/vnd.github+json", "User-Agent": "wkna49" },
+    });
+    const wfBody: any = await wfRes.json().catch(() => ({}));
+
+    // 3. Recent runs (any runs in the last hour?)
+    const runsRes = await fetch(`https://api.github.com/repos/${repo}/actions/runs?per_page=10`, {
+      headers: { Authorization: `Bearer ${pat}`, Accept: "application/vnd.github+json", "User-Agent": "wkna49" },
+    });
+    const runsBody: any = await runsRes.json().catch(() => ({}));
+
+    // 4. Test dispatch a no-op event to confirm the API call succeeds end-to-end
+    const dispRes = await fetch(`https://api.github.com/repos/${repo}/dispatches`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${pat}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json",
+        "User-Agent": "wkna49",
+      },
+      body: JSON.stringify({ event_type: "reddit-capture-session", client_payload: { notification_id: "session-capture", ts: Date.now(), source: "debug" } }),
+    });
+    const dispText = await dispRes.text().catch(() => "");
+
+    return {
+      ok: true,
+      repo: {
+        configured: repo,
+        api_status: repoRes.status,
+        full_name: repoBody?.full_name ?? null,
+        default_branch: repoBody?.default_branch ?? null,
+        permissions: repoBody?.permissions ?? null,
+        error: repoRes.ok ? null : (repoBody?.message ?? "unknown"),
+      },
+      workflows: {
+        api_status: wfRes.status,
+        count: wfBody?.total_count ?? null,
+        names: (wfBody?.workflows ?? []).map((w: any) => ({ name: w.name, path: w.path, state: w.state })),
+      },
+      recent_runs: (runsBody?.workflow_runs ?? []).slice(0, 5).map((r: any) => ({
+        name: r.name,
+        event: r.event,
+        status: r.status,
+        conclusion: r.conclusion,
+        created_at: r.created_at,
+        html_url: r.html_url,
+      })),
+      test_dispatch: {
+        api_status: dispRes.status, // expect 204 on success
+        body: dispText.slice(0, 300),
+      },
+    };
+  });
+
