@@ -10,7 +10,7 @@ import { createClient } from "@supabase/supabase-js";
 
 type SettingsMap = Record<string, any>;
 
-async function loadSettings(admin: ReturnType<typeof createClient>): Promise<SettingsMap> {
+async function loadSettings(admin: any): Promise<SettingsMap> {
   const { data } = await admin.from("site_settings").select("key, value");
   const map: SettingsMap = {};
   for (const r of (data as any[]) ?? []) {
