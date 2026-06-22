@@ -232,6 +232,16 @@ function RedditIntake() {
             <button disabled={busy} className="h-10 rounded bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-60">{busy ? "Saving…" : "Save Intake"}</button>
           </form>
         )}
+        <div className="mt-4 rounded border border-dashed bg-slate-50 p-3">
+          <label className="text-xs font-semibold uppercase text-muted-foreground">Candidate hero image (optional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setHeroFile(e.target.files?.[0] ?? null)}
+            className="mt-2 block w-full text-sm"
+          />
+          {heroFile && <p className="mt-1 text-xs text-muted-foreground">{heroFile.name} — {(heroFile.size / 1024).toFixed(0)} KB. The AI will judge whether to use it as the hero.</p>}
+        </div>
         {err && <p className="mt-3 text-sm text-[color:var(--breaking)]">{err}</p>}
       </div>
 
