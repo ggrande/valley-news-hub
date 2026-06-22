@@ -1,5 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+export const runRedditAutomationNow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: roleRow } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!roleRow) throw new Response("Forbidden", { status: 403 });
+    const secret = process.env.CRON_SECRET;
+    if (!secret) throw new Error("CRON_SECRET not configured");
+    const req = getRequest();
+    const origin = new URL(req.url).origin;
+    const res = await fetch(`${origin}/api/public/hooks/process-pending`, {
+      method: "POST",
+      headers: { "x-cron-secret": secret, "Content-Type": "application/json" },
+      body: "{}",
+    });
+    const text = await res.text();
+    let parsed: any = null;
+    try { parsed = JSON.parse(text); } catch { parsed = { raw: text }; }
+    if (!res.ok) throw new Error(`Automation run failed (${res.status}): ${text.slice(0, 300)}`);
+    return parsed;
+  });
 
 async function resetOrphans(admin: any) {
   // Find generated imports whose post was deleted, and reset them to 'new'.
