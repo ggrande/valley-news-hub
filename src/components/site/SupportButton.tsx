@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 
 // TODO: replace with the station's actual Buy Me a Coffee username.
-const BMC_USERNAME = "wkna49";
+const BMC_USERNAME = "wknatv";
 const BMC_URL = `https://www.buymeacoffee.com/${BMC_USERNAME}`;
 
 const CRYPTO_WALLETS: { label: string; address: string; note?: string }[] = [
