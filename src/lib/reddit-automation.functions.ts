@@ -69,7 +69,7 @@ export const listRedditNotifications = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("reddit_comment_notifications")
-      .select("id, post_id, thread_url, subreddit, status, mode_at_enqueue, attempt_count, failure_reason, created_at, posted_at, reddit_comment_permalink, posts!inner(title, slug)")
+      .select("id, post_id, reddit_thread_url:thread_url, subreddit, status, mode_at_enqueue, attempt_count, failure_reason, created_at, posted_at, reddit_comment_permalink, posts!inner(title, slug)")
       .order("created_at", { ascending: false })
       .limit(data.limit ?? 50);
     if (data.status) q = q.eq("status", data.status);
