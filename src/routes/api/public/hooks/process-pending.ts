@@ -93,7 +93,12 @@ async function fetchPostComments(postId: string): Promise<any[]> {
   const seen = new Set<string>();
   let before: number | null = null;
   for (let page = 0; page < 10; page++) {
-    const params: Record<string, string> = { link_id: `t3_${postId}`, limit: "100" };
+    const params: Record<string, string> = {
+      link_id: `t3_${postId}`,
+      limit: "100",
+      sort: "desc",
+      sort_type: "created_utc",
+    };
     if (before != null) params.before = String(before);
     let batch: any[];
     try {
