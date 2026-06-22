@@ -1,7 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-// Generates a stylized editorial filler image for a post using the Lovable AI gateway,
+export const DEFAULT_FILLER_PROMPT = `Photorealistic editorial news photograph for a local TV news web article.
+Headline: "{{title}}".
+Subhead: "{{dek}}".
+Category: {{category}}.
+Style: real-life documentary photojournalism, natural lighting, true-to-life colors, candid composition, shallow depth of field where appropriate, looks like it was captured by a working news photographer with a DSLR. NOT an illustration, NOT a cartoon, NOT a painting, NOT stylized, NOT a render. No text, no logos, no watermarks, no captions, no on-screen graphics. 16:9 framing suitable as a hero image.`;
+
+// Generates a photorealistic filler image for a post using the Lovable AI gateway,
 // uploads it to the news-media bucket, and sets featured_image/og_image.
 export const generateFillerImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -24,13 +30,24 @@ export const generateFillerImage = createServerFn({ method: "POST" })
     if (post.featured_image && !data.force) return { ok: true, skipped: true, url: post.featured_image };
 
     const cat = (post as any).category?.name ?? "news";
-    const prompt = [
-      `Editorial newspaper-style illustration for a satirical news article.`,
-      `Headline: "${post.title}".`,
-      post.dek ? `Subhead: "${post.dek}".` : "",
-      `Category: ${cat}.`,
-      `Style: muted gritty halftone newsprint, warm desaturated palette, painterly editorial, no text, no logos, no watermarks, no captions, no UI, photo-illustration composition suitable as a hero image, 16:9 framing.`,
-    ].filter(Boolean).join(" ");
+
+    const { data: tmplRow } = await supabaseAdmin
+      .from("site_settings")
+      .select("value")
+      .eq("key", "filler_image_prompt_template")
+      .maybeSingle();
+    const tmplVal = (tmplRow as any)?.value;
+    const rawTmpl =
+      typeof tmplVal === "string"
+        ? tmplVal
+        : tmplVal && typeof tmplVal === "object" && typeof tmplVal.value === "string"
+          ? tmplVal.value
+          : DEFAULT_FILLER_PROMPT;
+
+    const prompt = rawTmpl
+      .replace(/\{\{title\}\}/g, post.title ?? "")
+      .replace(/\{\{dek\}\}/g, post.dek ?? "")
+      .replace(/\{\{category\}\}/g, cat);
 
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
