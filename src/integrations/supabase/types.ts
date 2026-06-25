@@ -668,6 +668,63 @@ export type Database = {
         }
         Relationships: []
       }
+      merch_orders: {
+        Row: {
+          amount_cents: number | null
+          created_at: string
+          currency: string | null
+          email: string
+          environment: string
+          error: string | null
+          id: string
+          items: Json
+          printful_order_id: string | null
+          shipping_address: Json | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_session_id: string
+          tracking_url: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          created_at?: string
+          currency?: string | null
+          email: string
+          environment?: string
+          error?: string | null
+          id?: string
+          items?: Json
+          printful_order_id?: string | null
+          shipping_address?: Json | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_session_id: string
+          tracking_url?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          created_at?: string
+          currency?: string | null
+          email?: string
+          environment?: string
+          error?: string | null
+          id?: string
+          items?: Json
+          printful_order_id?: string | null
+          shipping_address?: Json | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_session_id?: string
+          tracking_url?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       network_purchases: {
         Row: {
           amount_cents: number | null
