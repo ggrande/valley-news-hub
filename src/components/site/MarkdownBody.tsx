@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 
 /**
  * Tiny dependency-free markdown renderer for CMS body fields.
@@ -38,7 +38,7 @@ export function MarkdownBody({ source }: { source: string }) {
 
 function renderInline(text: string) {
   // Links [text](url)
-  const parts: (string | JSX.Element)[] = [];
+  const parts: ReactNode[] = [];
   const re = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|\*([^*]+)\*/g;
   let last = 0;
   let m: RegExpExecArray | null;
