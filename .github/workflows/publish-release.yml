@@ -1,20 +1,19 @@
 name: Publish platform release
 
 # Triggered by pushing a semver tag (vX.Y.Z) or manually from the Actions tab.
-# Builds a scrubbed ZIP via scripts/build-template.mjs, uploads it to the
-# `network-releases` Supabase storage bucket, and inserts a row in
-# `platform_releases` so /network/changelog + the in-app update banner pick it up.
+# Builds a scrubbed ZIP via scripts/build-template.mjs and POSTs it to the
+# /api/public/network/ingest-release endpoint, which uploads it to the
+# `network-releases` Supabase storage bucket and inserts the
+# `platform_releases` row that powers /network/changelog and the in-app
+# update banner.
 #
 # Required repo secrets:
-#   SUPABASE_URL                — https://<project>.supabase.co
-#   SUPABASE_SERVICE_ROLE_KEY   — service role key (server-only)
+#   NETWORK_INGEST_URL              https://wkna49.com/api/public/network/ingest-release
+#   NETWORK_RELEASE_INGEST_SECRET   shared secret matching the env var of the
+#                                   same name set in Lovable Cloud
 #
-# Optional inputs (workflow_dispatch):
-#   version  — overrides the tag-derived version (e.g. "1.4.0")
-#   channel  — "stable" (default) or "beta"
-#   breaking — "true" / "false" (default false)
-#   security — "true" / "false" (default false)
-#   notes    — markdown changelog body (default: auto-generated from commits)
+# Optional workflow_dispatch inputs:
+#   version, channel, breaking, security, notes (see below)
 
 on:
   push:
@@ -40,7 +39,7 @@ on:
         required: false
         default: "false"
       notes:
-        description: "Changelog markdown"
+        description: "Changelog markdown (defaults to commit log)"
         required: false
 
 jobs:
@@ -67,7 +66,7 @@ jobs:
           echo "version=$V" >> "$GITHUB_OUTPUT"
           echo "Release version: $V"
 
-      - name: Generate changelog (auto)
+      - name: Generate changelog from commits
         id: cl
         run: |
           PREV=$(git tag --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sed -n '2p')
@@ -85,14 +84,32 @@ jobs:
       - name: Build scrubbed release ZIP
         run: node scripts/build-template.mjs --version "${{ steps.ver.outputs.version }}"
 
-      - name: Upload to Supabase storage + insert release row
+      - name: Upload to platform via ingest endpoint
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NETWORK_INGEST_URL: ${{ secrets.NETWORK_INGEST_URL }}
+          NETWORK_RELEASE_INGEST_SECRET: ${{ secrets.NETWORK_RELEASE_INGEST_SECRET }}
           VERSION: ${{ steps.ver.outputs.version }}
           CHANNEL: ${{ inputs.channel || 'stable' }}
           BREAKING: ${{ inputs.breaking || 'false' }}
           SECURITY: ${{ inputs.security || 'false' }}
           NOTES: ${{ inputs.notes }}
           AUTO_LOG: ${{ steps.cl.outputs.log }}
-        run: node scripts/publish-release-upload.mjs
+        run: |
+          set -e
+          ZIP="dist-release/wkna49-platform-${VERSION}.zip"
+          SHA=$(awk '{print $1}' "${ZIP}.sha256")
+          NOTES_BODY="${NOTES:-### Changes
+
+${AUTO_LOG}}"
+          echo "Posting v${VERSION} (${SHA}) to ${NETWORK_INGEST_URL}"
+          curl --fail-with-body -sS -X POST "$NETWORK_INGEST_URL" \
+            -H "x-ingest-secret: ${NETWORK_RELEASE_INGEST_SECRET}" \
+            -F "version=${VERSION}" \
+            -F "channel=${CHANNEL}" \
+            -F "breaking=${BREAKING}" \
+            -F "security=${SECURITY}" \
+            -F "sha256=${SHA}" \
+            -F "notes=${NOTES_BODY}" \
+            -F "zip=@${ZIP};type=application/zip"
+          echo
+          echo "✓ Release v${VERSION} published"
