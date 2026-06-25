@@ -37,10 +37,24 @@ function Page() {
 
   return (
     <div className="mx-auto max-w-5xl p-6 md:p-10">
-      <h1 className="font-display text-3xl font-black text-primary">My Managed Sites</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Manage your hosted WKNA Network sites — review pending updates, customize branding, and set your custom domain.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-black text-primary">My Managed Sites</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Manage your hosted WKNA Network sites — review pending updates, customize branding, and set your custom domain.
+          </p>
+        </div>
+        {sites.length > 0 && (
+          <button
+            onClick={() => portalMut.mutate()}
+            disabled={portalMut.isPending}
+            className="h-9 rounded-md border px-4 text-sm font-semibold disabled:opacity-50"
+          >
+            {portalMut.isPending ? "Opening…" : "Manage billing"}
+          </button>
+        )}
+      </div>
+
 
       {isLoading ? (
         <p className="mt-8 text-sm text-muted-foreground">Loading…</p>
