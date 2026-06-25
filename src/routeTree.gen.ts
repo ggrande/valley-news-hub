@@ -21,7 +21,6 @@ import { Route as PublicFileRouteImport } from './routes/public-file'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as NewsSitemapDotxmlRouteImport } from './routes/news-sitemap[.]xml'
 import { Route as NetworkRouteImport } from './routes/network'
-import { Route as MerchRouteImport } from './routes/merch'
 import { Route as CorrectionsPolicyRouteImport } from './routes/corrections-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -33,6 +32,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NewsIndexRouteImport } from './routes/news.index'
+import { Route as MerchIndexRouteImport } from './routes/merch.index'
 import { Route as WeatherClosingsRouteImport } from './routes/weather.closings'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
@@ -135,11 +135,6 @@ const NetworkRoute = NetworkRouteImport.update({
   path: '/network',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MerchRoute = MerchRouteImport.update({
-  id: '/merch',
-  path: '/merch',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CorrectionsPolicyRoute = CorrectionsPolicyRouteImport.update({
   id: '/corrections-policy',
   path: '/corrections-policy',
@@ -194,6 +189,11 @@ const NewsIndexRoute = NewsIndexRouteImport.update({
   path: '/news/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MerchIndexRoute = MerchIndexRouteImport.update({
+  id: '/merch/',
+  path: '/merch/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WeatherClosingsRoute = WeatherClosingsRouteImport.update({
   id: '/closings',
   path: '/closings',
@@ -220,9 +220,9 @@ const NetworkChangelogRoute = NetworkChangelogRouteImport.update({
   getParentRoute: () => NetworkRoute,
 } as any)
 const MerchIdRoute = MerchIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => MerchRoute,
+  id: '/merch/$id',
+  path: '/merch/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
@@ -437,7 +437,6 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
-  '/merch': typeof MerchRouteWithChildren
   '/network': typeof NetworkRouteWithChildren
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -459,6 +458,7 @@ export interface FileRoutesByFullPath {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
+  '/merch/': typeof MerchIndexRoute
   '/news/': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/account/managed-sites': typeof AuthenticatedAccountManagedSitesRoute
@@ -503,7 +503,6 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
-  '/merch': typeof MerchRouteWithChildren
   '/network': typeof NetworkRouteWithChildren
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -524,6 +523,7 @@ export interface FileRoutesByTo {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
+  '/merch': typeof MerchIndexRoute
   '/news': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/account/managed-sites': typeof AuthenticatedAccountManagedSitesRoute
@@ -570,7 +570,6 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
-  '/merch': typeof MerchRouteWithChildren
   '/network': typeof NetworkRouteWithChildren
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -592,6 +591,7 @@ export interface FileRoutesById {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
+  '/merch/': typeof MerchIndexRoute
   '/news/': typeof NewsIndexRoute
   '/_authenticated/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/_authenticated/account/managed-sites': typeof AuthenticatedAccountManagedSitesRoute
@@ -638,7 +638,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
-    | '/merch'
     | '/network'
     | '/news-sitemap.xml'
     | '/privacy-policy'
@@ -660,6 +659,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
+    | '/merch/'
     | '/news/'
     | '/account/licenses'
     | '/account/managed-sites'
@@ -704,7 +704,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
-    | '/merch'
     | '/network'
     | '/news-sitemap.xml'
     | '/privacy-policy'
@@ -725,6 +724,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
+    | '/merch'
     | '/news'
     | '/account/licenses'
     | '/account/managed-sites'
@@ -770,7 +770,6 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
-    | '/merch'
     | '/network'
     | '/news-sitemap.xml'
     | '/privacy-policy'
@@ -792,6 +791,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
+    | '/merch/'
     | '/news/'
     | '/_authenticated/account/licenses'
     | '/_authenticated/account/managed-sites'
@@ -838,7 +838,6 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ContactRoute: typeof ContactRoute
   CorrectionsPolicyRoute: typeof CorrectionsPolicyRoute
-  MerchRoute: typeof MerchRouteWithChildren
   NetworkRoute: typeof NetworkRouteWithChildren
   NewsSitemapDotxmlRoute: typeof NewsSitemapDotxmlRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
@@ -853,8 +852,10 @@ export interface RootRouteChildren {
   WeatherRoute: typeof WeatherRouteWithChildren
   ApiMediaRoute: typeof ApiMediaRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  MerchIdRoute: typeof MerchIdRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NewsLocalRoute: typeof NewsLocalRoute
+  MerchIndexRoute: typeof MerchIndexRoute
   NewsIndexRoute: typeof NewsIndexRoute
   ApiPublicHooksBackfillCommentsRoute: typeof ApiPublicHooksBackfillCommentsRoute
   ApiPublicHooksManualJsonlImportRoute: typeof ApiPublicHooksManualJsonlImportRoute
@@ -952,13 +953,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NetworkRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/merch': {
-      id: '/merch'
-      path: '/merch'
-      fullPath: '/merch'
-      preLoaderRoute: typeof MerchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/corrections-policy': {
       id: '/corrections-policy'
       path: '/corrections-policy'
@@ -1036,6 +1030,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/merch/': {
+      id: '/merch/'
+      path: '/merch'
+      fullPath: '/merch/'
+      preLoaderRoute: typeof MerchIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/weather/closings': {
       id: '/weather/closings'
       path: '/closings'
@@ -1073,10 +1074,10 @@ declare module '@tanstack/react-router' {
     }
     '/merch/$id': {
       id: '/merch/$id'
-      path: '/$id'
+      path: '/merch/$id'
       fullPath: '/merch/$id'
       preLoaderRoute: typeof MerchIdRouteImport
-      parentRoute: typeof MerchRoute
+      parentRoute: typeof rootRouteImport
     }
     '/checkout/return': {
       id: '/checkout/return'
@@ -1431,16 +1432,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface MerchRouteChildren {
-  MerchIdRoute: typeof MerchIdRoute
-}
-
-const MerchRouteChildren: MerchRouteChildren = {
-  MerchIdRoute: MerchIdRoute,
-}
-
-const MerchRouteWithChildren = MerchRoute._addFileChildren(MerchRouteChildren)
-
 interface NetworkRouteChildren {
   NetworkChangelogRoute: typeof NetworkChangelogRoute
   NetworkDocsRoute: typeof NetworkDocsRoute
@@ -1476,7 +1467,6 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ContactRoute: ContactRoute,
   CorrectionsPolicyRoute: CorrectionsPolicyRoute,
-  MerchRoute: MerchRouteWithChildren,
   NetworkRoute: NetworkRouteWithChildren,
   NewsSitemapDotxmlRoute: NewsSitemapDotxmlRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
@@ -1491,8 +1481,10 @@ const rootRouteChildren: RootRouteChildren = {
   WeatherRoute: WeatherRouteWithChildren,
   ApiMediaRoute: ApiMediaRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
+  MerchIdRoute: MerchIdRoute,
   NewsSlugRoute: NewsSlugRoute,
   NewsLocalRoute: NewsLocalRoute,
+  MerchIndexRoute: MerchIndexRoute,
   NewsIndexRoute: NewsIndexRoute,
   ApiPublicHooksBackfillCommentsRoute: ApiPublicHooksBackfillCommentsRoute,
   ApiPublicHooksManualJsonlImportRoute: ApiPublicHooksManualJsonlImportRoute,
