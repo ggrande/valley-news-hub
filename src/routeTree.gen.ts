@@ -43,6 +43,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminSubmissionsRouteImport } from './routes/_authenticated/admin.submissions'
 import { Route as AuthenticatedAdminSiteContentRouteImport } from './routes/_authenticated/admin.site-content'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminReleasesRouteImport } from './routes/_authenticated/admin.releases'
 import { Route as AuthenticatedAdminRedditAutomationRouteImport } from './routes/_authenticated/admin.reddit-automation'
 import { Route as AuthenticatedAdminRedditRouteImport } from './routes/_authenticated/admin.reddit'
 import { Route as AuthenticatedAdminPostsRouteImport } from './routes/_authenticated/admin.posts'
@@ -54,6 +55,7 @@ import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicNetworkCheckUpdateRouteImport } from './routes/api/public/network/check-update'
 import { Route as ApiPublicHooksRedditCommentJobRouteImport } from './routes/api/public/hooks/reddit-comment-job'
 import { Route as ApiPublicHooksRedditCommentCallbackRouteImport } from './routes/api/public/hooks/reddit-comment-callback'
 import { Route as ApiPublicHooksProcessPendingRouteImport } from './routes/api/public/hooks/process-pending'
@@ -235,6 +237,12 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminReleasesRoute =
+  AuthenticatedAdminReleasesRouteImport.update({
+    id: '/releases',
+    path: '/releases',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminRedditAutomationRoute =
   AuthenticatedAdminRedditAutomationRouteImport.update({
     id: '/reddit-automation',
@@ -296,6 +304,12 @@ const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
     path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicNetworkCheckUpdateRoute =
+  ApiPublicNetworkCheckUpdateRouteImport.update({
+    id: '/api/public/network/check-update',
+    path: '/api/public/network/check-update',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksRedditCommentJobRoute =
@@ -387,6 +401,7 @@ export interface FileRoutesByFullPath {
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
+  '/admin/releases': typeof AuthenticatedAdminReleasesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
@@ -399,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -440,6 +456,7 @@ export interface FileRoutesByTo {
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
+  '/admin/releases': typeof AuthenticatedAdminReleasesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
@@ -452,6 +469,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -496,6 +514,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/_authenticated/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/_authenticated/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
+  '/_authenticated/admin/releases': typeof AuthenticatedAdminReleasesRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/_authenticated/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
@@ -508,6 +527,7 @@ export interface FileRoutesById {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -552,6 +572,7 @@ export interface FileRouteTypes {
     | '/admin/posts'
     | '/admin/reddit'
     | '/admin/reddit-automation'
+    | '/admin/releases'
     | '/admin/settings'
     | '/admin/site-content'
     | '/admin/submissions'
@@ -564,6 +585,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/network/check-update'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -605,6 +627,7 @@ export interface FileRouteTypes {
     | '/admin/posts'
     | '/admin/reddit'
     | '/admin/reddit-automation'
+    | '/admin/releases'
     | '/admin/settings'
     | '/admin/site-content'
     | '/admin/submissions'
@@ -617,6 +640,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/network/check-update'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -660,6 +684,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/posts'
     | '/_authenticated/admin/reddit'
     | '/_authenticated/admin/reddit-automation'
+    | '/_authenticated/admin/releases'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/site-content'
     | '/_authenticated/admin/submissions'
@@ -672,6 +697,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/network/check-update'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -708,6 +734,7 @@ export interface RootRouteChildren {
   ApiPublicHooksProcessPendingRoute: typeof ApiPublicHooksProcessPendingRoute
   ApiPublicHooksRedditCommentCallbackRoute: typeof ApiPublicHooksRedditCommentCallbackRoute
   ApiPublicHooksRedditCommentJobRoute: typeof ApiPublicHooksRedditCommentJobRoute
+  ApiPublicNetworkCheckUpdateRoute: typeof ApiPublicNetworkCheckUpdateRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -951,6 +978,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/releases': {
+      id: '/_authenticated/admin/releases'
+      path: '/releases'
+      fullPath: '/admin/releases'
+      preLoaderRoute: typeof AuthenticatedAdminReleasesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/reddit-automation': {
       id: '/_authenticated/admin/reddit-automation'
       path: '/reddit-automation'
@@ -1026,6 +1060,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/payments/webhook'
       fullPath: '/api/public/payments/webhook'
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/network/check-update': {
+      id: '/api/public/network/check-update'
+      path: '/api/public/network/check-update'
+      fullPath: '/api/public/network/check-update'
+      preLoaderRoute: typeof ApiPublicNetworkCheckUpdateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/reddit-comment-job': {
@@ -1140,6 +1181,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminPostsRoute: typeof AuthenticatedAdminPostsRouteWithChildren
   AuthenticatedAdminRedditRoute: typeof AuthenticatedAdminRedditRouteWithChildren
   AuthenticatedAdminRedditAutomationRoute: typeof AuthenticatedAdminRedditAutomationRoute
+  AuthenticatedAdminReleasesRoute: typeof AuthenticatedAdminReleasesRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminSiteContentRoute: typeof AuthenticatedAdminSiteContentRoute
   AuthenticatedAdminSubmissionsRoute: typeof AuthenticatedAdminSubmissionsRoute
@@ -1158,6 +1200,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminRedditRoute: AuthenticatedAdminRedditRouteWithChildren,
   AuthenticatedAdminRedditAutomationRoute:
     AuthenticatedAdminRedditAutomationRoute,
+  AuthenticatedAdminReleasesRoute: AuthenticatedAdminReleasesRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminSiteContentRoute: AuthenticatedAdminSiteContentRoute,
   AuthenticatedAdminSubmissionsRoute: AuthenticatedAdminSubmissionsRoute,
@@ -1234,6 +1277,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksRedditCommentCallbackRoute:
     ApiPublicHooksRedditCommentCallbackRoute,
   ApiPublicHooksRedditCommentJobRoute: ApiPublicHooksRedditCommentJobRoute,
+  ApiPublicNetworkCheckUpdateRoute: ApiPublicNetworkCheckUpdateRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
