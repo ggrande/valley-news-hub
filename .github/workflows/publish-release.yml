@@ -1,0 +1,98 @@
+name: Publish platform release
+
+# Triggered by pushing a semver tag (vX.Y.Z) or manually from the Actions tab.
+# Builds a scrubbed ZIP via scripts/build-template.mjs, uploads it to the
+# `network-releases` Supabase storage bucket, and inserts a row in
+# `platform_releases` so /network/changelog + the in-app update banner pick it up.
+#
+# Required repo secrets:
+#   SUPABASE_URL                — https://<project>.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY   — service role key (server-only)
+#
+# Optional inputs (workflow_dispatch):
+#   version  — overrides the tag-derived version (e.g. "1.4.0")
+#   channel  — "stable" (default) or "beta"
+#   breaking — "true" / "false" (default false)
+#   security — "true" / "false" (default false)
+#   notes    — markdown changelog body (default: auto-generated from commits)
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver version (without leading v)"
+        required: false
+      channel:
+        description: "Release channel"
+        required: false
+        default: "stable"
+        type: choice
+        options: [stable, beta]
+      breaking:
+        description: "Breaking change?"
+        required: false
+        default: "false"
+      security:
+        description: "Security release?"
+        required: false
+        default: "false"
+      notes:
+        description: "Changelog markdown"
+        required: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Resolve release version
+        id: ver
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            V="${{ inputs.version }}"
+          else
+            V="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "Release version: $V"
+
+      - name: Generate changelog (auto)
+        id: cl
+        run: |
+          PREV=$(git tag --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sed -n '2p')
+          if [ -n "$PREV" ]; then
+            LOG=$(git log --pretty=format:"- %s (%h)" "$PREV"..HEAD)
+          else
+            LOG=$(git log --pretty=format:"- %s (%h)" -n 50)
+          fi
+          {
+            echo "log<<EOF"
+            echo "$LOG"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build scrubbed release ZIP
+        run: node scripts/build-template.mjs --version "${{ steps.ver.outputs.version }}"
+
+      - name: Upload to Supabase storage + insert release row
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VERSION: ${{ steps.ver.outputs.version }}
+          CHANNEL: ${{ inputs.channel || 'stable' }}
+          BREAKING: ${{ inputs.breaking || 'false' }}
+          SECURITY: ${{ inputs.security || 'false' }}
+          NOTES: ${{ inputs.notes }}
+          AUTO_LOG: ${{ steps.cl.outputs.log }}
+        run: node scripts/publish-release-upload.mjs
