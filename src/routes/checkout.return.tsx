@@ -22,9 +22,10 @@ function CheckoutReturn() {
         ) : (
           <p className="text-sm text-muted-foreground">No order information found in this URL.</p>
         )}
-        <div className="flex gap-3">
-          <Link to="/network" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground">Back to Network</Link>
-          <Link to="/network/changelog" className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-semibold">View changelog</Link>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/account/licenses" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground">View my licenses</Link>
+          <Link to="/network" className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-semibold">Back to Network</Link>
+          <Link to="/network/changelog" className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-semibold">Changelog</Link>
         </div>
       </div>
     </Layout>
