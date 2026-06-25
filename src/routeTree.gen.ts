@@ -20,6 +20,7 @@ import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
 import { Route as PublicFileRouteImport } from './routes/public-file'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as NewsSitemapDotxmlRouteImport } from './routes/news-sitemap[.]xml'
+import { Route as NetworkRouteImport } from './routes/network'
 import { Route as CorrectionsPolicyRouteImport } from './routes/corrections-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -34,6 +35,8 @@ import { Route as NewsIndexRouteImport } from './routes/news.index'
 import { Route as WeatherClosingsRouteImport } from './routes/weather.closings'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
+import { Route as NetworkChangelogRouteImport } from './routes/network.changelog'
+import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -49,6 +52,7 @@ import { Route as AuthenticatedAdminClosingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksRedditCommentJobRouteImport } from './routes/api/public/hooks/reddit-comment-job'
 import { Route as ApiPublicHooksRedditCommentCallbackRouteImport } from './routes/api/public/hooks/reddit-comment-callback'
 import { Route as ApiPublicHooksProcessPendingRouteImport } from './routes/api/public/hooks/process-pending'
@@ -111,6 +115,11 @@ const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
 const NewsSitemapDotxmlRoute = NewsSitemapDotxmlRouteImport.update({
   id: '/news-sitemap.xml',
   path: '/news-sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NetworkRoute = NetworkRouteImport.update({
+  id: '/network',
+  path: '/network',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CorrectionsPolicyRoute = CorrectionsPolicyRouteImport.update({
@@ -180,6 +189,16 @@ const NewsLocalRoute = NewsLocalRouteImport.update({
 const NewsSlugRoute = NewsSlugRouteImport.update({
   id: '/news/$slug',
   path: '/news/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NetworkChangelogRoute = NetworkChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => NetworkRoute,
+} as any)
+const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
+  id: '/checkout/return',
+  path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMediaRoute = ApiMediaRouteImport.update({
@@ -266,6 +285,12 @@ const AuthenticatedAdminAiLogRoute = AuthenticatedAdminAiLogRouteImport.update({
   path: '/ai-log',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRedditCommentJobRoute =
   ApiPublicHooksRedditCommentJobRouteImport.update({
     id: '/api/public/hooks/reddit-comment-job',
@@ -325,6 +350,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/network': typeof NetworkRouteWithChildren
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
@@ -338,6 +364,8 @@ export interface FileRoutesByFullPath {
   '/weather': typeof WeatherRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/media': typeof ApiMediaRoute
+  '/checkout/return': typeof CheckoutReturnRoute
+  '/network/changelog': typeof NetworkChangelogRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
@@ -363,6 +391,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -374,6 +403,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/network': typeof NetworkRouteWithChildren
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
@@ -386,6 +416,8 @@ export interface FileRoutesByTo {
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRouteWithChildren
   '/api/media': typeof ApiMediaRoute
+  '/checkout/return': typeof CheckoutReturnRoute
+  '/network/changelog': typeof NetworkChangelogRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
@@ -411,6 +443,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -424,6 +457,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/network': typeof NetworkRouteWithChildren
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/public-file': typeof PublicFileRoute
@@ -437,6 +471,8 @@ export interface FileRoutesById {
   '/weather': typeof WeatherRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/media': typeof ApiMediaRoute
+  '/checkout/return': typeof CheckoutReturnRoute
+  '/network/changelog': typeof NetworkChangelogRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
@@ -462,6 +498,7 @@ export interface FileRoutesById {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -475,6 +512,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
+    | '/network'
     | '/news-sitemap.xml'
     | '/privacy-policy'
     | '/public-file'
@@ -488,6 +526,8 @@ export interface FileRouteTypes {
     | '/weather'
     | '/admin'
     | '/api/media'
+    | '/checkout/return'
+    | '/network/changelog'
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
@@ -513,6 +553,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -524,6 +565,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
+    | '/network'
     | '/news-sitemap.xml'
     | '/privacy-policy'
     | '/public-file'
@@ -536,6 +578,8 @@ export interface FileRouteTypes {
     | '/watch-live'
     | '/weather'
     | '/api/media'
+    | '/checkout/return'
+    | '/network/changelog'
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
@@ -561,6 +605,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -573,6 +618,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
+    | '/network'
     | '/news-sitemap.xml'
     | '/privacy-policy'
     | '/public-file'
@@ -586,6 +632,8 @@ export interface FileRouteTypes {
     | '/weather'
     | '/_authenticated/admin'
     | '/api/media'
+    | '/checkout/return'
+    | '/network/changelog'
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
@@ -611,6 +659,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -624,6 +673,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ContactRoute: typeof ContactRoute
   CorrectionsPolicyRoute: typeof CorrectionsPolicyRoute
+  NetworkRoute: typeof NetworkRouteWithChildren
   NewsSitemapDotxmlRoute: typeof NewsSitemapDotxmlRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   PublicFileRoute: typeof PublicFileRoute
@@ -636,6 +686,7 @@ export interface RootRouteChildren {
   WatchLiveRoute: typeof WatchLiveRoute
   WeatherRoute: typeof WeatherRouteWithChildren
   ApiMediaRoute: typeof ApiMediaRoute
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NewsLocalRoute: typeof NewsLocalRoute
   NewsIndexRoute: typeof NewsIndexRoute
@@ -644,6 +695,7 @@ export interface RootRouteChildren {
   ApiPublicHooksProcessPendingRoute: typeof ApiPublicHooksProcessPendingRoute
   ApiPublicHooksRedditCommentCallbackRoute: typeof ApiPublicHooksRedditCommentCallbackRoute
   ApiPublicHooksRedditCommentJobRoute: typeof ApiPublicHooksRedditCommentJobRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -723,6 +775,13 @@ declare module '@tanstack/react-router' {
       path: '/news-sitemap.xml'
       fullPath: '/news-sitemap.xml'
       preLoaderRoute: typeof NewsSitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/network': {
+      id: '/network'
+      path: '/network'
+      fullPath: '/network'
+      preLoaderRoute: typeof NetworkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/corrections-policy': {
@@ -821,6 +880,20 @@ declare module '@tanstack/react-router' {
       path: '/news/$slug'
       fullPath: '/news/$slug'
       preLoaderRoute: typeof NewsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/network/changelog': {
+      id: '/network/changelog'
+      path: '/changelog'
+      fullPath: '/network/changelog'
+      preLoaderRoute: typeof NetworkChangelogRouteImport
+      parentRoute: typeof NetworkRoute
+    }
+    '/checkout/return': {
+      id: '/checkout/return'
+      path: '/checkout/return'
+      fullPath: '/checkout/return'
+      preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/media': {
@@ -927,6 +1000,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/ai-log'
       preLoaderRoute: typeof AuthenticatedAdminAiLogRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/reddit-comment-job': {
       id: '/api/public/hooks/reddit-comment-job'
@@ -1076,6 +1156,17 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface NetworkRouteChildren {
+  NetworkChangelogRoute: typeof NetworkChangelogRoute
+}
+
+const NetworkRouteChildren: NetworkRouteChildren = {
+  NetworkChangelogRoute: NetworkChangelogRoute,
+}
+
+const NetworkRouteWithChildren =
+  NetworkRoute._addFileChildren(NetworkRouteChildren)
+
 interface WeatherRouteChildren {
   WeatherClosingsRoute: typeof WeatherClosingsRoute
 }
@@ -1098,6 +1189,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ContactRoute: ContactRoute,
   CorrectionsPolicyRoute: CorrectionsPolicyRoute,
+  NetworkRoute: NetworkRouteWithChildren,
   NewsSitemapDotxmlRoute: NewsSitemapDotxmlRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   PublicFileRoute: PublicFileRoute,
@@ -1110,6 +1202,7 @@ const rootRouteChildren: RootRouteChildren = {
   WatchLiveRoute: WatchLiveRoute,
   WeatherRoute: WeatherRouteWithChildren,
   ApiMediaRoute: ApiMediaRoute,
+  CheckoutReturnRoute: CheckoutReturnRoute,
   NewsSlugRoute: NewsSlugRoute,
   NewsLocalRoute: NewsLocalRoute,
   NewsIndexRoute: NewsIndexRoute,
@@ -1119,6 +1212,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksRedditCommentCallbackRoute:
     ApiPublicHooksRedditCommentCallbackRoute,
   ApiPublicHooksRedditCommentJobRoute: ApiPublicHooksRedditCommentJobRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
