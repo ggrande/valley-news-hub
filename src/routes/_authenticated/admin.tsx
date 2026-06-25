@@ -24,6 +24,7 @@ const NAV = [
   { to: "/admin/site-content", label: "Site Content (CMS)" },
   { to: "/admin/releases", label: "Network Releases" },
   { to: "/admin/licenses", label: "Network Licenses" },
+  { to: "/admin/managed-sites", label: "Managed Sites" },
 ];
 
 function AdminLayout() {
