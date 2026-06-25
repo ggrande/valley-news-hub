@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { adminListManagedSites, adminStageReleaseForSites, type ManagedSiteRow } from "@/lib/managed-sites.functions";
-import { adminListReleases } from "@/lib/network-releases.functions";
+import { listAllReleases } from "@/lib/network-releases.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/managed-sites")({
   head: () => ({ meta: [{ title: "Managed Sites — Admin" }, { name: "robots", content: "noindex" }] }),
