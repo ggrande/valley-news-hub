@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Layout, PageHeader } from "@/components/site/Layout";
+import { MarkdownBody } from "@/components/site/MarkdownBody";
+import { useSiteContent } from "@/lib/use-site-content";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -16,13 +18,20 @@ export const Route = createFileRoute("/about")({
 });
 
 function AboutPage() {
+  const page = useSiteContent<{ title: string; body_md?: string }>("page_about", { title: "About WKNA-TV 49" });
+  const override = page.body_md?.trim();
   return (
     <Layout>
       <PageHeader
         eyebrow="Our Station"
-        title="About WKNA-TV 49"
+        title={page.title || "About WKNA-TV 49"}
         description="Charleston's Channel 49 — local news for the Kanawha Valley."
       />
+      {override ? (
+        <article className="mx-auto max-w-3xl px-4 py-12 font-news text-lg leading-relaxed text-foreground">
+          <MarkdownBody source={override} />
+        </article>
+      ) : (
       <section className="mx-auto max-w-3xl px-4 py-12 font-news text-lg leading-relaxed text-foreground">
         <p>
           WKNA-TV 49 is a Charleston-based local news station serving the Kanawha Valley and surrounding communities. WKNA-TV first appeared on Channel 49 in Charleston in the early 1950s during the first wave of UHF television in West Virginia. The station began test-pattern operations on September 21, 1953, and regular broadcasts began on October 12, 1953. The original broadcast era ended in 1955, but the WKNA-TV name remained part of Charleston television history.
