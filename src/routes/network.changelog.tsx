@@ -19,7 +19,7 @@ const listReleases = createServerFn({ method: "GET" }).handler(async (): Promise
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
   });
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("platform_releases")
     .select("id,version,channel,title,changelog_md,breaking,security,published_at")
     .not("published_at", "is", null)
