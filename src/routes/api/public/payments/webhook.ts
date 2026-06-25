@@ -103,12 +103,14 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
   const supabase = getSupabase();
   await supabase
     .from("network_purchases")
-    .update({
-      status: subscription.status,
-      updated_at: new Date().toISOString(),
-    })
+    .update({ status: subscription.status, updated_at: new Date().toISOString() })
     .eq("stripe_subscription_id", subscription.id)
     .eq("environment", env);
+  // Mirror subscription_status onto managed_sites so we can gate access
+  await supabase
+    .from("managed_sites")
+    .update({ subscription_status: subscription.status, updated_at: new Date().toISOString() })
+    .eq("stripe_subscription_id", subscription.id);
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {
