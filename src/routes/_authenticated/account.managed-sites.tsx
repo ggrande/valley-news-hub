@@ -9,6 +9,8 @@ import {
   rejectPendingRelease,
   type ManagedSiteRow,
 } from "@/lib/managed-sites.functions";
+import { createNetworkBillingPortalSession } from "@/lib/network-payments.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/_authenticated/account/managed-sites")({
   head: () => ({ meta: [{ title: "My Managed Sites — WKNA 49 Network" }, { name: "robots", content: "noindex" }] }),
@@ -17,17 +19,42 @@ export const Route = createFileRoute("/_authenticated/account/managed-sites")({
 
 function Page() {
   const list = useServerFn(listMyManagedSites);
+  const portal = useServerFn(createNetworkBillingPortalSession);
   const { data: sites = [], isLoading } = useQuery({
     queryKey: ["my-managed-sites"],
     queryFn: () => list(),
   });
 
+  const portalMut = useMutation({
+    mutationFn: async () => {
+      const r = await portal({ data: { returnUrl: window.location.href, environment: getStripeEnvironment() } });
+      if ("error" in r) throw new Error(r.error);
+      window.open(r.url, "_blank", "noopener");
+    },
+    onError: (e: any) => alert(e.message || "Could not open billing portal"),
+  });
+
+
   return (
     <div className="mx-auto max-w-5xl p-6 md:p-10">
-      <h1 className="font-display text-3xl font-black text-primary">My Managed Sites</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Manage your hosted WKNA Network sites — review pending updates, customize branding, and set your custom domain.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-black text-primary">My Managed Sites</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Manage your hosted WKNA Network sites — review pending updates, customize branding, and set your custom domain.
+          </p>
+        </div>
+        {sites.length > 0 && (
+          <button
+            onClick={() => portalMut.mutate()}
+            disabled={portalMut.isPending}
+            className="h-9 rounded-md border px-4 text-sm font-semibold disabled:opacity-50"
+          >
+            {portalMut.isPending ? "Opening…" : "Manage billing"}
+          </button>
+        )}
+      </div>
+
 
       {isLoading ? (
         <p className="mt-8 text-sm text-muted-foreground">Loading…</p>
@@ -89,10 +116,22 @@ function SiteCard({ site }: { site: ManagedSiteRow }) {
         </div>
       </div>
 
+      {site.subscription_status === "past_due" && (
+        <div className="mt-4 rounded-md border-2 border-red-400 bg-red-50 p-4 text-sm text-red-900">
+          <strong>Your last payment failed.</strong> Update your card via "Manage billing" to keep your site online. Stripe will retry automatically.
+        </div>
+      )}
+      {site.status === "pending_provision" && (
+        <div className="mt-4 rounded-md border bg-amber-50 p-4 text-sm text-amber-900">
+          <strong>Setting up your site.</strong> Our team is provisioning your hosting. You'll get an email when it's live (usually within 1 business day).
+        </div>
+      )}
+
       <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
         <div>Current version: <span className="font-mono text-foreground">{site.current_release?.version ?? "—"}</span></div>
         <div>Last deployed: <span className="text-foreground">{site.last_deployed_at ? new Date(site.last_deployed_at).toLocaleString() : "—"}</span></div>
       </div>
+
 
       {site.pending_release && (
         <div className="mt-4 rounded-md border-2 border-[color:var(--breaking)] bg-[color:var(--breaking)]/5 p-4">

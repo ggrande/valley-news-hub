@@ -113,6 +113,24 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
     .eq("stripe_subscription_id", subscription.id);
 }
 
+async function handleInvoiceEvent(invoice: any, env: StripeEnv, type: string) {
+  const subId = typeof invoice.subscription === "string"
+    ? invoice.subscription
+    : invoice.subscription?.id ?? null;
+  if (!subId) return;
+  const supabase = getSupabase();
+  const status = type === "invoice.payment_failed" ? "past_due" : "active";
+  await supabase
+    .from("network_purchases")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("stripe_subscription_id", subId)
+    .eq("environment", env);
+  await supabase
+    .from("managed_sites")
+    .update({ subscription_status: status, updated_at: new Date().toISOString() })
+    .eq("stripe_subscription_id", subId);
+}
+
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
   switch (event.type) {
@@ -122,6 +140,11 @@ async function handleWebhook(req: Request, env: StripeEnv) {
     case "customer.subscription.updated":
     case "customer.subscription.deleted":
       await handleSubscriptionUpdated(event.data.object, env);
+      break;
+    case "invoice.payment_failed":
+    case "invoice.paid":
+    case "invoice.payment_succeeded":
+      await handleInvoiceEvent(event.data.object, env, event.type);
       break;
     default:
       console.log("Unhandled event:", event.type);

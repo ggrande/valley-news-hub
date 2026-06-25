@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type Tier = "self_host_license" | "managed_mirror";
 
 type CheckoutResult = { clientSecret: string } | { error: string };
+type PortalResult = { url: string } | { error: string };
 
 async function resolveOrCreateCustomer(
   stripe: any,
@@ -96,6 +98,36 @@ export const createNetworkCheckoutSession = createServerFn({ method: "POST" })
       } as any);
 
       return { clientSecret: session.client_secret ?? "" };
+    } catch (error) {
+      return { error: getStripeErrorMessage(error) };
+    }
+  });
+
+export const createNetworkBillingPortalSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { returnUrl: string; environment: "sandbox" | "live" }) => data)
+  .handler(async ({ data, context }): Promise<PortalResult> => {
+    const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
+    const { supabase, userId } = context;
+    // Find the most-recent purchase with a customer id for this user in this env
+    const { data: purchase } = await supabase
+      .from("network_purchases")
+      .select("stripe_customer_id")
+      .eq("user_id", userId)
+      .eq("environment", data.environment)
+      .not("stripe_customer_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const customerId = (purchase as any)?.stripe_customer_id;
+    if (!customerId) return { error: "No billing account found for your user." };
+    try {
+      const stripe = createStripeClient(data.environment);
+      const portal = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: data.returnUrl,
+      });
+      return { url: portal.url };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }
