@@ -41,6 +41,7 @@ import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminSubmissionsRouteImport } from './routes/_authenticated/admin.submissions'
+import { Route as AuthenticatedAdminSiteContentRouteImport } from './routes/_authenticated/admin.site-content'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminRedditAutomationRouteImport } from './routes/_authenticated/admin.reddit-automation'
 import { Route as AuthenticatedAdminRedditRouteImport } from './routes/_authenticated/admin.reddit'
@@ -222,6 +223,12 @@ const AuthenticatedAdminSubmissionsRoute =
     path: '/submissions',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminSiteContentRoute =
+  AuthenticatedAdminSiteContentRouteImport.update({
+    id: '/site-content',
+    path: '/site-content',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/settings',
@@ -381,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
@@ -433,6 +441,7 @@ export interface FileRoutesByTo {
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
@@ -488,6 +497,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/_authenticated/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/_authenticated/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
@@ -543,6 +553,7 @@ export interface FileRouteTypes {
     | '/admin/reddit'
     | '/admin/reddit-automation'
     | '/admin/settings'
+    | '/admin/site-content'
     | '/admin/submissions'
     | '/admin/'
     | '/admin/import/$batchId'
@@ -595,6 +606,7 @@ export interface FileRouteTypes {
     | '/admin/reddit'
     | '/admin/reddit-automation'
     | '/admin/settings'
+    | '/admin/site-content'
     | '/admin/submissions'
     | '/admin'
     | '/admin/import/$batchId'
@@ -649,6 +661,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/reddit'
     | '/_authenticated/admin/reddit-automation'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/admin/site-content'
     | '/_authenticated/admin/submissions'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/import/$batchId'
@@ -924,6 +937,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSubmissionsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/site-content': {
+      id: '/_authenticated/admin/site-content'
+      path: '/site-content'
+      fullPath: '/admin/site-content'
+      preLoaderRoute: typeof AuthenticatedAdminSiteContentRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
       path: '/settings'
@@ -1121,6 +1141,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminRedditRoute: typeof AuthenticatedAdminRedditRouteWithChildren
   AuthenticatedAdminRedditAutomationRoute: typeof AuthenticatedAdminRedditAutomationRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedAdminSiteContentRoute: typeof AuthenticatedAdminSiteContentRoute
   AuthenticatedAdminSubmissionsRoute: typeof AuthenticatedAdminSubmissionsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
@@ -1138,6 +1159,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminRedditAutomationRoute:
     AuthenticatedAdminRedditAutomationRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+  AuthenticatedAdminSiteContentRoute: AuthenticatedAdminSiteContentRoute,
   AuthenticatedAdminSubmissionsRoute: AuthenticatedAdminSubmissionsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }

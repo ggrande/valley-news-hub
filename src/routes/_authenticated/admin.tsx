@@ -21,6 +21,7 @@ const NAV = [
   { to: "/admin/submissions", label: "Submissions" },
   { to: "/admin/closings", label: "Closings & Delays" },
   { to: "/admin/settings", label: "Site Settings" },
+  { to: "/admin/site-content", label: "Site Content (CMS)" },
 ];
 
 function AdminLayout() {
