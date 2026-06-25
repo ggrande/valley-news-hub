@@ -10,11 +10,13 @@ function getKey(): string {
 }
 
 async function pf<T = any>(path: string, init?: RequestInit): Promise<T> {
+  const storeId = process.env.PRINTFUL_STORE_ID;
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${getKey()}`,
       "Content-Type": "application/json",
+      ...(storeId ? { "X-PF-Store-Id": storeId } : {}),
       ...(init?.headers ?? {}),
     },
   });
