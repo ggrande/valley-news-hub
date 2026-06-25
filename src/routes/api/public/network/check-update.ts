@@ -28,21 +28,22 @@ export const Route = createFileRoute("/api/public/network/check-update")({
           auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
         });
 
-        // Verify the license key exists and is active
+        // Verify the license key exists and is not revoked
         const { data: lic } = await (admin as any)
           .from("licenses")
-          .select("id,status")
+          .select("id,revoked,channel")
           .eq("license_key", license)
           .maybeSingle();
-        if (!lic || lic.status !== "active") {
+        if (!lic || lic.revoked) {
           return Response.json({ error: "invalid license" }, { status: 403 });
         }
+        const effectiveChannel = channel || lic.channel || "stable";
 
         // Latest published release in the requested channel
         const { data: latest } = await (admin as any)
           .from("platform_releases")
           .select("id,version,channel,breaking,security,zip_path,published_at")
-          .eq("channel", channel)
+          .eq("channel", effectiveChannel)
           .not("published_at", "is", null)
           .order("published_at", { ascending: false })
           .limit(1)
@@ -64,7 +65,7 @@ export const Route = createFileRoute("/api/public/network/check-update")({
           // Best-effort: track that this license was offered this version
           await (admin as any)
             .from("licenses")
-            .update({ last_update_check_at: new Date().toISOString() })
+            .update({ last_check_at: new Date().toISOString() })
             .eq("id", lic.id);
         }
 
