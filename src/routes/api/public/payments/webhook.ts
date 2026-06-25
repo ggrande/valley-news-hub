@@ -18,7 +18,88 @@ function generateLicenseKey(): string {
   return `WKNA49-${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 20)}`;
 }
 
+async function handleMerchCheckoutCompleted(session: any, env: StripeEnv) {
+  const supabase = getSupabase();
+  const syncVariantId = Number(session.metadata?.printful_sync_variant_id);
+  const quantity = Number(session.metadata?.quantity) || 1;
+  const email = session.customer_details?.email || session.customer_email || "";
+  const userId = session.metadata?.userId || null;
+  const shipping = session.collected_information?.shipping_details
+    || session.customer_details?.address
+    || null;
+  const lineItem = session.display_items?.[0] || null;
+  const productName = lineItem?.custom?.name || session.payment_intent?.description || "Merch order";
+
+  const items = [{ sync_variant_id: syncVariantId, quantity, name: productName }];
+
+  // Insert order row first (so we have a trail even if Printful fails)
+  const { data: inserted } = await supabase
+    .from("merch_orders")
+    .upsert({
+      user_id: userId,
+      email,
+      stripe_session_id: session.id,
+      stripe_customer_id: typeof session.customer === "string" ? session.customer : session.customer?.id ?? null,
+      status: "pending",
+      amount_cents: session.amount_total ?? null,
+      currency: session.currency ?? "usd",
+      items,
+      shipping_address: shipping,
+      environment: env,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "stripe_session_id" })
+    .select()
+    .single();
+
+  // Submit to Printful
+  const sd = session.collected_information?.shipping_details || session.shipping_details || {};
+  const addr = sd.address || session.customer_details?.address || {};
+  const recipient = {
+    name: sd.name || session.customer_details?.name || email,
+    address1: addr.line1,
+    address2: addr.line2 || undefined,
+    city: addr.city,
+    state_code: addr.state,
+    country_code: addr.country,
+    zip: addr.postal_code,
+    email,
+    phone: session.customer_details?.phone || undefined,
+  };
+
+  if (!recipient.address1 || !recipient.city || !recipient.country_code || !recipient.zip || !syncVariantId) {
+    await supabase.from("merch_orders").update({
+      status: "submit_failed",
+      error: "Missing shipping address or variant id",
+    }).eq("id", (inserted as any).id);
+    return;
+  }
+
+  try {
+    const { createOrder } = await import("@/lib/printful.server");
+    const result = await createOrder({
+      external_id: session.id,
+      recipient: recipient as any,
+      items: [{ sync_variant_id: syncVariantId, quantity }],
+      confirm: env === "live", // only auto-fulfill in production
+    });
+    await supabase.from("merch_orders").update({
+      status: "submitted",
+      printful_order_id: String(result.id),
+      error: null,
+    }).eq("id", (inserted as any).id);
+  } catch (e: any) {
+    await supabase.from("merch_orders").update({
+      status: "submit_failed",
+      error: String(e?.message || e).slice(0, 1000),
+    }).eq("id", (inserted as any).id);
+  }
+}
+
 async function handleCheckoutCompleted(session: any, env: StripeEnv) {
+  if (session.metadata?.kind === "merch") {
+    await handleMerchCheckoutCompleted(session, env);
+    return;
+  }
   const tier = session.metadata?.tier as "self_host_license" | "managed_mirror" | undefined;
   if (!tier) return;
 

@@ -23,6 +23,8 @@ const COLS: { title: string; links: { to: string; label: string }[] }[] = [
       { to: "/advertise", label: "Advertise" },
       { to: "/careers", label: "Careers" },
       { to: "/submit-news-tip", label: "Submit a News Tip" },
+      { to: "/merch", label: "Shop Merch" },
+      { to: "/account/orders", label: "My Orders" },
     ],
   },
   {

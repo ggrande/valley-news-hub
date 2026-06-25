@@ -21,6 +21,7 @@ import { Route as PublicFileRouteImport } from './routes/public-file'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as NewsSitemapDotxmlRouteImport } from './routes/news-sitemap[.]xml'
 import { Route as NetworkRouteImport } from './routes/network'
+import { Route as MerchRouteImport } from './routes/merch'
 import { Route as CorrectionsPolicyRouteImport } from './routes/corrections-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -37,6 +38,7 @@ import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
 import { Route as NetworkDocsRouteImport } from './routes/network.docs'
 import { Route as NetworkChangelogRouteImport } from './routes/network.changelog'
+import { Route as MerchIdRouteImport } from './routes/merch.$id'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -48,6 +50,7 @@ import { Route as AuthenticatedAdminReleasesRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminRedditAutomationRouteImport } from './routes/_authenticated/admin.reddit-automation'
 import { Route as AuthenticatedAdminRedditRouteImport } from './routes/_authenticated/admin.reddit'
 import { Route as AuthenticatedAdminPostsRouteImport } from './routes/_authenticated/admin.posts'
+import { Route as AuthenticatedAdminMerchRouteImport } from './routes/_authenticated/admin.merch'
 import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin.media'
 import { Route as AuthenticatedAdminManagedSitesRouteImport } from './routes/_authenticated/admin.managed-sites'
 import { Route as AuthenticatedAdminLicensesRouteImport } from './routes/_authenticated/admin.licenses'
@@ -57,6 +60,7 @@ import { Route as AuthenticatedAdminClosingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
+import { Route as AuthenticatedAccountOrdersRouteImport } from './routes/_authenticated/account.orders'
 import { Route as AuthenticatedAccountManagedSitesRouteImport } from './routes/_authenticated/account.managed-sites'
 import { Route as AuthenticatedAccountLicensesRouteImport } from './routes/_authenticated/account.licenses'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -129,6 +133,11 @@ const NewsSitemapDotxmlRoute = NewsSitemapDotxmlRouteImport.update({
 const NetworkRoute = NetworkRouteImport.update({
   id: '/network',
   path: '/network',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MerchRoute = MerchRouteImport.update({
+  id: '/merch',
+  path: '/merch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CorrectionsPolicyRoute = CorrectionsPolicyRouteImport.update({
@@ -210,6 +219,11 @@ const NetworkChangelogRoute = NetworkChangelogRouteImport.update({
   path: '/changelog',
   getParentRoute: () => NetworkRoute,
 } as any)
+const MerchIdRoute = MerchIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => MerchRoute,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
@@ -271,6 +285,11 @@ const AuthenticatedAdminPostsRoute = AuthenticatedAdminPostsRouteImport.update({
   path: '/posts',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminMerchRoute = AuthenticatedAdminMerchRouteImport.update({
+  id: '/merch',
+  path: '/merch',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminMediaRoute = AuthenticatedAdminMediaRouteImport.update({
   id: '/media',
   path: '/media',
@@ -323,6 +342,12 @@ const AuthenticatedAdminAiLogRoute = AuthenticatedAdminAiLogRouteImport.update({
   path: '/ai-log',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAccountOrdersRoute =
+  AuthenticatedAccountOrdersRouteImport.update({
+    id: '/account/orders',
+    path: '/account/orders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAccountManagedSitesRoute =
   AuthenticatedAccountManagedSitesRouteImport.update({
     id: '/account/managed-sites',
@@ -412,6 +437,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/merch': typeof MerchRouteWithChildren
   '/network': typeof NetworkRouteWithChildren
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -427,6 +453,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
   '/network/docs': typeof NetworkDocsRoute
   '/news/$slug': typeof NewsSlugRoute
@@ -435,6 +462,7 @@ export interface FileRoutesByFullPath {
   '/news/': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/account/managed-sites': typeof AuthenticatedAccountManagedSitesRoute
+  '/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -444,6 +472,7 @@ export interface FileRoutesByFullPath {
   '/admin/licenses': typeof AuthenticatedAdminLicensesRoute
   '/admin/managed-sites': typeof AuthenticatedAdminManagedSitesRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
+  '/admin/merch': typeof AuthenticatedAdminMerchRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
@@ -474,6 +503,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/merch': typeof MerchRouteWithChildren
   '/network': typeof NetworkRouteWithChildren
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -488,6 +518,7 @@ export interface FileRoutesByTo {
   '/weather': typeof WeatherRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
   '/network/docs': typeof NetworkDocsRoute
   '/news/$slug': typeof NewsSlugRoute
@@ -496,6 +527,7 @@ export interface FileRoutesByTo {
   '/news': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/account/managed-sites': typeof AuthenticatedAccountManagedSitesRoute
+  '/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -505,6 +537,7 @@ export interface FileRoutesByTo {
   '/admin/licenses': typeof AuthenticatedAdminLicensesRoute
   '/admin/managed-sites': typeof AuthenticatedAdminManagedSitesRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
+  '/admin/merch': typeof AuthenticatedAdminMerchRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
@@ -537,6 +570,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/contact': typeof ContactRoute
   '/corrections-policy': typeof CorrectionsPolicyRoute
+  '/merch': typeof MerchRouteWithChildren
   '/network': typeof NetworkRouteWithChildren
   '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -552,6 +586,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
   '/network/docs': typeof NetworkDocsRoute
   '/news/$slug': typeof NewsSlugRoute
@@ -560,6 +595,7 @@ export interface FileRoutesById {
   '/news/': typeof NewsIndexRoute
   '/_authenticated/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/_authenticated/account/managed-sites': typeof AuthenticatedAccountManagedSitesRoute
+  '/_authenticated/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/_authenticated/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/_authenticated/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -569,6 +605,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/licenses': typeof AuthenticatedAdminLicensesRoute
   '/_authenticated/admin/managed-sites': typeof AuthenticatedAdminManagedSitesRoute
   '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
+  '/_authenticated/admin/merch': typeof AuthenticatedAdminMerchRoute
   '/_authenticated/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/_authenticated/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/_authenticated/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
@@ -601,6 +638,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
+    | '/merch'
     | '/network'
     | '/news-sitemap.xml'
     | '/privacy-policy'
@@ -616,6 +654,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/api/media'
     | '/checkout/return'
+    | '/merch/$id'
     | '/network/changelog'
     | '/network/docs'
     | '/news/$slug'
@@ -624,6 +663,7 @@ export interface FileRouteTypes {
     | '/news/'
     | '/account/licenses'
     | '/account/managed-sites'
+    | '/account/orders'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
@@ -633,6 +673,7 @@ export interface FileRouteTypes {
     | '/admin/licenses'
     | '/admin/managed-sites'
     | '/admin/media'
+    | '/admin/merch'
     | '/admin/posts'
     | '/admin/reddit'
     | '/admin/reddit-automation'
@@ -663,6 +704,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
+    | '/merch'
     | '/network'
     | '/news-sitemap.xml'
     | '/privacy-policy'
@@ -677,6 +719,7 @@ export interface FileRouteTypes {
     | '/weather'
     | '/api/media'
     | '/checkout/return'
+    | '/merch/$id'
     | '/network/changelog'
     | '/network/docs'
     | '/news/$slug'
@@ -685,6 +728,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/account/licenses'
     | '/account/managed-sites'
+    | '/account/orders'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
@@ -694,6 +738,7 @@ export interface FileRouteTypes {
     | '/admin/licenses'
     | '/admin/managed-sites'
     | '/admin/media'
+    | '/admin/merch'
     | '/admin/posts'
     | '/admin/reddit'
     | '/admin/reddit-automation'
@@ -725,6 +770,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/contact'
     | '/corrections-policy'
+    | '/merch'
     | '/network'
     | '/news-sitemap.xml'
     | '/privacy-policy'
@@ -740,6 +786,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/api/media'
     | '/checkout/return'
+    | '/merch/$id'
     | '/network/changelog'
     | '/network/docs'
     | '/news/$slug'
@@ -748,6 +795,7 @@ export interface FileRouteTypes {
     | '/news/'
     | '/_authenticated/account/licenses'
     | '/_authenticated/account/managed-sites'
+    | '/_authenticated/account/orders'
     | '/_authenticated/admin/ai-log'
     | '/_authenticated/admin/authors'
     | '/_authenticated/admin/categories'
@@ -757,6 +805,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/licenses'
     | '/_authenticated/admin/managed-sites'
     | '/_authenticated/admin/media'
+    | '/_authenticated/admin/merch'
     | '/_authenticated/admin/posts'
     | '/_authenticated/admin/reddit'
     | '/_authenticated/admin/reddit-automation'
@@ -789,6 +838,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ContactRoute: typeof ContactRoute
   CorrectionsPolicyRoute: typeof CorrectionsPolicyRoute
+  MerchRoute: typeof MerchRouteWithChildren
   NetworkRoute: typeof NetworkRouteWithChildren
   NewsSitemapDotxmlRoute: typeof NewsSitemapDotxmlRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
@@ -900,6 +950,13 @@ declare module '@tanstack/react-router' {
       path: '/network'
       fullPath: '/network'
       preLoaderRoute: typeof NetworkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/merch': {
+      id: '/merch'
+      path: '/merch'
+      fullPath: '/merch'
+      preLoaderRoute: typeof MerchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/corrections-policy': {
@@ -1014,6 +1071,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NetworkChangelogRouteImport
       parentRoute: typeof NetworkRoute
     }
+    '/merch/$id': {
+      id: '/merch/$id'
+      path: '/$id'
+      fullPath: '/merch/$id'
+      preLoaderRoute: typeof MerchIdRouteImport
+      parentRoute: typeof MerchRoute
+    }
     '/checkout/return': {
       id: '/checkout/return'
       path: '/checkout/return'
@@ -1091,6 +1155,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPostsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/merch': {
+      id: '/_authenticated/admin/merch'
+      path: '/merch'
+      fullPath: '/admin/merch'
+      preLoaderRoute: typeof AuthenticatedAdminMerchRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/media': {
       id: '/_authenticated/admin/media'
       path: '/media'
@@ -1153,6 +1224,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/ai-log'
       preLoaderRoute: typeof AuthenticatedAdminAiLogRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/account/orders': {
+      id: '/_authenticated/account/orders'
+      path: '/account/orders'
+      fullPath: '/account/orders'
+      preLoaderRoute: typeof AuthenticatedAccountOrdersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/account/managed-sites': {
       id: '/_authenticated/account/managed-sites'
@@ -1300,6 +1378,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminLicensesRoute: typeof AuthenticatedAdminLicensesRoute
   AuthenticatedAdminManagedSitesRoute: typeof AuthenticatedAdminManagedSitesRoute
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
+  AuthenticatedAdminMerchRoute: typeof AuthenticatedAdminMerchRoute
   AuthenticatedAdminPostsRoute: typeof AuthenticatedAdminPostsRouteWithChildren
   AuthenticatedAdminRedditRoute: typeof AuthenticatedAdminRedditRouteWithChildren
   AuthenticatedAdminRedditAutomationRoute: typeof AuthenticatedAdminRedditAutomationRoute
@@ -1320,6 +1399,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminLicensesRoute: AuthenticatedAdminLicensesRoute,
   AuthenticatedAdminManagedSitesRoute: AuthenticatedAdminManagedSitesRoute,
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
+  AuthenticatedAdminMerchRoute: AuthenticatedAdminMerchRoute,
   AuthenticatedAdminPostsRoute: AuthenticatedAdminPostsRouteWithChildren,
   AuthenticatedAdminRedditRoute: AuthenticatedAdminRedditRouteWithChildren,
   AuthenticatedAdminRedditAutomationRoute:
@@ -1338,16 +1418,28 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAccountLicensesRoute: typeof AuthenticatedAccountLicensesRoute
   AuthenticatedAccountManagedSitesRoute: typeof AuthenticatedAccountManagedSitesRoute
+  AuthenticatedAccountOrdersRoute: typeof AuthenticatedAccountOrdersRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAccountLicensesRoute: AuthenticatedAccountLicensesRoute,
   AuthenticatedAccountManagedSitesRoute: AuthenticatedAccountManagedSitesRoute,
+  AuthenticatedAccountOrdersRoute: AuthenticatedAccountOrdersRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface MerchRouteChildren {
+  MerchIdRoute: typeof MerchIdRoute
+}
+
+const MerchRouteChildren: MerchRouteChildren = {
+  MerchIdRoute: MerchIdRoute,
+}
+
+const MerchRouteWithChildren = MerchRoute._addFileChildren(MerchRouteChildren)
 
 interface NetworkRouteChildren {
   NetworkChangelogRoute: typeof NetworkChangelogRoute
@@ -1384,6 +1476,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ContactRoute: ContactRoute,
   CorrectionsPolicyRoute: CorrectionsPolicyRoute,
+  MerchRoute: MerchRouteWithChildren,
   NetworkRoute: NetworkRouteWithChildren,
   NewsSitemapDotxmlRoute: NewsSitemapDotxmlRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
