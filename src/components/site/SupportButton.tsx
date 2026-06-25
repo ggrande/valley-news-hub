@@ -8,18 +8,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useSiteContent } from "@/lib/use-site-content";
 
-// TODO: replace with the station's actual Buy Me a Coffee username.
-const BMC_USERNAME = "wknatv";
-const BMC_URL = `https://www.buymeacoffee.com/${BMC_USERNAME}`;
-
-const CRYPTO_WALLETS: { label: string; address: string; note?: string }[] = [
-  {
-    label: "EVM (ETH / Base / Polygon / Arbitrum)",
-    address: "0xE348aD2C679F7b5A5Dd1f68fEc8875f11860795c",
-    note: "Send only ERC-20 / EVM-compatible assets.",
-  },
-];
+const DEFAULT_SUPPORT = {
+  bmc_username: "wknatv",
+  crypto_wallets: [
+    {
+      label: "EVM (ETH / Base / Polygon / Arbitrum)",
+      address: "0xE348aD2C679F7b5A5Dd1f68fEc8875f11860795c",
+      note: "Send only ERC-20 / EVM-compatible assets.",
+    },
+  ] as { label: string; address: string; note?: string }[],
+  donation_enabled: true,
+};
 
 type Variant = "primary" | "ghost" | "navy" | "inline" | "block";
 
