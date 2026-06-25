@@ -61,6 +61,9 @@ export function SupportButton({
 }
 
 function SupportDialogBody() {
+  const support = useSiteContent("support", DEFAULT_SUPPORT);
+  const bmcUrl = `https://www.buymeacoffee.com/${support.bmc_username || "wknatv"}`;
+  const wallets = (support.crypto_wallets?.length ? support.crypto_wallets : DEFAULT_SUPPORT.crypto_wallets) as typeof DEFAULT_SUPPORT.crypto_wallets;
   const [copied, setCopied] = useState<string | null>(null);
   const copy = async (addr: string) => {
     try {
@@ -84,7 +87,7 @@ function SupportDialogBody() {
 
       <div className="space-y-5">
         <a
-          href={BMC_URL}
+          href={bmcUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-between gap-3 rounded-lg bg-[#FFDD00] px-4 py-3 text-[#1a1a1a] shadow-sm transition hover:brightness-95"
@@ -101,7 +104,7 @@ function SupportDialogBody() {
             Or send crypto
           </p>
           <ul className="space-y-3">
-            {CRYPTO_WALLETS.map((w) => (
+            {wallets.map((w) => (
               <li key={w.address}>
                 <p className="text-xs font-semibold text-primary">{w.label}</p>
                 <div className="mt-1 flex items-center gap-2">
