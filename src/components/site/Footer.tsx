@@ -35,6 +35,14 @@ const COLS: { title: string; links: { to: string; label: string }[] }[] = [
       { to: "/public-file", label: "Public File / EEO" },
     ],
   },
+  {
+    title: "Network",
+    links: [
+      { to: "/network", label: "Join the Network" },
+      { to: "/network/docs", label: "Self-Host Guide" },
+      { to: "/network/changelog", label: "Changelog" },
+    ],
+  },
 ];
 
 type Branding = { name: string; tagline: string };

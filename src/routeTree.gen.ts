@@ -35,6 +35,7 @@ import { Route as NewsIndexRouteImport } from './routes/news.index'
 import { Route as WeatherClosingsRouteImport } from './routes/weather.closings'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
+import { Route as NetworkDocsRouteImport } from './routes/network.docs'
 import { Route as NetworkChangelogRouteImport } from './routes/network.changelog'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
@@ -197,6 +198,11 @@ const NewsSlugRoute = NewsSlugRouteImport.update({
   id: '/news/$slug',
   path: '/news/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const NetworkDocsRoute = NetworkDocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => NetworkRoute,
 } as any)
 const NetworkChangelogRoute = NetworkChangelogRouteImport.update({
   id: '/changelog',
@@ -415,6 +421,7 @@ export interface FileRoutesByFullPath {
   '/api/media': typeof ApiMediaRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/network/changelog': typeof NetworkChangelogRoute
+  '/network/docs': typeof NetworkDocsRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
@@ -474,6 +481,7 @@ export interface FileRoutesByTo {
   '/api/media': typeof ApiMediaRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/network/changelog': typeof NetworkChangelogRoute
+  '/network/docs': typeof NetworkDocsRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
@@ -536,6 +544,7 @@ export interface FileRoutesById {
   '/api/media': typeof ApiMediaRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/network/changelog': typeof NetworkChangelogRoute
+  '/network/docs': typeof NetworkDocsRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
@@ -598,6 +607,7 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/checkout/return'
     | '/network/changelog'
+    | '/network/docs'
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
@@ -657,6 +667,7 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/checkout/return'
     | '/network/changelog'
+    | '/network/docs'
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
@@ -718,6 +729,7 @@ export interface FileRouteTypes {
     | '/api/media'
     | '/checkout/return'
     | '/network/changelog'
+    | '/network/docs'
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
@@ -973,6 +985,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/news/$slug'
       preLoaderRoute: typeof NewsSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/network/docs': {
+      id: '/network/docs'
+      path: '/docs'
+      fullPath: '/network/docs'
+      preLoaderRoute: typeof NetworkDocsRouteImport
+      parentRoute: typeof NetworkRoute
     }
     '/network/changelog': {
       id: '/network/changelog'
@@ -1311,10 +1330,12 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface NetworkRouteChildren {
   NetworkChangelogRoute: typeof NetworkChangelogRoute
+  NetworkDocsRoute: typeof NetworkDocsRoute
 }
 
 const NetworkRouteChildren: NetworkRouteChildren = {
   NetworkChangelogRoute: NetworkChangelogRoute,
+  NetworkDocsRoute: NetworkDocsRoute,
 }
 
 const NetworkRouteWithChildren =
