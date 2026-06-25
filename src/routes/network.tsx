@@ -110,9 +110,22 @@ function NetworkPage() {
               </p>
             </div>
           </div>
-          <div className="mt-8">
+          <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/network/changelog" className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-semibold">View full changelog →</Link>
+            <Link to="/network/docs" className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-semibold">Self-host setup guide →</Link>
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-4xl px-4 py-12">
+        <h2 className="font-display text-3xl font-black text-primary">Frequently asked</h2>
+        <div className="mt-6 grid gap-5 sm:grid-cols-2">
+          {FAQS.map((f) => (
+            <div key={f.q} className="rounded-lg border bg-card p-5">
+              <h3 className="font-semibold text-primary">{f.q}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{f.a}</p>
+            </div>
+          ))}
         </div>
       </section>
 
