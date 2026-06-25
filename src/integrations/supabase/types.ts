@@ -401,6 +401,104 @@ export type Database = {
         }
         Relationships: []
       }
+      license_download_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          license_id: string
+          release_id: string | null
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          license_id: string
+          release_id?: string | null
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          license_id?: string
+          release_id?: string | null
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "license_download_tokens_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "license_download_tokens_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "platform_releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      licenses: {
+        Row: {
+          channel: string
+          created_at: string
+          current_version: string | null
+          downloads_max: number
+          downloads_used: number
+          email: string
+          id: string
+          last_check_at: string | null
+          license_key: string
+          purchase_id: string | null
+          revoked: boolean
+          updated_at: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          current_version?: string | null
+          downloads_max?: number
+          downloads_used?: number
+          email: string
+          id?: string
+          last_check_at?: string | null
+          license_key: string
+          purchase_id?: string | null
+          revoked?: boolean
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          current_version?: string | null
+          downloads_max?: number
+          downloads_used?: number
+          email?: string
+          id?: string
+          last_check_at?: string | null
+          license_key?: string
+          purchase_id?: string | null
+          revoked?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licenses_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "network_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media_assets: {
         Row: {
           alt_text: string | null
@@ -440,6 +538,57 @@ export type Database = {
           uploaded_by?: string | null
           url?: string
           width?: number | null
+        }
+        Relationships: []
+      }
+      network_purchases: {
+        Row: {
+          amount_cents: number | null
+          created_at: string
+          currency: string | null
+          email: string
+          environment: string
+          id: string
+          metadata: Json
+          status: string
+          stripe_customer_id: string | null
+          stripe_session_id: string | null
+          stripe_subscription_id: string | null
+          tier: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          created_at?: string
+          currency?: string | null
+          email: string
+          environment?: string
+          id?: string
+          metadata?: Json
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          tier: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          created_at?: string
+          currency?: string | null
+          email?: string
+          environment?: string
+          id?: string
+          metadata?: Json
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -506,6 +655,54 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           preferences?: Json | null
+        }
+        Relationships: []
+      }
+      platform_releases: {
+        Row: {
+          breaking: boolean
+          changelog_md: string
+          channel: string
+          created_at: string
+          id: string
+          published_at: string | null
+          security: boolean
+          title: string
+          updated_at: string
+          version: string
+          zip_bytes: number | null
+          zip_path: string | null
+          zip_sha256: string | null
+        }
+        Insert: {
+          breaking?: boolean
+          changelog_md?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          security?: boolean
+          title: string
+          updated_at?: string
+          version: string
+          zip_bytes?: number | null
+          zip_path?: string | null
+          zip_sha256?: string | null
+        }
+        Update: {
+          breaking?: boolean
+          changelog_md?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          security?: boolean
+          title?: string
+          updated_at?: string
+          version?: string
+          zip_bytes?: number | null
+          zip_path?: string | null
+          zip_sha256?: string | null
         }
         Relationships: []
       }
