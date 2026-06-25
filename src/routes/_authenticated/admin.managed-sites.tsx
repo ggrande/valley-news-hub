@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/admin/managed-sites")({
 
 function Page() {
   const list = useServerFn(adminListManagedSites);
-  const listReleases = useServerFn(adminListReleases);
+  const listReleases = useServerFn(listAllReleases);
   const stage = useServerFn(adminStageReleaseForSites);
   const qc = useQueryClient();
 
