@@ -19,10 +19,21 @@ export const Route = createFileRoute("/_authenticated/account/managed-sites")({
 
 function Page() {
   const list = useServerFn(listMyManagedSites);
+  const portal = useServerFn(createNetworkBillingPortalSession);
   const { data: sites = [], isLoading } = useQuery({
     queryKey: ["my-managed-sites"],
     queryFn: () => list(),
   });
+
+  const portalMut = useMutation({
+    mutationFn: async () => {
+      const r = await portal({ data: { returnUrl: window.location.href, environment: getStripeEnvironment() } });
+      if ("error" in r) throw new Error(r.error);
+      window.open(r.url, "_blank", "noopener");
+    },
+    onError: (e: any) => alert(e.message || "Could not open billing portal"),
+  });
+
 
   return (
     <div className="mx-auto max-w-5xl p-6 md:p-10">
