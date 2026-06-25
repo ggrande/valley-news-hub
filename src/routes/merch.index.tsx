@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/site/Layout";
 import { listMerchProducts } from "@/lib/merch.functions";
 
-export const Route = createFileRoute("/merch")({
+export const Route = createFileRoute("/merch/")({
   head: () => ({
     meta: [
       { title: "WKNA 49 Merch — T-shirts, Tumblers, Stickers" },
