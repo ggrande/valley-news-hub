@@ -116,10 +116,22 @@ function SiteCard({ site }: { site: ManagedSiteRow }) {
         </div>
       </div>
 
+      {site.subscription_status === "past_due" && (
+        <div className="mt-4 rounded-md border-2 border-red-400 bg-red-50 p-4 text-sm text-red-900">
+          <strong>Your last payment failed.</strong> Update your card via "Manage billing" to keep your site online. Stripe will retry automatically.
+        </div>
+      )}
+      {site.status === "pending_provision" && (
+        <div className="mt-4 rounded-md border bg-amber-50 p-4 text-sm text-amber-900">
+          <strong>Setting up your site.</strong> Our team is provisioning your hosting. You'll get an email when it's live (usually within 1 business day).
+        </div>
+      )}
+
       <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
         <div>Current version: <span className="font-mono text-foreground">{site.current_release?.version ?? "—"}</span></div>
         <div>Last deployed: <span className="text-foreground">{site.last_deployed_at ? new Date(site.last_deployed_at).toLocaleString() : "—"}</span></div>
       </div>
+
 
       {site.pending_release && (
         <div className="mt-4 rounded-md border-2 border-[color:var(--breaking)] bg-[color:var(--breaking)]/5 p-4">
