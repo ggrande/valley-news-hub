@@ -48,12 +48,14 @@ import { Route as AuthenticatedAdminRedditAutomationRouteImport } from './routes
 import { Route as AuthenticatedAdminRedditRouteImport } from './routes/_authenticated/admin.reddit'
 import { Route as AuthenticatedAdminPostsRouteImport } from './routes/_authenticated/admin.posts'
 import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin.media'
+import { Route as AuthenticatedAdminLicensesRouteImport } from './routes/_authenticated/admin.licenses'
 import { Route as AuthenticatedAdminImportRouteImport } from './routes/_authenticated/admin.import'
 import { Route as AuthenticatedAdminCommentsRouteImport } from './routes/_authenticated/admin.comments'
 import { Route as AuthenticatedAdminClosingsRouteImport } from './routes/_authenticated/admin.closings'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
+import { Route as AuthenticatedAccountLicensesRouteImport } from './routes/_authenticated/account.licenses'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicNetworkCheckUpdateRouteImport } from './routes/api/public/network/check-update'
 import { Route as ApiPublicHooksRedditCommentJobRouteImport } from './routes/api/public/hooks/reddit-comment-job'
@@ -265,6 +267,12 @@ const AuthenticatedAdminMediaRoute = AuthenticatedAdminMediaRouteImport.update({
   path: '/media',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminLicensesRoute =
+  AuthenticatedAdminLicensesRouteImport.update({
+    id: '/licenses',
+    path: '/licenses',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminImportRoute =
   AuthenticatedAdminImportRouteImport.update({
     id: '/import',
@@ -300,6 +308,12 @@ const AuthenticatedAdminAiLogRoute = AuthenticatedAdminAiLogRouteImport.update({
   path: '/ai-log',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAccountLicensesRoute =
+  AuthenticatedAccountLicensesRouteImport.update({
+    id: '/account/licenses',
+    path: '/account/licenses',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -391,12 +405,14 @@ export interface FileRoutesByFullPath {
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
   '/news/': typeof NewsIndexRoute
+  '/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/closings': typeof AuthenticatedAdminClosingsRoute
   '/admin/comments': typeof AuthenticatedAdminCommentsRoute
   '/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
+  '/admin/licenses': typeof AuthenticatedAdminLicensesRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
@@ -446,12 +462,14 @@ export interface FileRoutesByTo {
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
   '/news': typeof NewsIndexRoute
+  '/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/closings': typeof AuthenticatedAdminClosingsRoute
   '/admin/comments': typeof AuthenticatedAdminCommentsRoute
   '/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
+  '/admin/licenses': typeof AuthenticatedAdminLicensesRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
@@ -504,12 +522,14 @@ export interface FileRoutesById {
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
   '/news/': typeof NewsIndexRoute
+  '/_authenticated/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/_authenticated/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/_authenticated/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/closings': typeof AuthenticatedAdminClosingsRoute
   '/_authenticated/admin/comments': typeof AuthenticatedAdminCommentsRoute
   '/_authenticated/admin/import': typeof AuthenticatedAdminImportRouteWithChildren
+  '/_authenticated/admin/licenses': typeof AuthenticatedAdminLicensesRoute
   '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
   '/_authenticated/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/_authenticated/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
@@ -562,12 +582,14 @@ export interface FileRouteTypes {
     | '/news/local'
     | '/weather/closings'
     | '/news/'
+    | '/account/licenses'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
     | '/admin/closings'
     | '/admin/comments'
     | '/admin/import'
+    | '/admin/licenses'
     | '/admin/media'
     | '/admin/posts'
     | '/admin/reddit'
@@ -617,12 +639,14 @@ export interface FileRouteTypes {
     | '/news/local'
     | '/weather/closings'
     | '/news'
+    | '/account/licenses'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
     | '/admin/closings'
     | '/admin/comments'
     | '/admin/import'
+    | '/admin/licenses'
     | '/admin/media'
     | '/admin/posts'
     | '/admin/reddit'
@@ -674,12 +698,14 @@ export interface FileRouteTypes {
     | '/news/local'
     | '/weather/closings'
     | '/news/'
+    | '/_authenticated/account/licenses'
     | '/_authenticated/admin/ai-log'
     | '/_authenticated/admin/authors'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/closings'
     | '/_authenticated/admin/comments'
     | '/_authenticated/admin/import'
+    | '/_authenticated/admin/licenses'
     | '/_authenticated/admin/media'
     | '/_authenticated/admin/posts'
     | '/_authenticated/admin/reddit'
@@ -1013,6 +1039,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMediaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/licenses': {
+      id: '/_authenticated/admin/licenses'
+      path: '/licenses'
+      fullPath: '/admin/licenses'
+      preLoaderRoute: typeof AuthenticatedAdminLicensesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/import': {
       id: '/_authenticated/admin/import'
       path: '/import'
@@ -1054,6 +1087,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/ai-log'
       preLoaderRoute: typeof AuthenticatedAdminAiLogRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/account/licenses': {
+      id: '/_authenticated/account/licenses'
+      path: '/account/licenses'
+      fullPath: '/account/licenses'
+      preLoaderRoute: typeof AuthenticatedAccountLicensesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
@@ -1177,6 +1217,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminClosingsRoute: typeof AuthenticatedAdminClosingsRoute
   AuthenticatedAdminCommentsRoute: typeof AuthenticatedAdminCommentsRoute
   AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRouteWithChildren
+  AuthenticatedAdminLicensesRoute: typeof AuthenticatedAdminLicensesRoute
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
   AuthenticatedAdminPostsRoute: typeof AuthenticatedAdminPostsRouteWithChildren
   AuthenticatedAdminRedditRoute: typeof AuthenticatedAdminRedditRouteWithChildren
@@ -1195,6 +1236,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminClosingsRoute: AuthenticatedAdminClosingsRoute,
   AuthenticatedAdminCommentsRoute: AuthenticatedAdminCommentsRoute,
   AuthenticatedAdminImportRoute: AuthenticatedAdminImportRouteWithChildren,
+  AuthenticatedAdminLicensesRoute: AuthenticatedAdminLicensesRoute,
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
   AuthenticatedAdminPostsRoute: AuthenticatedAdminPostsRouteWithChildren,
   AuthenticatedAdminRedditRoute: AuthenticatedAdminRedditRouteWithChildren,
@@ -1212,10 +1254,12 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedAccountLicensesRoute: typeof AuthenticatedAccountLicensesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedAccountLicensesRoute: AuthenticatedAccountLicensesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

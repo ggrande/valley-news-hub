@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Layout } from "../components/site/Layout";
+import { NetworkUpdateBanner } from "../components/NetworkUpdateBanner";
 
 function NotFoundComponent() {
   return (
@@ -116,6 +117,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
+      <NetworkUpdateBanner />
       <Outlet />
     </QueryClientProvider>
   );
