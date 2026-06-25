@@ -65,6 +65,7 @@ function AboutPage() {
           The WKNA 49 newsroom is built around local reporting — neighborhood stories, weather that affects daily life in the valley, high school sports, and the institutions that make Charleston home.
         </p>
       </section>
+      )}
     </Layout>
   );
 }
