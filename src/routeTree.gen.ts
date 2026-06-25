@@ -43,6 +43,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminSubmissionsRouteImport } from './routes/_authenticated/admin.submissions'
 import { Route as AuthenticatedAdminSiteContentRouteImport } from './routes/_authenticated/admin.site-content'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminReleasesRouteImport } from './routes/_authenticated/admin.releases'
 import { Route as AuthenticatedAdminRedditAutomationRouteImport } from './routes/_authenticated/admin.reddit-automation'
 import { Route as AuthenticatedAdminRedditRouteImport } from './routes/_authenticated/admin.reddit'
 import { Route as AuthenticatedAdminPostsRouteImport } from './routes/_authenticated/admin.posts'
@@ -236,6 +237,12 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminReleasesRoute =
+  AuthenticatedAdminReleasesRouteImport.update({
+    id: '/releases',
+    path: '/releases',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminRedditAutomationRoute =
   AuthenticatedAdminRedditAutomationRouteImport.update({
     id: '/reddit-automation',
@@ -394,6 +401,7 @@ export interface FileRoutesByFullPath {
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
+  '/admin/releases': typeof AuthenticatedAdminReleasesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
@@ -448,6 +456,7 @@ export interface FileRoutesByTo {
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
+  '/admin/releases': typeof AuthenticatedAdminReleasesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
@@ -505,6 +514,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/_authenticated/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/_authenticated/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
+  '/_authenticated/admin/releases': typeof AuthenticatedAdminReleasesRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/_authenticated/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
@@ -562,6 +572,7 @@ export interface FileRouteTypes {
     | '/admin/posts'
     | '/admin/reddit'
     | '/admin/reddit-automation'
+    | '/admin/releases'
     | '/admin/settings'
     | '/admin/site-content'
     | '/admin/submissions'
@@ -616,6 +627,7 @@ export interface FileRouteTypes {
     | '/admin/posts'
     | '/admin/reddit'
     | '/admin/reddit-automation'
+    | '/admin/releases'
     | '/admin/settings'
     | '/admin/site-content'
     | '/admin/submissions'
@@ -672,6 +684,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/posts'
     | '/_authenticated/admin/reddit'
     | '/_authenticated/admin/reddit-automation'
+    | '/_authenticated/admin/releases'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/site-content'
     | '/_authenticated/admin/submissions'
@@ -965,6 +978,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/releases': {
+      id: '/_authenticated/admin/releases'
+      path: '/releases'
+      fullPath: '/admin/releases'
+      preLoaderRoute: typeof AuthenticatedAdminReleasesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/reddit-automation': {
       id: '/_authenticated/admin/reddit-automation'
       path: '/reddit-automation'
@@ -1161,6 +1181,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminPostsRoute: typeof AuthenticatedAdminPostsRouteWithChildren
   AuthenticatedAdminRedditRoute: typeof AuthenticatedAdminRedditRouteWithChildren
   AuthenticatedAdminRedditAutomationRoute: typeof AuthenticatedAdminRedditAutomationRoute
+  AuthenticatedAdminReleasesRoute: typeof AuthenticatedAdminReleasesRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminSiteContentRoute: typeof AuthenticatedAdminSiteContentRoute
   AuthenticatedAdminSubmissionsRoute: typeof AuthenticatedAdminSubmissionsRoute
@@ -1179,6 +1200,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminRedditRoute: AuthenticatedAdminRedditRouteWithChildren,
   AuthenticatedAdminRedditAutomationRoute:
     AuthenticatedAdminRedditAutomationRoute,
+  AuthenticatedAdminReleasesRoute: AuthenticatedAdminReleasesRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminSiteContentRoute: AuthenticatedAdminSiteContentRoute,
   AuthenticatedAdminSubmissionsRoute: AuthenticatedAdminSubmissionsRoute,
