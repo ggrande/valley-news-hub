@@ -1,0 +1,115 @@
+name: Publish platform release
+
+# Triggered by pushing a semver tag (vX.Y.Z) or manually from the Actions tab.
+# Builds a scrubbed ZIP via scripts/build-template.mjs and POSTs it to the
+# /api/public/network/ingest-release endpoint, which uploads it to the
+# `network-releases` Supabase storage bucket and inserts the
+# `platform_releases` row that powers /network/changelog and the in-app
+# update banner.
+#
+# Required repo secrets:
+#   NETWORK_INGEST_URL              https://wkna49.com/api/public/network/ingest-release
+#   NETWORK_RELEASE_INGEST_SECRET   shared secret matching the env var of the
+#                                   same name set in Lovable Cloud
+#
+# Optional workflow_dispatch inputs:
+#   version, channel, breaking, security, notes (see below)
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver version (without leading v)"
+        required: false
+      channel:
+        description: "Release channel"
+        required: false
+        default: "stable"
+        type: choice
+        options: [stable, beta]
+      breaking:
+        description: "Breaking change?"
+        required: false
+        default: "false"
+      security:
+        description: "Security release?"
+        required: false
+        default: "false"
+      notes:
+        description: "Changelog markdown (defaults to commit log)"
+        required: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Resolve release version
+        id: ver
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            V="${{ inputs.version }}"
+          else
+            V="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "Release version: $V"
+
+      - name: Generate changelog from commits
+        id: cl
+        run: |
+          PREV=$(git tag --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sed -n '2p')
+          if [ -n "$PREV" ]; then
+            LOG=$(git log --pretty=format:"- %s (%h)" "$PREV"..HEAD)
+          else
+            LOG=$(git log --pretty=format:"- %s (%h)" -n 50)
+          fi
+          {
+            echo "log<<EOF"
+            echo "$LOG"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build scrubbed release ZIP
+        run: node scripts/build-template.mjs --version "${{ steps.ver.outputs.version }}"
+
+      - name: Upload to platform via ingest endpoint
+        env:
+          NETWORK_INGEST_URL: ${{ secrets.NETWORK_INGEST_URL }}
+          NETWORK_RELEASE_INGEST_SECRET: ${{ secrets.NETWORK_RELEASE_INGEST_SECRET }}
+          VERSION: ${{ steps.ver.outputs.version }}
+          CHANNEL: ${{ inputs.channel || 'stable' }}
+          BREAKING: ${{ inputs.breaking || 'false' }}
+          SECURITY: ${{ inputs.security || 'false' }}
+          NOTES: ${{ inputs.notes }}
+          AUTO_LOG: ${{ steps.cl.outputs.log }}
+        run: |
+          set -e
+          ZIP="dist-release/wkna49-platform-${VERSION}.zip"
+          SHA=$(awk '{print $1}' "${ZIP}.sha256")
+          NOTES_BODY="${NOTES:-### Changes
+
+${AUTO_LOG}}"
+          echo "Posting v${VERSION} (${SHA}) to ${NETWORK_INGEST_URL}"
+          curl --fail-with-body -sS -X POST "$NETWORK_INGEST_URL" \
+            -H "x-ingest-secret: ${NETWORK_RELEASE_INGEST_SECRET}" \
+            -F "version=${VERSION}" \
+            -F "channel=${CHANNEL}" \
+            -F "breaking=${BREAKING}" \
+            -F "security=${SECURITY}" \
+            -F "sha256=${SHA}" \
+            -F "notes=${NOTES_BODY}" \
+            -F "zip=@${ZIP};type=application/zip"
+          echo
+          echo "✓ Release v${VERSION} published"

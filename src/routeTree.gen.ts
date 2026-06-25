@@ -60,6 +60,7 @@ import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAccountManagedSitesRouteImport } from './routes/_authenticated/account.managed-sites'
 import { Route as AuthenticatedAccountLicensesRouteImport } from './routes/_authenticated/account.licenses'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicNetworkIngestReleaseRouteImport } from './routes/api/public/network/ingest-release'
 import { Route as ApiPublicNetworkCheckUpdateRouteImport } from './routes/api/public/network/check-update'
 import { Route as ApiPublicHooksRedditCommentJobRouteImport } from './routes/api/public/hooks/reddit-comment-job'
 import { Route as ApiPublicHooksRedditCommentCallbackRouteImport } from './routes/api/public/hooks/reddit-comment-callback'
@@ -340,6 +341,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicNetworkIngestReleaseRoute =
+  ApiPublicNetworkIngestReleaseRouteImport.update({
+    id: '/api/public/network/ingest-release',
+    path: '/api/public/network/ingest-release',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicNetworkCheckUpdateRoute =
   ApiPublicNetworkCheckUpdateRouteImport.update({
     id: '/api/public/network/check-update',
@@ -454,6 +461,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
+  '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -514,6 +522,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
+  '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -577,6 +586,7 @@ export interface FileRoutesById {
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
+  '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -640,6 +650,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
     | '/api/public/network/check-update'
+    | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -700,6 +711,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
     | '/api/public/network/check-update'
+    | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -762,6 +774,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
     | '/api/public/network/check-update'
+    | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -799,6 +812,7 @@ export interface RootRouteChildren {
   ApiPublicHooksRedditCommentCallbackRoute: typeof ApiPublicHooksRedditCommentCallbackRoute
   ApiPublicHooksRedditCommentJobRoute: typeof ApiPublicHooksRedditCommentJobRoute
   ApiPublicNetworkCheckUpdateRoute: typeof ApiPublicNetworkCheckUpdateRoute
+  ApiPublicNetworkIngestReleaseRoute: typeof ApiPublicNetworkIngestReleaseRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -1161,6 +1175,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/network/ingest-release': {
+      id: '/api/public/network/ingest-release'
+      path: '/api/public/network/ingest-release'
+      fullPath: '/api/public/network/ingest-release'
+      preLoaderRoute: typeof ApiPublicNetworkIngestReleaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/network/check-update': {
       id: '/api/public/network/check-update'
       path: '/api/public/network/check-update'
@@ -1387,6 +1408,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksRedditCommentCallbackRoute,
   ApiPublicHooksRedditCommentJobRoute: ApiPublicHooksRedditCommentJobRoute,
   ApiPublicNetworkCheckUpdateRoute: ApiPublicNetworkCheckUpdateRoute,
+  ApiPublicNetworkIngestReleaseRoute: ApiPublicNetworkIngestReleaseRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
