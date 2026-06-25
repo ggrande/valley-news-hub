@@ -8,7 +8,7 @@ import { Newsletter } from "@/components/site/Newsletter";
 import { SupportButton } from "@/components/site/SupportButton";
 import { shows, schedule } from "@/lib/news-data";
 import { dbPostToArticle, fetchPublishedPosts } from "@/lib/posts-queries";
-import { Calendar, ChevronRight } from "lucide-react";
+import { Calendar, ChevronRight, ShoppingBag } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
