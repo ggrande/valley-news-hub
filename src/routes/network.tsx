@@ -21,6 +21,15 @@ export const Route = createFileRoute("/network")({
   notFoundComponent: () => <Layout><div className="p-12 text-center">Not found.</div></Layout>,
 });
 
+const FAQS: { q: string; a: string }[] = [
+  { q: "Who owns the content I publish?", a: "You do. Both tiers give you full ownership of articles, branding, and subscriber data." },
+  { q: "Can I switch between tiers?", a: "Yes. Move from self-hosted to managed (or back) at any time — your license entitles you to either." },
+  { q: "Do I need to know how to code?", a: "Self-host requires basic Git/deploy comfort. Managed Mirror requires none — we handle everything." },
+  { q: "What does 'scrubbed' source mean?", a: "The release ZIP strips our private credentials, station data, and operational secrets so you start with a clean slate." },
+  { q: "Is AI usage included?", a: "Self-hosters bring their own AI Gateway key (covered by Lovable Cloud free tier for most stations). Managed includes generous usage." },
+  { q: "How do refunds work?", a: "Self-host: 14-day money-back if you haven't downloaded. Managed: cancel anytime, prorated to the day." },
+];
+
 function NetworkPage() {
   const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
   const [email, setEmail] = useState<string | undefined>();
