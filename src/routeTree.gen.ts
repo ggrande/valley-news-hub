@@ -55,6 +55,7 @@ import { Route as AuthenticatedAdminClosingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
+import { Route as AuthenticatedAccountManagedSitesRouteImport } from './routes/_authenticated/account.managed-sites'
 import { Route as AuthenticatedAccountLicensesRouteImport } from './routes/_authenticated/account.licenses'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicNetworkCheckUpdateRouteImport } from './routes/api/public/network/check-update'
@@ -308,6 +309,12 @@ const AuthenticatedAdminAiLogRoute = AuthenticatedAdminAiLogRouteImport.update({
   path: '/ai-log',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAccountManagedSitesRoute =
+  AuthenticatedAccountManagedSitesRouteImport.update({
+    id: '/account/managed-sites',
+    path: '/account/managed-sites',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAccountLicensesRoute =
   AuthenticatedAccountLicensesRouteImport.update({
     id: '/account/licenses',
@@ -406,6 +413,7 @@ export interface FileRoutesByFullPath {
   '/weather/closings': typeof WeatherClosingsRoute
   '/news/': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
+  '/account/managed-sites': typeof AuthenticatedAccountManagedSitesRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -463,6 +471,7 @@ export interface FileRoutesByTo {
   '/weather/closings': typeof WeatherClosingsRoute
   '/news': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
+  '/account/managed-sites': typeof AuthenticatedAccountManagedSitesRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -523,6 +532,7 @@ export interface FileRoutesById {
   '/weather/closings': typeof WeatherClosingsRoute
   '/news/': typeof NewsIndexRoute
   '/_authenticated/account/licenses': typeof AuthenticatedAccountLicensesRoute
+  '/_authenticated/account/managed-sites': typeof AuthenticatedAccountManagedSitesRoute
   '/_authenticated/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/_authenticated/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -583,6 +593,7 @@ export interface FileRouteTypes {
     | '/weather/closings'
     | '/news/'
     | '/account/licenses'
+    | '/account/managed-sites'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '/weather/closings'
     | '/news'
     | '/account/licenses'
+    | '/account/managed-sites'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
@@ -699,6 +711,7 @@ export interface FileRouteTypes {
     | '/weather/closings'
     | '/news/'
     | '/_authenticated/account/licenses'
+    | '/_authenticated/account/managed-sites'
     | '/_authenticated/admin/ai-log'
     | '/_authenticated/admin/authors'
     | '/_authenticated/admin/categories'
@@ -1088,6 +1101,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAiLogRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/account/managed-sites': {
+      id: '/_authenticated/account/managed-sites'
+      path: '/account/managed-sites'
+      fullPath: '/account/managed-sites'
+      preLoaderRoute: typeof AuthenticatedAccountManagedSitesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/account/licenses': {
       id: '/_authenticated/account/licenses'
       path: '/account/licenses'
@@ -1255,11 +1275,13 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAccountLicensesRoute: typeof AuthenticatedAccountLicensesRoute
+  AuthenticatedAccountManagedSitesRoute: typeof AuthenticatedAccountManagedSitesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAccountLicensesRoute: AuthenticatedAccountLicensesRoute,
+  AuthenticatedAccountManagedSitesRoute: AuthenticatedAccountManagedSitesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
