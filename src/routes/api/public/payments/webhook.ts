@@ -48,7 +48,6 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
     .single();
 
   if (tier === "self_host_license" && purchase) {
-    // Issue a license key (one per purchase)
     const { data: existing } = await supabase
       .from("licenses")
       .select("id")
@@ -61,6 +60,41 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
         email,
         channel: "stable",
       });
+    }
+  }
+
+  if (tier === "managed_mirror" && purchase) {
+    // Provision a managed site if one doesn't exist for this subscription yet
+    const subId = typeof session.subscription === "string"
+      ? session.subscription
+      : session.subscription?.id ?? null;
+    if (subId) {
+      const { data: existingSite } = await supabase
+        .from("managed_sites")
+        .select("id")
+        .eq("stripe_subscription_id", subId)
+        .maybeSingle();
+      if (!existingSite) {
+        // Generate a unique subdomain slug from email local-part
+        const base = (email.split("@")[0] || "site").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24) || "site";
+        let subdomain = base;
+        for (let i = 0; i < 5; i++) {
+          const { data: clash } = await supabase
+            .from("managed_sites").select("id").eq("subdomain", subdomain).maybeSingle();
+          if (!clash) break;
+          subdomain = `${base}-${Math.random().toString(36).slice(2, 6)}`;
+        }
+        await supabase.from("managed_sites").insert({
+          owner_user_id: session.metadata?.userId ?? null,
+          owner_email: email,
+          purchase_id: (purchase as any).id,
+          stripe_subscription_id: subId,
+          subdomain,
+          display_name: "My News Site",
+          status: "pending_provision",
+          subscription_status: "active",
+        });
+      }
     }
   }
 }
