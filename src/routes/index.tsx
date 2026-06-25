@@ -8,7 +8,7 @@ import { Newsletter } from "@/components/site/Newsletter";
 import { SupportButton } from "@/components/site/SupportButton";
 import { shows, schedule } from "@/lib/news-data";
 import { dbPostToArticle, fetchPublishedPosts } from "@/lib/posts-queries";
-import { Calendar, ChevronRight } from "lucide-react";
+import { Calendar, ChevronRight, ShoppingBag } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -102,7 +102,12 @@ function Home() {
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--breaking)]">Reader-supported</p>
                 <h3 className="mt-1 font-display text-lg font-black text-primary">Help keep WKNA 49 independent</h3>
                 <p className="mt-1.5 text-sm text-muted-foreground">Tips and crypto contributions fund local reporting in the Kanawha Valley.</p>
-                <div className="mt-3"><SupportButton variant="inline" /></div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <SupportButton variant="inline" />
+                  <Link to="/merch" className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-semibold text-primary hover:bg-accent">
+                    <ShoppingBag className="size-4" /> View Our Merch
+                  </Link>
+                </div>
               </div>
             </aside>
           </div>
