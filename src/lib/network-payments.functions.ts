@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type Tier = "self_host_license" | "managed_mirror";
 
 type CheckoutResult = { clientSecret: string } | { error: string };
+type PortalResult = { url: string } | { error: string };
 
 async function resolveOrCreateCustomer(
   stripe: any,
