@@ -499,6 +499,133 @@ export type Database = {
           },
         ]
       }
+      managed_site_release_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          notes: string | null
+          release_id: string
+          site_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          notes?: string | null
+          release_id: string
+          site_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          notes?: string | null
+          release_id?: string
+          site_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "managed_site_release_events_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "platform_releases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "managed_site_release_events_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "managed_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      managed_sites: {
+        Row: {
+          auto_apply_security: boolean
+          created_at: string
+          current_release_id: string | null
+          custom_domain: string | null
+          display_name: string
+          id: string
+          last_deployed_at: string | null
+          notes: string | null
+          owner_email: string
+          owner_user_id: string | null
+          pending_release_id: string | null
+          purchase_id: string | null
+          status: string
+          stripe_subscription_id: string | null
+          subdomain: string
+          subscription_status: string
+          updated_at: string
+        }
+        Insert: {
+          auto_apply_security?: boolean
+          created_at?: string
+          current_release_id?: string | null
+          custom_domain?: string | null
+          display_name?: string
+          id?: string
+          last_deployed_at?: string | null
+          notes?: string | null
+          owner_email: string
+          owner_user_id?: string | null
+          pending_release_id?: string | null
+          purchase_id?: string | null
+          status?: string
+          stripe_subscription_id?: string | null
+          subdomain: string
+          subscription_status?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_apply_security?: boolean
+          created_at?: string
+          current_release_id?: string | null
+          custom_domain?: string | null
+          display_name?: string
+          id?: string
+          last_deployed_at?: string | null
+          notes?: string | null
+          owner_email?: string
+          owner_user_id?: string | null
+          pending_release_id?: string | null
+          purchase_id?: string | null
+          status?: string
+          stripe_subscription_id?: string | null
+          subdomain?: string
+          subscription_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "managed_sites_current_release_id_fkey"
+            columns: ["current_release_id"]
+            isOneToOne: false
+            referencedRelation: "platform_releases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "managed_sites_pending_release_id_fkey"
+            columns: ["pending_release_id"]
+            isOneToOne: false
+            referencedRelation: "platform_releases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "managed_sites_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "network_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media_assets: {
         Row: {
           alt_text: string | null
