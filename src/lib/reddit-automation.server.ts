@@ -118,3 +118,34 @@ export async function dispatchGitHubWorkflow(opts: {
   console.log("[reddit-dispatch] ok", { status: res.status });
   return { ok: true };
 }
+
+// Dispatch the reddit-fetch-listings workflow with a listing job id.
+export async function dispatchListingWorkflow(opts: { jobId: string }): Promise<{ ok: true } | { ok: false; error: string }> {
+  const pat = process.env.GH_DISPATCH_PAT;
+  const repo = process.env.GITHUB_REPO;
+  if (!pat) return { ok: false, error: "GH_DISPATCH_PAT not configured" };
+  if (!repo) return { ok: false, error: "GITHUB_REPO not configured (format: owner/repo)" };
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}/dispatches`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${pat}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json",
+        "User-Agent": "wkna49-reddit-listings",
+      },
+      body: JSON.stringify({
+        event_type: "reddit-fetch-listings",
+        client_payload: { job_id: opts.jobId, ts: Date.now() },
+      }),
+    });
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      return { ok: false, error: `GitHub dispatch failed: ${res.status} ${txt.slice(0, 300)}` };
+    }
+    return { ok: true };
+  } catch (e: any) {
+    return { ok: false, error: `GitHub dispatch network error: ${e?.message ?? String(e)}` };
+  }
+}
