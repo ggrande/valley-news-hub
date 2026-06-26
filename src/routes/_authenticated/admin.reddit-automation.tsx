@@ -328,10 +328,14 @@ function Page() {
             <button
               onClick={() => refreshQueue.mutate()}
               disabled={refreshQueue.isPending}
-              className="self-end rounded-md border bg-white px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
-              title="Re-pull live upvote counts from Reddit and re-sync with the Posts table."
+              className="inline-flex h-9 w-9 items-center justify-center self-end rounded-full border bg-white text-muted-foreground hover:text-primary disabled:opacity-50"
+              title="Backfill missing notifications and re-pull live upvote counts from Reddit."
+              aria-label="Refresh notification queue"
             >
-              {refreshQueue.isPending ? "Refreshing…" : "Refresh now"}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`h-4 w-4 ${refreshQueue.isPending ? "animate-spin" : ""}`}>
+                <path d="M21 12a9 9 0 1 1-3-6.7" />
+                <polyline points="21 3 21 9 15 9" />
+              </svg>
             </button>
             <label className="flex flex-col">
               <span className="font-semibold text-muted-foreground">Time window</span>
