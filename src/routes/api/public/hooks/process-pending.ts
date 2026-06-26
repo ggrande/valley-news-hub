@@ -368,9 +368,13 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
           const nowSec = Math.floor(Date.now() / 1000);
           for (const p of posts) {
             if (knownIds.has(p.id)) { summary.skipped_existing++; continue; }
-            // Wait at least 3 hours after creation so subreddit moderators
-            // have time to remove rule-breaking content before we import it.
-            if (typeof p.created_utc === "number" && nowSec - p.created_utc < MODERATION_HOLD_SEC) continue;
+            // Wait `holdHours` after creation so subreddit moderators have time
+            // to remove rule-breaking content before we import it. Set to 0 to disable.
+            if (moderationHoldSec > 0 && typeof p.created_utc === "number" && nowSec - p.created_utc < moderationHoldSec) {
+              summary.skipped_moderation_hold++;
+              continue;
+            }
+
             const body = (p.selftext ?? "").trim().toLowerCase();
             const title = (p.title ?? "").trim().toLowerCase();
             if (body === "[removed]" || body === "[deleted]" || title === "[removed]" || title === "[deleted]") continue;
