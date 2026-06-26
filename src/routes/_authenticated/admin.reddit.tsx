@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { drainRedditIntake, getRedditQueueStats, regenerateImport, runRedditAutomationNow } from "@/lib/generate-article.functions";
-import { runRedditListingFetch, listRedditListingJobs, getRedditSessionStatus } from "@/lib/reddit-listing.functions";
+import { listRedditListingJobs, getRedditSessionStatus } from "@/lib/reddit-listing.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/reddit")({
   component: RedditIntake,
