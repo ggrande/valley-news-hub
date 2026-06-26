@@ -861,32 +861,46 @@ function ProvisioningPanel({
           </div>
         )}
 
-        {isFailed && (
+        {(isFailed || isRetrying) && (
           <div className="space-y-2">
             <button
               type="button"
-              disabled={retryDisabled}
+              disabled={retryDisabled || isRetrying}
               onClick={async () => {
+                if (isRetrying) return;
+                setIsRetrying(true);
+                // Optimistically reset the progress ring so the user sees motion
+                setPct(0);
                 try {
                   await resetForRetry({ data: { siteId } });
+                  // Refetch so the ring reflects the "linking" baseline
+                  await status.refetch();
                   await onRetry();
-                  status.refetch();
-                  attempts.refetch();
+                  await Promise.all([status.refetch(), attempts.refetch()]);
                 } catch (e) {
                   toast.error((e as Error).message);
+                } finally {
+                  setIsRetrying(false);
                 }
               }}
-              className="w-full rounded-md bg-[color:var(--breaking)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-[color:var(--breaking)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
             >
-              {retryDisabled ? "Retrying…" : "Retry provisioning"}
+              {(retryDisabled || isRetrying) && (
+                <span
+                  aria-hidden
+                  className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                />
+              )}
+              {isRetrying || retryDisabled ? "Retrying…" : "Retry provisioning"}
             </button>
             <button
               type="button"
+              disabled={isRetrying}
               onClick={() => {
                 status.refetch();
                 attempts.refetch();
               }}
-              className="w-full rounded-md border px-4 py-2 text-xs font-semibold"
+              className="w-full rounded-md border px-4 py-2 text-xs font-semibold disabled:opacity-50"
             >
               Refresh status
             </button>
