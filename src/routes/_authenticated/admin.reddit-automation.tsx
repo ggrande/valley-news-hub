@@ -320,6 +320,14 @@ function Page() {
             </p>
           </div>
           <div className="flex flex-wrap items-end gap-2 text-xs">
+            <button
+              onClick={() => refreshQueue.mutate()}
+              disabled={refreshQueue.isPending}
+              className="self-end rounded-md border bg-white px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+              title="Re-pull live upvote counts from Reddit and re-sync with the Posts table."
+            >
+              {refreshQueue.isPending ? "Refreshing…" : "Refresh now"}
+            </button>
             <label className="flex flex-col">
               <span className="font-semibold text-muted-foreground">Time window</span>
               <select
