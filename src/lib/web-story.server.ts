@@ -12,6 +12,9 @@
 const BASE_URL = "https://wkna49.com";
 const PUBLISHER = "WKNA 49 News";
 const PUBLISHER_LOGO = "https://wkna49.com/logo.png";
+// Custom subdomain CNAME'd to {owner}.github.io. AMP is served from here so
+// the canonical URL stays on-brand and Google sees a clean text/html response.
+const STORIES_HOST = "stories.wkna49.com";
 
 export type WebStoryPost = {
   slug: string;
@@ -146,8 +149,9 @@ function ghRepo(): { owner: string; repo: string } | null {
 export function publicStoryUrl(slug: string): string {
   const r = ghRepo();
   if (!r) return `${BASE_URL}/api/public/web-stories/${slug}`;
-  // GitHub Pages serves docs/web-stories/{slug}/index.html at this URL.
-  return `https://${r.owner}.github.io/${r.repo}/web-stories/${slug}/`;
+  // Custom domain CNAME'd at the registrar (Porkbun) to {owner}.github.io.
+  // Pages serves docs/web-stories/{slug}/index.html.
+  return `https://${STORIES_HOST}/web-stories/${slug}/`;
 }
 
 async function gh(path: string, init: RequestInit = {}) {
@@ -189,6 +193,41 @@ async function ensurePagesEnabled(owner: string, repo: string) {
   // Don't throw — committing the file still works; Pages may be set up later.
 }
 
+let cnameEnsured = false;
+async function ensureCnameFile(owner: string, repo: string) {
+  if (cnameEnsured) return;
+  const path = "docs/CNAME";
+  const want = STORIES_HOST + "\n";
+  const getRes = await gh(`/repos/${owner}/${repo}/contents/${path}`);
+  let sha: string | undefined;
+  if (getRes.status === 200) {
+    const j: any = await getRes.json();
+    sha = j?.sha;
+    try {
+      const existingB64 = String(j?.content ?? "").replace(/\n/g, "");
+      if (existingB64 === b64(want)) {
+        cnameEnsured = true;
+        return;
+      }
+    } catch { /* fall through */ }
+  }
+  const put = await gh(`/repos/${owner}/${repo}/contents/${path}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: `web-stories: set CNAME to ${STORIES_HOST}`,
+      content: b64(want),
+      sha,
+      committer: { name: "WKNA Web Stories Bot", email: "bot@wkna49.com" },
+    }),
+  });
+  if (put.ok || put.status === 409) cnameEnsured = true;
+  else {
+    const txt = await put.text().catch(() => "");
+    console.warn("[web-stories] ensureCnameFile non-fatal:", put.status, txt.slice(0, 200));
+  }
+}
+
 function b64(s: string): string {
   // edge-safe base64 of UTF-8 string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -210,6 +249,7 @@ export async function ensureWebStoryUploaded(post: WebStoryPost): Promise<string
   const url = publicStoryUrl(post.slug);
 
   await ensurePagesEnabled(r.owner, r.repo);
+  await ensureCnameFile(r.owner, r.repo);
 
   // GET current SHA if file exists (Contents API requires sha for updates).
   let sha: string | undefined;
