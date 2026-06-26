@@ -103,7 +103,7 @@ export function renderWebStoryHtml(p: WebStoryPost): string {
   </amp-story-page>`;
 
   return `<!doctype html>
-<html amp lang="en">
+<html amp="amp" lang="en">
 <head>
   <meta charset="utf-8"/>
   <title>${esc(title)} — WKNA 49 News</title>
