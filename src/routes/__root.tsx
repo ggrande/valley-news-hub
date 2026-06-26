@@ -53,7 +53,32 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  beforeLoad: async ({ location }) => {
+    // Host-aware redirect: on tenant subdomains (*.wkna49.com other than www),
+    // /admin and /account funnel into the station magic-link flow instead of
+    // the master Supabase admin.
+    if (typeof window === "undefined") {
+      try {
+        const { getRequest } = await import("@tanstack/react-start/server");
+        const { redirect } = await import("@tanstack/react-router");
+        const req = getRequest();
+        const host = req?.headers.get("host")?.split(":")[0].toLowerCase() ?? "";
+        const isTenantHost =
+          host.endsWith(".wkna49.com") && host !== "www.wkna49.com" && host !== "wkna49.com";
+        if (isTenantHost) {
+          const p = location.pathname;
+          if (p === "/admin" || p.startsWith("/admin/") || p === "/account" || p.startsWith("/account/")) {
+            throw redirect({ to: "/station/admin" });
+          }
+        }
+      } catch (e) {
+        const { isRedirect } = await import("@tanstack/react-router");
+        if (isRedirect(e)) throw e;
+      }
+    }
+  },
   head: () => ({
+
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
