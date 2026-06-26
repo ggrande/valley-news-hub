@@ -217,14 +217,10 @@ export async function ensureWebStoryUploaded(post: WebStoryPost): Promise<string
   if (getRes.status === 200) {
     const j: any = await getRes.json();
     sha = j?.sha;
-    // Skip write if content unchanged (compare decoded body).
+    // Skip rewrite if content is byte-identical (avoid noisy commits on every sitemap hit).
     try {
-      const existing = j?.content
-        ? atob(String(j.content).replace(/\n/g, ""))
-        : "";
-      // existing may be UTF-8 byte string; rough byte-length check is enough
-      if (existing && existing.length === new TextEncoder().encode(html).length) {
-        // best-effort: assume identical to avoid no-op commits on every sitemap hit
+      const existingB64 = String(j?.content ?? "").replace(/\n/g, "");
+      if (existingB64 && existingB64 === b64(html)) {
         return url;
       }
     } catch {
