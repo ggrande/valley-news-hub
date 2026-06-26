@@ -392,12 +392,61 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
         const generateLimit = Math.max(1, Math.min(50, Number(settings.automation_generate_limit ?? 20)));
         const holdHours = Math.max(0, Number(settings.automation_moderation_hold_hours ?? DEFAULT_MODERATION_HOLD_HOURS));
         const moderationHoldSec = Math.floor(holdHours * 3600);
+        const useSessionCookies = settings.automation_use_session_cookies === true;
 
-        const summary: any = { imported: 0, skipped_existing: 0, skipped_low_score: 0, skipped_moderation_hold: 0, generated: 0, published: 0, filler_images: 0, errors: [] as string[] };
+        const summary: any = { imported: 0, skipped_existing: 0, skipped_low_score: 0, skipped_moderation_hold: 0, generated: 0, published: 0, filler_images: 0, dispatched_jobs: 0, errors: [] as string[] };
 
-
-        // 1. Auto-import recent posts from configured subreddits
-        for (const sub of subs) {
+        // 1a. Session-cookie path: dispatch one GitHub Actions listing job per
+        // subreddit using the WKNA49 logged-in browser. The callback runs the
+        // same import loop (with min_score + moderation_hold filters applied),
+        // so new intakes show up asynchronously and the next cron run — or
+        // the same one, below — handles generation/publishing.
+        if (useSessionCookies) {
+          const { data: sessRow } = await admin
+            .from("reddit_automation_settings")
+            .select("session_cookies_encrypted")
+            .eq("id", true)
+            .maybeSingle();
+          if (!(sessRow as any)?.session_cookies_encrypted) {
+            summary.errors.push("session cookies enabled but no cookies stored — capture/paste them on the Reddit Automation page first");
+          } else {
+            const { dispatchListingWorkflow } = await import("@/lib/reddit-automation.server");
+            for (const sub of subs) {
+              try {
+                const { data: job, error: insErr } = await admin
+                  .from("reddit_listing_jobs")
+                  .insert({
+                    subreddit: sub,
+                    sort: sortBy,
+                    top_window: sortBy === "top" ? topWindow : null,
+                    limit_per_sub: perSub,
+                    status: "queued",
+                    triggered_by: "automation",
+                  })
+                  .select("id")
+                  .single();
+                if (insErr || !job) {
+                  summary.errors.push(`listing-job r/${sub}: ${insErr?.message ?? "insert failed"}`);
+                  continue;
+                }
+                const d = await dispatchListingWorkflow({ jobId: (job as any).id });
+                if (!d.ok) {
+                  await admin
+                    .from("reddit_listing_jobs")
+                    .update({ status: "failed", error: d.error, completed_at: new Date().toISOString() })
+                    .eq("id", (job as any).id);
+                  summary.errors.push(`dispatch r/${sub}: ${d.error}`);
+                  continue;
+                }
+                summary.dispatched_jobs++;
+              } catch (err: any) {
+                summary.errors.push(`dispatch r/${sub}: ${err?.message ?? err}`);
+              }
+            }
+          }
+        } else {
+          // 1b. RSS + Arctic Shift archive path (no session cookies needed).
+          for (const sub of subs) {
           let posts: any[] = [];
           try {
             const result = await fetchSubredditListing(sub, perSub, sortBy, topWindow);
@@ -407,6 +456,7 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
             summary.errors.push(`listing r/${sub}: ${err?.message ?? err}`);
             continue;
           }
+
           if (!posts.length) continue;
           const ids = posts.map((p) => p.id);
           const titles = posts.map((p) => (p.title ?? "").trim()).filter(Boolean);
