@@ -35,13 +35,14 @@ export const Route = createFileRoute("/_authenticated/account/managed-sites/$sit
 });
 
 // ---------- Onboarding "question" steps (left side) ----------
-type Step = 0 | 1 | 2 | 3;
+type Step = 0 | 1 | 2 | 3 | 4;
 
 const STEPS: { key: Step; label: string; blurb: string }[] = [
-  { key: 0, label: "Identity", blurb: "Name your affiliate station" },
-  { key: 1, label: "Branding", blurb: "Logo & tagline for the directory" },
-  { key: 2, label: "Domain", blurb: "Connect a custom domain (optional)" },
-  { key: 3, label: "Review", blurb: "Review and finish" },
+  { key: 0, label: "Project", blurb: "Choose your Supabase org & region" },
+  { key: 1, label: "Identity", blurb: "Name your affiliate station" },
+  { key: 2, label: "Branding", blurb: "Logo & tagline for the directory" },
+  { key: 3, label: "Domain", blurb: "Connect a custom domain (optional)" },
+  { key: 4, label: "Review", blurb: "Review and finish" },
 ];
 
 // ---------- Maxis-style flavor messages (right side) ----------
