@@ -597,9 +597,10 @@ function ProvisioningPanel({
     const s = status.data?.state;
     if (s === "ready" || s === "failed") return;
     const t = setInterval(
-      () => setMsgIdx((i) => (i + 1 + Math.floor(Math.random() * (FLAVOR_MESSAGES.length - 1))) % FLAVOR_MESSAGES.length),
-      2400,
+      () => setMsgIdx((i) => (i + 1) % FLAVOR_MESSAGES.length),
+      6000,
     );
+
     return () => clearInterval(t);
   }, [status.data?.state]);
 
