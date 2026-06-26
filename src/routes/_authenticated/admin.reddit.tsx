@@ -428,6 +428,7 @@ function AutomationPanel() {
         setRunMsg(`Skipped: ${r.reason ?? "disabled"}. Enable automation above to run.`);
       } else {
         const parts: string[] = [];
+        if (typeof r?.dispatched_jobs === "number" && r.dispatched_jobs > 0) parts.push(`dispatched ${r.dispatched_jobs} session jobs`);
         if (typeof r?.imported === "number") parts.push(`imported ${r.imported}`);
         if (typeof r?.generated === "number") parts.push(`generated ${r.generated}`);
         if (typeof r?.published === "number") parts.push(`published ${r.published}`);
