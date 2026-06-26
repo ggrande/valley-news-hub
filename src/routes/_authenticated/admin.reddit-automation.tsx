@@ -157,46 +157,30 @@ function Page() {
 
       <section className="rounded-lg border bg-white p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold text-primary">Reddit account</h2>
+          <h2 className="font-display text-lg font-bold text-primary">Reddit session</h2>
           <div className="flex items-center gap-3">
             <span className="text-xs text-muted-foreground">Session: {sessionBadge}</span>
+            {s.reddit_username && (
+              <span className="text-xs text-muted-foreground">as u/{s.reddit_username}</span>
+            )}
             <button
               onClick={() => capture.mutate()}
               disabled={capture.isPending}
               className="rounded-md border px-3 py-1.5 text-sm font-semibold disabled:opacity-50"
+              title="Re-runs the worker to refresh session state using the saved cookies."
             >
-              {capture.isPending ? "Dispatching…" : "Capture session now"}
+              {capture.isPending ? "Dispatching…" : "Refresh session"}
             </button>
           </div>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Credentials are AES-256-GCM encrypted at rest. The password is never returned to the browser after saving.
+          Authentication is handled via the pasted cookies below — no Reddit username or password is stored.
         </p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">
-            <span className="block font-medium">Username</span>
-            <input
-              className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
-              value={eff.username}
-              placeholder="WKNA49"
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          </label>
-          <label className="text-sm">
-            <span className="block font-medium">Password</span>
-            <input
-              type="password"
-              className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
-              value={password}
-              placeholder={s.has_password ? "•••••••• (saved)" : ""}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
-        </div>
         {s.session_last_error && (
           <p className="mt-2 text-xs text-red-700">Last error: {s.session_last_error}</p>
         )}
       </section>
+
 
       <section className="rounded-lg border bg-white p-6">
         <h2 className="font-display text-lg font-bold text-primary">Paste session cookies</h2>
