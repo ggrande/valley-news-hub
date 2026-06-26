@@ -673,6 +673,8 @@ function ProvisioningPanel({
   const finalize = useServerFn(finalizeTenantProvisioning);
   const fetchAttempts = useServerFn(listProvisionAttempts);
   const resetForRetry = useServerFn(resetProvisioningForRetry);
+  const purgeReset = useServerFn(purgeAndResetTenant);
+  const [isPurging, setIsPurging] = useState(false);
 
   const status = useQuery({
     queryKey: ["provisioning-status", siteId],
