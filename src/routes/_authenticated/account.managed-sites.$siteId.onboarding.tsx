@@ -429,11 +429,12 @@ function OnboardingPage() {
                       <option value="">
                         {orgs.isLoading ? "Loading organizations…" : "— pick one —"}
                       </option>
-                      {orgs.data?.map((o) => (
+                      {orgs.data?.map((o, i) => (
                         <option key={o.id} value={o.id}>
-                          {o.name}
+                          {o.name}{i === 0 ? " (default)" : ""}
                         </option>
                       ))}
+
                     </select>
                   </Field>
                   <Field label="Region" hint="Pick the closest region to your readers.">
