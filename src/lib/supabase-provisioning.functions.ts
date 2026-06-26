@@ -168,7 +168,7 @@ export const provisionTenantProject = createServerFn({ method: "POST" })
       })
       .eq("id", data.siteId);
 
-    let project: sbo.SbProject;
+    let project: import("@/lib/supabase-oauth.server").SbProject;
     try {
       project = await sbo.createProject(accessToken, {
         name: data.projectName || `${site.display_name} (${site.subdomain})`.slice(0, 50),

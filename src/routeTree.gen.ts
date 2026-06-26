@@ -82,6 +82,7 @@ import { Route as ApiPublicHooksBackfillCommentsRouteImport } from './routes/api
 import { Route as AuthenticatedAdminRedditIdRouteImport } from './routes/_authenticated/admin.reddit.$id'
 import { Route as AuthenticatedAdminPostsIdRouteImport } from './routes/_authenticated/admin.posts.$id'
 import { Route as AuthenticatedAdminImportBatchIdRouteImport } from './routes/_authenticated/admin.import.$batchId'
+import { Route as ApiPublicIntegrationsSupabaseCallbackRouteImport } from './routes/api/public/integrations/supabase/callback'
 import { Route as AuthenticatedAccountManagedSitesSiteIdOnboardingRouteImport } from './routes/_authenticated/account.managed-sites.$siteId.onboarding'
 
 const WeatherRoute = WeatherRouteImport.update({
@@ -479,6 +480,12 @@ const AuthenticatedAdminImportBatchIdRoute =
     path: '/$batchId',
     getParentRoute: () => AuthenticatedAdminImportRoute,
   } as any)
+const ApiPublicIntegrationsSupabaseCallbackRoute =
+  ApiPublicIntegrationsSupabaseCallbackRouteImport.update({
+    id: '/api/public/integrations/supabase/callback',
+    path: '/api/public/integrations/supabase/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAccountManagedSitesSiteIdOnboardingRoute =
   AuthenticatedAccountManagedSitesSiteIdOnboardingRouteImport.update({
     id: '/$siteId/onboarding',
@@ -560,6 +567,7 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
   '/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
+  '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -634,6 +642,7 @@ export interface FileRoutesByTo {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
   '/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
+  '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -711,6 +720,7 @@ export interface FileRoutesById {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
   '/_authenticated/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
+  '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -788,6 +798,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/web-stories/$slug'
     | '/account/managed-sites/$siteId/onboarding'
+    | '/api/public/integrations/supabase/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -862,6 +873,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/web-stories/$slug'
     | '/account/managed-sites/$siteId/onboarding'
+    | '/api/public/integrations/supabase/callback'
   id:
     | '__root__'
     | '/'
@@ -938,6 +950,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/web-stories/$slug'
     | '/_authenticated/account/managed-sites/$siteId/onboarding'
+    | '/api/public/integrations/supabase/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -984,6 +997,7 @@ export interface RootRouteChildren {
   ApiPublicNetworkIngestReleaseRoute: typeof ApiPublicNetworkIngestReleaseRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWebStoriesSlugRoute: typeof ApiPublicWebStoriesSlugRoute
+  ApiPublicIntegrationsSupabaseCallbackRoute: typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1499,6 +1513,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminImportBatchIdRouteImport
       parentRoute: typeof AuthenticatedAdminImportRoute
     }
+    '/api/public/integrations/supabase/callback': {
+      id: '/api/public/integrations/supabase/callback'
+      path: '/api/public/integrations/supabase/callback'
+      fullPath: '/api/public/integrations/supabase/callback'
+      preLoaderRoute: typeof ApiPublicIntegrationsSupabaseCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/account/managed-sites/$siteId/onboarding': {
       id: '/_authenticated/account/managed-sites/$siteId/onboarding'
       path: '/$siteId/onboarding'
@@ -1704,17 +1725,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicNetworkIngestReleaseRoute: ApiPublicNetworkIngestReleaseRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWebStoriesSlugRoute: ApiPublicWebStoriesSlugRoute,
+  ApiPublicIntegrationsSupabaseCallbackRoute:
+    ApiPublicIntegrationsSupabaseCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
