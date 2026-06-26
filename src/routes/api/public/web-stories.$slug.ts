@@ -128,9 +128,13 @@ ${ctaPage}
 </body>
 </html>`;
 
+        // Serve as application/xhtml+xml to bypass Lovable's edge HTML rewriter
+        // (it only matches text/html). Google's AMP validator accepts XHTML-served
+        // AMP. If validation fails on this content-type, revert to text/html and
+        // pursue an off-platform hosting option for the AMP routes.
         return new Response(html, {
           headers: {
-            "Content-Type": "text/html; charset=utf-8",
+            "Content-Type": "application/xhtml+xml; charset=utf-8",
             "Cache-Control": "public, max-age=300, s-maxage=600",
           },
         });
