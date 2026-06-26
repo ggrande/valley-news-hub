@@ -129,6 +129,13 @@ function ArticlePage() {
               title={a.title}
               summary={a.summary}
             />
+            <Link
+              to="/stories/$slug"
+              params={{ slug: post.slug }}
+              className="mt-4 inline-flex items-center gap-2 rounded-md border border-[color:var(--broadcast)] px-3 py-1.5 text-sm font-semibold text-[color:var(--broadcast)] hover:bg-[color:var(--broadcast)] hover:text-white"
+            >
+              ▶ View as Web Story
+            </Link>
           </div>
         </div>
         {post.featured_image ? (
