@@ -2,12 +2,14 @@
 // GitHub Pages. Supabase Storage cannot host AMP (forces text/plain,
 // injects `x-robots-tag: none`, and wraps every object in a
 // `default-src 'none'; sandbox` CSP). GitHub Pages serves plain
-// text/html with no robots header — the only viable static host we
-// already have credentials for.
+// text/html with no robots header.
 //
-// Files are committed to `docs/web-stories/{slug}/index.html` on the
-// default branch via the GitHub Contents API. Pages serves from
-// `/docs` on main. URL: https://{owner}.github.io/{repo}/web-stories/{slug}/
+// Files are committed to the `gh-pages` branch at
+// `web-stories/{slug}/index.html` via the GitHub Contents API. We use a
+// dedicated branch (NOT `main`/`docs/`) so the generated AMP HTML never
+// syncs back into the Lovable workspace and clutters chat context.
+// GitHub Pages serves the `gh-pages` branch root; the CNAME file at the
+// branch root points the custom subdomain at it.
 
 const BASE_URL = "https://wkna49.com";
 const PUBLISHER = "WKNA 49 News";
@@ -15,6 +17,8 @@ const PUBLISHER_LOGO = "https://wkna49.com/logo.png";
 // Custom subdomain CNAME'd to {owner}.github.io. AMP is served from here so
 // the canonical URL stays on-brand and Google sees a clean text/html response.
 const STORIES_HOST = "stories.wkna49.com";
+const STORIES_BRANCH = "gh-pages";
+
 
 export type WebStoryPost = {
   slug: string;
