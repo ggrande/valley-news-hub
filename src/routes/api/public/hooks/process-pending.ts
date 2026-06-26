@@ -333,8 +333,11 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
         const autoFillerImage = settings.automation_auto_filler_image === true;
         const autoPublish = settings.automation_auto_publish === true;
         const generateLimit = Math.max(1, Math.min(50, Number(settings.automation_generate_limit ?? 20)));
+        const holdHours = Math.max(0, Number(settings.automation_moderation_hold_hours ?? DEFAULT_MODERATION_HOLD_HOURS));
+        const moderationHoldSec = Math.floor(holdHours * 3600);
 
-        const summary: any = { imported: 0, skipped_existing: 0, skipped_low_score: 0, generated: 0, published: 0, filler_images: 0, errors: [] as string[] };
+        const summary: any = { imported: 0, skipped_existing: 0, skipped_low_score: 0, skipped_moderation_hold: 0, generated: 0, published: 0, filler_images: 0, errors: [] as string[] };
+
 
         // 1. Auto-import recent posts from configured subreddits
         for (const sub of subs) {
