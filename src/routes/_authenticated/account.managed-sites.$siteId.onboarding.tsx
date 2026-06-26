@@ -166,6 +166,14 @@ function OnboardingPage() {
     if (step === 0 && status.data?.project) setStep(1);
   }, [status.data?.project, step]);
 
+  // Default the org dropdown to the first org returned (usually "Personal").
+  useEffect(() => {
+    if (!chosenOrg && orgs.data && orgs.data.length > 0) {
+      setChosenOrg(orgs.data[0].id);
+    }
+  }, [orgs.data, chosenOrg]);
+
+
   useEffect(() => {
     if (profile && Object.keys(form).length === 0) setForm(profile);
   }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
