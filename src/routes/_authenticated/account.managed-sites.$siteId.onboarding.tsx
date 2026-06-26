@@ -4,6 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+import {
   getMyManagedSiteProfile,
   updateMyManagedSiteProfile,
   type ManagedSiteDirectoryProfile,
@@ -88,6 +96,36 @@ function OnboardingPage() {
   const fetchProfile = useServerFn(getMyManagedSiteProfile);
   const saveProfile = useServerFn(updateMyManagedSiteProfile);
 
+  // If this page was opened in a popup as the OAuth callback target,
+  // notify the opener and close — the parent window owns the wizard.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get("supabase") === "connected";
+    const err = params.get("supabase_error");
+    if ((connected || err) && window.opener && window.opener !== window) {
+      try {
+        window.opener.postMessage(
+          { type: "supabase-oauth", ok: connected, error: err ?? null },
+          window.location.origin,
+        );
+      } catch {
+        /* noop */
+      }
+      window.close();
+    }
+  }, []);
+
+  const fetchStatus = useServerFn(getProvisioningStatus);
+  const status = useQuery({
+    queryKey: ["provisioning-status", siteId],
+    queryFn: () => fetchStatus({ data: { siteId } }),
+    refetchInterval: (q) => {
+      const s = q.state.data?.state;
+      return s === "provisioning" || s === "migrating" || s === "linking" ? 4000 : false;
+    },
+  });
+
   const { data: profile, isLoading } = useQuery({
     queryKey: ["managed-site-profile", siteId],
     queryFn: () => fetchProfile({ data: { siteId } }),
@@ -100,6 +138,7 @@ function OnboardingPage() {
   useEffect(() => {
     if (profile && Object.keys(form).length === 0) setForm(profile);
   }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const patch = (p: Partial<ManagedSiteDirectoryProfile>) => setForm((f) => ({ ...f, ...p }));
 
@@ -146,12 +185,120 @@ function OnboardingPage() {
     }
   };
 
+  // Supabase connect modal — must come BEFORE the form is usable so background provisioning starts.
+  const initiate = useServerFn(initiateSupabaseConnect);
+  const hasConnected = !!status.data?.hasRefreshToken;
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const popupRef = useRef<Window | null>(null);
+
+  // Auto-open the connect modal the first time we see we're not connected.
+  useEffect(() => {
+    if (status.isSuccess && !hasConnected) setConnectOpen(true);
+    if (hasConnected) setConnectOpen(false);
+  }, [status.isSuccess, hasConnected]);
+
+  // Listen for the popup's postMessage so we refetch immediately on success.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.type !== "supabase-oauth") return;
+      setConnecting(false);
+      if (e.data.ok) {
+        toast.success("Supabase connected — provisioning starts now.");
+        qc.invalidateQueries({ queryKey: ["provisioning-status", siteId] });
+      } else if (e.data.error) {
+        toast.error(`Supabase: ${e.data.error}`);
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [qc, siteId]);
+
+  // While a popup is open, poll status so we close the modal even if postMessage is blocked.
+  useEffect(() => {
+    if (!connecting) return;
+    const id = setInterval(() => {
+      qc.invalidateQueries({ queryKey: ["provisioning-status", siteId] });
+      if (popupRef.current?.closed) {
+        setConnecting(false);
+        clearInterval(id);
+      }
+    }, 1500);
+    return () => clearInterval(id);
+  }, [connecting, qc, siteId]);
+
+  const openSupabasePopup = async () => {
+    try {
+      setConnecting(true);
+      const { authorizeUrl } = await initiate({ data: { siteId } });
+      const w = 560;
+      const h = 720;
+      const left = window.screenX + (window.outerWidth - w) / 2;
+      const top = window.screenY + (window.outerHeight - h) / 2;
+      const popup = window.open(
+        authorizeUrl,
+        "supabase-oauth",
+        `popup=yes,width=${w},height=${h},left=${left},top=${top}`,
+      );
+      if (!popup) {
+        // Popup blocked — fall back to a full-page redirect.
+        window.location.href = authorizeUrl;
+        return;
+      }
+      popupRef.current = popup;
+    } catch (e) {
+      setConnecting(false);
+      toast.error((e as Error).message);
+    }
+  };
+
   if (isLoading || !profile) {
     return <div className="mx-auto max-w-2xl p-10 text-sm text-muted-foreground">Loading…</div>;
   }
 
   return (
     <div className="mx-auto max-w-7xl p-4 md:p-8">
+      <Dialog
+        open={connectOpen}
+        onOpenChange={(o) => {
+          // Block dismissal until connected — connecting Supabase is required first.
+          if (!hasConnected) return;
+          setConnectOpen(o);
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-md"
+          onPointerDownOutside={(e) => !hasConnected && e.preventDefault()}
+          onEscapeKeyDown={(e) => !hasConnected && e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>Connect your Supabase account</DialogTitle>
+            <DialogDescription>
+              We provision your newsroom database inside <strong>your own</strong> Supabase
+              account so you fully own your data. This takes about a minute and runs in the
+              background while you finish onboarding.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <button
+              type="button"
+              onClick={openSupabasePopup}
+              disabled={connecting}
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+            >
+              {connecting ? "Waiting for Supabase…" : "Connect Supabase →"}
+            </button>
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              A Supabase window will open. After you authorize, it closes automatically and
+              provisioning begins. Session code{" "}
+              <span className="font-mono">{shortSessionCode(siteId)}</span>.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <Link to="/account/managed-sites" className="hover:underline">
           ← My Affiliate Stations
@@ -168,13 +315,22 @@ function OnboardingPage() {
         Welcome to the Affiliate Network
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        While we get things ready in the background, let's set up your station.
+        {hasConnected
+          ? "While we get things ready in the background, let's set up your station."
+          : "First, connect your Supabase account so we can provision your newsroom in the background."}
       </p>
+
 
       <div className="mt-6 grid gap-4 lg:grid-cols-10">
         {/* LEFT — Onboarding questions */}
         <div className="lg:col-span-7">
-          <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <div
+            aria-disabled={!hasConnected}
+            className={`rounded-xl border bg-card p-6 shadow-sm ${
+              hasConnected ? "" : "pointer-events-none select-none opacity-50"
+            }`}
+          >
+
             <div className="flex items-center justify-between">
               <h2 className="font-display text-xl font-bold text-primary">
                 {STEPS[step].blurb}
@@ -441,9 +597,10 @@ function ProvisioningPanel({
     const s = status.data?.state;
     if (s === "ready" || s === "failed") return;
     const t = setInterval(
-      () => setMsgIdx((i) => (i + 1 + Math.floor(Math.random() * (FLAVOR_MESSAGES.length - 1))) % FLAVOR_MESSAGES.length),
-      2400,
+      () => setMsgIdx((i) => (i + 1) % FLAVOR_MESSAGES.length),
+      6000,
     );
+
     return () => clearInterval(t);
   }, [status.data?.state]);
 
