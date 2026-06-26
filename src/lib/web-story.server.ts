@@ -103,7 +103,7 @@ export function renderWebStoryHtml(p: WebStoryPost): string {
   </amp-story-page>`;
 
   return `<!doctype html>
-<html amp lang="en">
+<html amp="amp" lang="en">
 <head>
   <meta charset="utf-8"/>
   <title>${esc(title)} — WKNA 49 News</title>
@@ -138,8 +138,11 @@ export async function ensureWebStoryUploaded(post: WebStoryPost): Promise<string
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const html = renderWebStoryHtml(post);
   const path = `${post.slug}/index.html`;
-  await supabaseAdmin.storage.from("web-stories").upload(path, html, {
-    contentType: "text/html; charset=utf-8",
+  // Wrap in a Blob with explicit text/html type — passing a raw string causes
+  // supabase-js to default to text/plain, which breaks AMP rendering.
+  const file = new Blob([html], { type: "text/html;charset=utf-8" });
+  await supabaseAdmin.storage.from("web-stories").upload(path, file, {
+    contentType: "text/html;charset=utf-8",
     upsert: true,
     cacheControl: "300",
   });
