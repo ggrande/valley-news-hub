@@ -22,14 +22,29 @@ export const Route = createFileRoute("/_authenticated/admin/reddit-automation")(
 function Page() {
   const qc = useQueryClient();
   const settingsQ = useQuery({ queryKey: ["reddit-automation-settings"], queryFn: () => getRedditAutomationSettings() });
-  const notifsQ = useQuery({ queryKey: ["reddit-notifications"], queryFn: () => listRedditNotifications({ data: {} }) });
+
+  // Notification filters
+  const [windowHours, setWindowHours] = useState<number | null>(24);
+  const [minUpvotes, setMinUpvotes] = useState<number | "">("");
+  const [sortBy, setSortBy] = useState<"created_at" | "upvotes">("created_at");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+
+  const notifsQ = useQuery({
+    queryKey: ["reddit-notifications", windowHours, minUpvotes, sortBy, statusFilter],
+    queryFn: () => listRedditNotifications({ data: {
+      windowHours,
+      minUpvotes: typeof minUpvotes === "number" ? minUpvotes : null,
+      sortBy,
+      status: statusFilter || undefined,
+      limit: 100,
+    } }),
+    refetchInterval: 30_000,
+  });
 
   const s: any = settingsQ.data ?? {};
 
   const [mode, setMode] = useState<string>("");
   const [enabled, setEnabled] = useState<boolean | null>(null);
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
   const [template, setTemplate] = useState<string>("");
   const [perHour, setPerHour] = useState<number | "">("");
   const [perDay, setPerDay] = useState<number | "">("");
