@@ -302,8 +302,67 @@ function Page() {
       </div>
 
       <section className="rounded-lg border bg-white p-6">
-        <h2 className="font-display text-lg font-bold text-primary">Notification queue</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Recent 50 notifications.</p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="font-display text-lg font-bold text-primary">Notification queue</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Synced live with the Posts page and the latest upvote counts from Reddit Intake. Auto-refreshes every 30 s.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-end gap-2 text-xs">
+            <label className="flex flex-col">
+              <span className="font-semibold text-muted-foreground">Time window</span>
+              <select
+                className="mt-1 rounded-md border bg-white px-2 py-1.5"
+                value={windowHours === null ? "all" : String(windowHours)}
+                onChange={(e) => setWindowHours(e.target.value === "all" ? null : Number(e.target.value))}
+              >
+                <option value="6">Last 6 hours</option>
+                <option value="24">Last 24 hours</option>
+                <option value="168">Last 7 days</option>
+                <option value="all">All time</option>
+              </select>
+            </label>
+            <label className="flex flex-col">
+              <span className="font-semibold text-muted-foreground">Min upvotes</span>
+              <input
+                type="number" min={0}
+                className="mt-1 w-24 rounded-md border px-2 py-1.5"
+                value={minUpvotes}
+                placeholder="any"
+                onChange={(e) => setMinUpvotes(e.target.value === "" ? "" : Number(e.target.value))}
+              />
+            </label>
+            <label className="flex flex-col">
+              <span className="font-semibold text-muted-foreground">Status</span>
+              <select
+                className="mt-1 rounded-md border bg-white px-2 py-1.5"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="">All</option>
+                <option value="queued">Queued</option>
+                <option value="awaiting_approval">Awaiting approval</option>
+                <option value="dispatched">Dispatched</option>
+                <option value="posted">Posted</option>
+                <option value="failed">Failed</option>
+                <option value="skipped">Skipped</option>
+                <option value="dry_run_only">Dry run only</option>
+              </select>
+            </label>
+            <label className="flex flex-col">
+              <span className="font-semibold text-muted-foreground">Sort by</span>
+              <select
+                className="mt-1 rounded-md border bg-white px-2 py-1.5"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+              >
+                <option value="created_at">Newest first</option>
+                <option value="upvotes">Upvotes (highest)</option>
+              </select>
+            </label>
+          </div>
+        </div>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -311,6 +370,8 @@ function Page() {
                 <th className="py-2 pr-3">When</th>
                 <th className="py-2 pr-3">Article</th>
                 <th className="py-2 pr-3">Subreddit</th>
+                <th className="py-2 pr-3">Upvotes</th>
+                <th className="py-2 pr-3">Post</th>
                 <th className="py-2 pr-3">Status</th>
                 <th className="py-2 pr-3">Attempts</th>
                 <th className="py-2 pr-3">Actions</th>
@@ -334,6 +395,14 @@ function Page() {
                       n.subreddit ? `r/${n.subreddit}` : "—"
                     )}
                   </td>
+                  <td className="py-2 pr-3 text-xs tabular-nums">
+                    {typeof n.upvotes === "number" ? n.upvotes.toLocaleString() : <span className="text-muted-foreground">—</span>}
+                  </td>
+                  <td className="py-2 pr-3 text-xs">
+                    {n.post_status ? (
+                      <span className={`rounded px-2 py-0.5 font-semibold ${n.post_status === "published" ? "bg-emerald-100 text-emerald-800" : n.post_status === "draft" ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-700"}`}>{n.post_status}</span>
+                    ) : <span className="text-muted-foreground">—</span>}
+                  </td>
                   <td className="py-2 pr-3"><StatusPill status={n.status} mode={n.mode_at_enqueue} /></td>
                   <td className="py-2 pr-3 text-xs">{n.attempt_count}</td>
                   <td className="py-2 pr-3">
@@ -356,12 +425,13 @@ function Page() {
                 </tr>
               ))}
               {!notifsQ.data?.length && (
-                <tr><td colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No notifications yet.</td></tr>
+                <tr><td colSpan={8} className="py-8 text-center text-sm text-muted-foreground">No notifications match these filters.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </section>
+
 
       <section className="rounded-lg border bg-white p-6">
         <div className="flex items-center justify-between">
