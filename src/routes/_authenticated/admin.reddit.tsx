@@ -187,7 +187,6 @@ function RedditIntake() {
 
       <AutomationPanel />
 
-      <SessionListingPanel />
 
 
 
