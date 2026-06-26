@@ -151,6 +151,28 @@ export async function generateOne(admin: SupabaseClient, importId: string) {
   // Category
   let categoryId: string | null = null;
   const catName = (generated.category ?? imp.link_flair_text ?? "Community").toString().trim();
+  const generatedBody = (generated.body ?? "").toString().trim();
+  const generatedHeadline = (generated.headline ?? "").toString().trim();
+
+  // Hard reject: AI flagged this source as unusable, or returned an empty body, or
+  // labeled it as "rejected source material". Don't pollute /admin/posts with empty
+  // archived placeholders — mark the import as discarded and return.
+  const isRejected =
+    /reject/i.test(catName) ||
+    /reject/i.test(generatedHeadline) ||
+    generatedBody.length < 40;
+  if (isRejected) {
+    await admin
+      .from("reddit_imports")
+      .update({
+        import_status: "discarded",
+        generated_post_id: null,
+        processing_error: `Auto-rejected: ${/reject/i.test(catName) ? "category=" + catName : generatedBody.length < 40 ? "empty body" : "headline=" + generatedHeadline}`,
+      })
+      .eq("id", imp.id);
+    return { postId: null, moderationStatus: "rejected" as const, rejected: true };
+  }
+
   if (catName) {
     const catSlug = slugify(catName);
     const { data: existingCat } = await admin.from("categories").select("id").eq("slug", catSlug).maybeSingle();
@@ -195,7 +217,7 @@ export async function generateOne(admin: SupabaseClient, importId: string) {
       title: generated.headline ?? imp.original_title ?? "Untitled",
       dek: generated.dek ?? null,
       body: (generated.body ?? "").toString(),
-      status: /reject/i.test(catName) ? "archived" : "draft",
+      status: "draft",
       source_type: "reddit_import",
       source_url: imp.permalink,
       source_subreddit: imp.subreddit,

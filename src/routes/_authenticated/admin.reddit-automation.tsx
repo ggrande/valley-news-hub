@@ -22,14 +22,29 @@ export const Route = createFileRoute("/_authenticated/admin/reddit-automation")(
 function Page() {
   const qc = useQueryClient();
   const settingsQ = useQuery({ queryKey: ["reddit-automation-settings"], queryFn: () => getRedditAutomationSettings() });
-  const notifsQ = useQuery({ queryKey: ["reddit-notifications"], queryFn: () => listRedditNotifications({ data: {} }) });
+
+  // Notification filters
+  const [windowHours, setWindowHours] = useState<number | null>(24);
+  const [minUpvotes, setMinUpvotes] = useState<number | "">("");
+  const [sortBy, setSortBy] = useState<"created_at" | "upvotes">("created_at");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+
+  const notifsQ = useQuery({
+    queryKey: ["reddit-notifications", windowHours, minUpvotes, sortBy, statusFilter],
+    queryFn: () => listRedditNotifications({ data: {
+      windowHours,
+      minUpvotes: typeof minUpvotes === "number" ? minUpvotes : null,
+      sortBy,
+      status: statusFilter || undefined,
+      limit: 100,
+    } }),
+    refetchInterval: 30_000,
+  });
 
   const s: any = settingsQ.data ?? {};
 
   const [mode, setMode] = useState<string>("");
   const [enabled, setEnabled] = useState<boolean | null>(null);
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
   const [template, setTemplate] = useState<string>("");
   const [perHour, setPerHour] = useState<number | "">("");
   const [perDay, setPerDay] = useState<number | "">("");
@@ -37,7 +52,6 @@ function Page() {
   const eff = {
     mode: mode || s.mode || "off",
     enabled: enabled ?? s.enabled ?? false,
-    username: username || s.reddit_username || "",
     template: template || s.template_markdown || "",
     perHour: perHour === "" ? (s.rate_per_hour ?? 4) : Number(perHour),
     perDay: perDay === "" ? (s.rate_per_day ?? 20) : Number(perDay),
@@ -49,8 +63,6 @@ function Page() {
         data: {
           mode: eff.mode as any,
           enabled: eff.enabled,
-          reddit_username: eff.username,
-          reddit_password: password || undefined,
           template_markdown: eff.template,
           rate_per_hour: eff.perHour,
           rate_per_day: eff.perDay,
@@ -58,7 +70,6 @@ function Page() {
       }),
     onSuccess: () => {
       toast.success("Settings saved");
-      setPassword("");
       qc.invalidateQueries({ queryKey: ["reddit-automation-settings"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
@@ -146,46 +157,30 @@ function Page() {
 
       <section className="rounded-lg border bg-white p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold text-primary">Reddit account</h2>
+          <h2 className="font-display text-lg font-bold text-primary">Reddit session</h2>
           <div className="flex items-center gap-3">
             <span className="text-xs text-muted-foreground">Session: {sessionBadge}</span>
+            {s.reddit_username && (
+              <span className="text-xs text-muted-foreground">as u/{s.reddit_username}</span>
+            )}
             <button
               onClick={() => capture.mutate()}
               disabled={capture.isPending}
               className="rounded-md border px-3 py-1.5 text-sm font-semibold disabled:opacity-50"
+              title="Re-runs the worker to refresh session state using the saved cookies."
             >
-              {capture.isPending ? "Dispatching…" : "Capture session now"}
+              {capture.isPending ? "Dispatching…" : "Refresh session"}
             </button>
           </div>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Credentials are AES-256-GCM encrypted at rest. The password is never returned to the browser after saving.
+          Authentication is handled via the pasted cookies below — no Reddit username or password is stored.
         </p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">
-            <span className="block font-medium">Username</span>
-            <input
-              className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
-              value={eff.username}
-              placeholder="WKNA49"
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          </label>
-          <label className="text-sm">
-            <span className="block font-medium">Password</span>
-            <input
-              type="password"
-              className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
-              value={password}
-              placeholder={s.has_password ? "•••••••• (saved)" : ""}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
-        </div>
         {s.session_last_error && (
           <p className="mt-2 text-xs text-red-700">Last error: {s.session_last_error}</p>
         )}
       </section>
+
 
       <section className="rounded-lg border bg-white p-6">
         <h2 className="font-display text-lg font-bold text-primary">Paste session cookies</h2>
@@ -307,8 +302,67 @@ function Page() {
       </div>
 
       <section className="rounded-lg border bg-white p-6">
-        <h2 className="font-display text-lg font-bold text-primary">Notification queue</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Recent 50 notifications.</p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="font-display text-lg font-bold text-primary">Notification queue</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Synced live with the Posts page and the latest upvote counts from Reddit Intake. Auto-refreshes every 30 s.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-end gap-2 text-xs">
+            <label className="flex flex-col">
+              <span className="font-semibold text-muted-foreground">Time window</span>
+              <select
+                className="mt-1 rounded-md border bg-white px-2 py-1.5"
+                value={windowHours === null ? "all" : String(windowHours)}
+                onChange={(e) => setWindowHours(e.target.value === "all" ? null : Number(e.target.value))}
+              >
+                <option value="6">Last 6 hours</option>
+                <option value="24">Last 24 hours</option>
+                <option value="168">Last 7 days</option>
+                <option value="all">All time</option>
+              </select>
+            </label>
+            <label className="flex flex-col">
+              <span className="font-semibold text-muted-foreground">Min upvotes</span>
+              <input
+                type="number" min={0}
+                className="mt-1 w-24 rounded-md border px-2 py-1.5"
+                value={minUpvotes}
+                placeholder="any"
+                onChange={(e) => setMinUpvotes(e.target.value === "" ? "" : Number(e.target.value))}
+              />
+            </label>
+            <label className="flex flex-col">
+              <span className="font-semibold text-muted-foreground">Status</span>
+              <select
+                className="mt-1 rounded-md border bg-white px-2 py-1.5"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="">All</option>
+                <option value="queued">Queued</option>
+                <option value="awaiting_approval">Awaiting approval</option>
+                <option value="dispatched">Dispatched</option>
+                <option value="posted">Posted</option>
+                <option value="failed">Failed</option>
+                <option value="skipped">Skipped</option>
+                <option value="dry_run_only">Dry run only</option>
+              </select>
+            </label>
+            <label className="flex flex-col">
+              <span className="font-semibold text-muted-foreground">Sort by</span>
+              <select
+                className="mt-1 rounded-md border bg-white px-2 py-1.5"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+              >
+                <option value="created_at">Newest first</option>
+                <option value="upvotes">Upvotes (highest)</option>
+              </select>
+            </label>
+          </div>
+        </div>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -316,6 +370,8 @@ function Page() {
                 <th className="py-2 pr-3">When</th>
                 <th className="py-2 pr-3">Article</th>
                 <th className="py-2 pr-3">Subreddit</th>
+                <th className="py-2 pr-3">Upvotes</th>
+                <th className="py-2 pr-3">Post</th>
                 <th className="py-2 pr-3">Status</th>
                 <th className="py-2 pr-3">Attempts</th>
                 <th className="py-2 pr-3">Actions</th>
@@ -339,6 +395,14 @@ function Page() {
                       n.subreddit ? `r/${n.subreddit}` : "—"
                     )}
                   </td>
+                  <td className="py-2 pr-3 text-xs tabular-nums">
+                    {typeof n.upvotes === "number" ? n.upvotes.toLocaleString() : <span className="text-muted-foreground">—</span>}
+                  </td>
+                  <td className="py-2 pr-3 text-xs">
+                    {n.post_status ? (
+                      <span className={`rounded px-2 py-0.5 font-semibold ${n.post_status === "published" ? "bg-emerald-100 text-emerald-800" : n.post_status === "draft" ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-700"}`}>{n.post_status}</span>
+                    ) : <span className="text-muted-foreground">—</span>}
+                  </td>
                   <td className="py-2 pr-3"><StatusPill status={n.status} mode={n.mode_at_enqueue} /></td>
                   <td className="py-2 pr-3 text-xs">{n.attempt_count}</td>
                   <td className="py-2 pr-3">
@@ -361,12 +425,13 @@ function Page() {
                 </tr>
               ))}
               {!notifsQ.data?.length && (
-                <tr><td colSpan={6} className="py-8 text-center text-sm text-muted-foreground">No notifications yet.</td></tr>
+                <tr><td colSpan={8} className="py-8 text-center text-sm text-muted-foreground">No notifications match these filters.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </section>
+
 
       <section className="rounded-lg border bg-white p-6">
         <div className="flex items-center justify-between">
@@ -394,7 +459,7 @@ function Page() {
       <section className="rounded-lg border bg-amber-50 p-4 text-xs text-amber-900">
         <p className="font-semibold">Setup checklist</p>
         <ol className="ml-5 mt-2 list-decimal space-y-1">
-          <li>Save Reddit username + password above.</li>
+          <li>Paste a fresh set of u/WKNA49 cookies into the <strong>Paste session cookies</strong> box above.</li>
           <li>Add the following <strong>repository secrets</strong> to this GitHub repo (Settings → Secrets and variables → Actions):
             <ul className="ml-4 mt-1 list-disc">
               <li><code>APP_BASE_URL</code> — e.g. <code>https://wkna49.com</code></li>
