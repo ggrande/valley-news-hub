@@ -128,7 +128,7 @@ function ArticlePage() {
               url={`https://wkna49.com/news/${post.slug}`}
               title={a.title}
               summary={a.summary}
-              storyUrl={`https://wkna49.com/stories/${post.slug}`}
+              storyUrl={`https://wkna49.com/api/public/web-stories/${post.slug}`}
             />
           </div>
         </div>
