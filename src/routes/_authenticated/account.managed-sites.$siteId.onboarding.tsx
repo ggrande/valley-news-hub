@@ -734,16 +734,6 @@ function ProvisioningPanel({
     }
   };
 
-  const startProvision = async () => {
-    if (!chosenOrg) return toast.error("Pick a Supabase organization");
-    try {
-      const r = await provision({ data: { siteId, organizationId: chosenOrg, region } });
-      toast.success(r.message);
-      status.refetch();
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  };
 
   const isReady = s?.state === "ready";
   const isFailed = s?.state === "failed";
