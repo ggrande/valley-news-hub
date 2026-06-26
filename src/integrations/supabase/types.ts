@@ -53,6 +53,59 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_directory_entries: {
+        Row: {
+          approved: boolean
+          city: string | null
+          created_at: string
+          display_name: string
+          id: string
+          license_id: string | null
+          logo_url: string | null
+          owner_user_id: string
+          region: string | null
+          tagline: string | null
+          updated_at: string
+          website_url: string
+        }
+        Insert: {
+          approved?: boolean
+          city?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          license_id?: string | null
+          logo_url?: string | null
+          owner_user_id: string
+          region?: string | null
+          tagline?: string | null
+          updated_at?: string
+          website_url: string
+        }
+        Update: {
+          approved?: boolean
+          city?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          license_id?: string | null
+          logo_url?: string | null
+          owner_user_id?: string
+          region?: string | null
+          tagline?: string | null
+          updated_at?: string
+          website_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_directory_entries_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_generation_logs: {
         Row: {
           created_at: string
@@ -550,10 +603,17 @@ export type Database = {
           created_at: string
           current_release_id: string | null
           custom_domain: string | null
+          directory_city: string | null
+          directory_logo_url: string | null
+          directory_opt_in: boolean
+          directory_region: string | null
+          directory_tagline: string | null
+          directory_website_url: string | null
           display_name: string
           id: string
           last_deployed_at: string | null
           notes: string | null
+          onboarding_completed_at: string | null
           owner_email: string
           owner_user_id: string | null
           pending_release_id: string | null
@@ -569,10 +629,17 @@ export type Database = {
           created_at?: string
           current_release_id?: string | null
           custom_domain?: string | null
+          directory_city?: string | null
+          directory_logo_url?: string | null
+          directory_opt_in?: boolean
+          directory_region?: string | null
+          directory_tagline?: string | null
+          directory_website_url?: string | null
           display_name?: string
           id?: string
           last_deployed_at?: string | null
           notes?: string | null
+          onboarding_completed_at?: string | null
           owner_email: string
           owner_user_id?: string | null
           pending_release_id?: string | null
@@ -588,10 +655,17 @@ export type Database = {
           created_at?: string
           current_release_id?: string | null
           custom_domain?: string | null
+          directory_city?: string | null
+          directory_logo_url?: string | null
+          directory_opt_in?: boolean
+          directory_region?: string | null
+          directory_tagline?: string | null
+          directory_website_url?: string | null
           display_name?: string
           id?: string
           last_deployed_at?: string | null
           notes?: string | null
+          onboarding_completed_at?: string | null
           owner_email?: string
           owner_user_id?: string | null
           pending_release_id?: string | null
@@ -1621,6 +1695,19 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      list_public_affiliate_stations: {
+        Args: never
+        Returns: {
+          city: string
+          display_name: string
+          kind: string
+          logo_url: string
+          region: string
+          since: string
+          tagline: string
+          website_url: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "editor" | "user"

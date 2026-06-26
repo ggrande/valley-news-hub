@@ -4,7 +4,7 @@ import { Layout, PageHeader } from "@/components/site/Layout";
 export const Route = createFileRoute("/network/docs")({
   head: () => ({
     meta: [
-      { title: "Self-Host Setup Guide — WKNA-49 Network" },
+      { title: "Self-Host Setup Guide — WKNA-49 Affiliate Network" },
       { name: "description", content: "Step-by-step setup for self-hosting the WKNA-49 newsroom platform: Lovable Cloud, AI Gateway, deployment, and update flow." },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -36,7 +36,7 @@ function DocsPage() {
       <PageHeader
         eyebrow="Self-Host Docs"
         title="Set up your own WKNA-49 style newsroom"
-        description="A 20-minute walkthrough for self-hosters. If you'd rather we run it for you, grab a Managed Mirror on the /network page."
+        description="A 20-minute walkthrough for self-hosters. If you'd rather we run it for you, grab a Managed Affiliate Station on the /network page."
       />
       <section className="mx-auto max-w-3xl px-4 py-10 space-y-6">
         <Step n={1} title="Download your release">
@@ -84,7 +84,7 @@ bun run start`}</Code>
 
         <Step n={6} title="Stay current with updates">
           <p>On every page load, your install pings the network host using your license key. When a new release is published you'll see an in-app banner — security releases are flagged red, breaking changes amber. Download from <Link to="/account/licenses" className="text-primary underline">your license dashboard</Link>, unzip over your project, and redeploy.</p>
-          <p>Need a managed experience? Switch to a <Link to="/network" className="text-primary underline">Managed Mirror</Link> anytime — we'll host, update, and back it all up for you.</p>
+          <p>Need a managed experience? Switch to a <Link to="/network" className="text-primary underline">Managed Affiliate Station</Link> anytime — we'll host, update, and back it all up for you.</p>
         </Step>
 
         <div className="rounded-xl border-2 border-[color:var(--breaking)] bg-card p-6">

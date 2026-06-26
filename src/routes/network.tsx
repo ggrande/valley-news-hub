@@ -10,11 +10,11 @@ import { useEffect } from "react";
 export const Route = createFileRoute("/network")({
   head: () => ({
     meta: [
-      { title: "Join Our Network — Run Your Own WKNA-49 Style News Site" },
-      { name: "description", content: "License the WKNA-49 news platform or get a managed mirror. Self-host for a one-time fee, or let us run it for you with automatic updates you approve." },
+      { title: "Become an Affiliate Station — Join the WKNA-49 Affiliate Network" },
+      { name: "description", content: "Launch your own local newsroom on the WKNA-49 platform. Run it yourself with a one-time license, or join as a Managed Affiliate Station and we'll host, update, and maintain it for you." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "Join the WKNA-49 Network" },
-      { property: "og:description", content: "Build your own AI-powered local news site. Self-host or fully managed." },
+      { property: "og:title", content: "Become an Affiliate Station — WKNA-49 Network" },
+      { property: "og:description", content: "Independent local news, powered by a shared platform. Self-host or fully managed." },
     ],
   }),
   component: NetworkPage,
@@ -23,11 +23,11 @@ export const Route = createFileRoute("/network")({
 });
 
 const FAQS: { q: string; a: string }[] = [
-  { q: "Who owns the content I publish?", a: "You do. Both tiers give you full ownership of articles, branding, and subscriber data." },
-  { q: "Can I switch between tiers?", a: "Yes. Move from self-hosted to managed (or back) at any time — your license entitles you to either." },
-  { q: "Do I need to know how to code?", a: "Self-host requires basic Git/deploy comfort. Managed Mirror requires none — we handle everything." },
-  { q: "What does 'scrubbed' source mean?", a: "The release ZIP strips our private credentials, station data, and operational secrets so you start with a clean slate." },
-  { q: "Is AI usage included?", a: "Self-hosters bring their own AI Gateway key (covered by Lovable Cloud free tier for most stations). Managed includes generous usage." },
+  { q: "Who owns the content I publish?", a: "You do. Every affiliate station owns its articles, branding, and subscriber data outright. The Affiliate Network is shared technology — not shared ownership." },
+  { q: "Can I switch between tiers?", a: "Yes. Move from self-hosted to a Managed Affiliate Station (or back) at any time — your license entitles you to either." },
+  { q: "Do I need to know how to code?", a: "Self-host requires basic Git/deploy comfort. Managed Affiliate Stations require none — we handle everything." },
+  { q: "What does 'scrubbed' source mean?", a: "The release ZIP strips our private credentials, station data, and operational secrets so your affiliate station starts with a clean slate." },
+  { q: "Is AI usage included?", a: "Self-hosters bring their own AI Gateway key (covered by Lovable Cloud free tier for most stations). Managed Affiliate Stations include generous usage." },
   { q: "How do refunds work?", a: "Self-host: 14-day money-back if you haven't downloaded. Managed: cancel anytime, prorated to the day." },
 ];
 
@@ -47,16 +47,16 @@ function NetworkPage() {
     <Layout>
       <PaymentTestModeBanner />
       <PageHeader
-        eyebrow="Join Our Network"
-        title="Run your own WKNA-49 style newsroom"
-        description="License the platform we built to power WKNA 49 News — AI-curated stories, automated Reddit ingestion, full SEO, and a beautiful broadcast-style design. Pick the model that fits you."
+        eyebrow="Join Our Affiliate Network"
+        title="Become an Affiliate Station"
+        description="Launch your own independent local newsroom on the same platform that powers WKNA 49 News — AI-curated stories, automated Reddit ingestion, full SEO, and a broadcast-style design. Pick the affiliate path that fits you."
       />
       <section className="mx-auto max-w-6xl px-4 py-12 grid gap-6 md:grid-cols-2">
         <PlanCard
           tier="self_host_license"
-          name="Self-Host License"
+          name="Independent Affiliate"
           price="$49.99"
-          unit="one-time"
+          unit="one-time license"
           tagline="Own it. Deploy it anywhere."
           features={[
             "Full scrubbed source code",
@@ -64,6 +64,7 @@ function NetworkPage() {
             "Update notifications + downloads",
             "Editable site content (About, branding, contact info)",
             "Bring your own Lovable Cloud, AI, and domain",
+            "Listing in the Affiliate Stations directory",
             "Community support",
           ]}
           cta="Get the license"
@@ -78,16 +79,17 @@ function NetworkPage() {
         />
         <PlanCard
           tier="managed_mirror"
-          name="Managed Mirror"
+          name="Managed Affiliate Station"
           price="$9.99"
           unit="per month"
           tagline="We run it. You publish."
           features={[
             "We host & maintain everything",
             "Automatic updates — accept or reject each release",
-            "Per-site CMS for all branding & policies",
+            "Guided onboarding wizard",
+            "Per-station CMS for all branding & policies",
             "Reddit automation included",
-            "Custom domain support",
+            "Custom domain + Affiliate Stations directory",
             "Priority email support",
           ]}
           cta="Start subscription"
@@ -103,18 +105,33 @@ function NetworkPage() {
         />
       </section>
 
+      <section className="border-t bg-card/40">
+        <div className="mx-auto max-w-4xl px-4 py-10 text-center">
+          <h2 className="font-display text-2xl font-black text-primary">See who's already on the network</h2>
+          <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground">
+            Every Affiliate Station gets a spot in our public directory so readers can find their local newsroom.
+          </p>
+          <Link
+            to="/network/stations"
+            className="mt-5 inline-flex h-10 items-center rounded-md border-2 border-primary px-5 text-sm font-semibold text-primary"
+          >
+            Browse Affiliate Stations →
+          </Link>
+        </div>
+      </section>
+
       <section className="border-t bg-[color:var(--ivory)]">
         <div className="mx-auto max-w-4xl px-4 py-12">
           <h2 className="font-display text-3xl font-black text-primary">How updates work</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-2">
             <div>
-              <h3 className="font-semibold text-primary">Self-hosters</h3>
+              <h3 className="font-semibold text-primary">Independent Affiliates</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Every release we ship to WKNA-49 is published to the network with a versioned ZIP and changelog. You'll see an update banner in your admin dashboard with a one-click download.
+                Every release we ship to WKNA-49 is published to the Affiliate Network with a versioned ZIP and changelog. You'll see an update banner in your admin dashboard with a one-click download.
               </p>
             </div>
             <div>
-              <h3 className="font-semibold text-primary">Managed mirrors</h3>
+              <h3 className="font-semibold text-primary">Managed Affiliate Stations</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 Updates are staged for you. When a new release is ready, you'll get an in-app prompt to <strong>accept</strong> or <strong>reject</strong> it — no surprise changes to your live site.
               </p>

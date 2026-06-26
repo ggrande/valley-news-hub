@@ -16,6 +16,8 @@ export type ManagedSiteRow = {
   last_deployed_at: string | null;
   notes: string | null;
   created_at: string;
+  onboarding_completed_at: string | null;
+  directory_opt_in: boolean;
   current_release?: { version: string; channel: string } | null;
   pending_release?: { version: string; channel: string; notes: string | null; is_security: boolean; is_breaking: boolean } | null;
 };
@@ -29,6 +31,7 @@ const SITE_SELECT = `
   id, owner_user_id, owner_email, subdomain, custom_domain, display_name,
   status, subscription_status, current_release_id, pending_release_id,
   auto_apply_security, last_deployed_at, notes, created_at,
+  onboarding_completed_at, directory_opt_in,
   current_release:platform_releases!managed_sites_current_release_id_fkey(version,channel),
   pending_release:platform_releases!managed_sites_pending_release_id_fkey(version,channel,notes,is_security,is_breaking)
 `;

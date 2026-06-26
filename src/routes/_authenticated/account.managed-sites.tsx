@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -13,7 +13,7 @@ import { createNetworkBillingPortalSession } from "@/lib/network-payments.functi
 import { getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/_authenticated/account/managed-sites")({
-  head: () => ({ meta: [{ title: "My Managed Sites — WKNA 49 Network" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "My Affiliate Stations — WKNA 49 Affiliate Network" }, { name: "robots", content: "noindex" }] }),
   component: Page,
 });
 
@@ -39,9 +39,9 @@ function Page() {
     <div className="mx-auto max-w-5xl p-6 md:p-10">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-black text-primary">My Managed Sites</h1>
+          <h1 className="font-display text-3xl font-black text-primary">My Affiliate Stations</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Manage your hosted WKNA Network sites — review pending updates, customize branding, and set your custom domain.
+            Manage your Managed Affiliate Stations — review pending updates, customize branding, and set your custom domain.
           </p>
         </div>
         {sites.length > 0 && (
@@ -60,9 +60,9 @@ function Page() {
         <p className="mt-8 text-sm text-muted-foreground">Loading…</p>
       ) : sites.length === 0 ? (
         <div className="mt-8 rounded-lg border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">You don't have any managed sites yet.</p>
+          <p className="text-sm text-muted-foreground">You're not running an Affiliate Station yet.</p>
           <a href="/network" className="mt-3 inline-block text-sm font-semibold text-primary underline">
-            Start a Managed Mirror subscription →
+            Become a Managed Affiliate Station →
           </a>
         </div>
       ) : (
@@ -106,7 +106,7 @@ function SiteCard({ site }: { site: ManagedSiteRow }) {
         <div>
           <h2 className="font-display text-xl font-bold text-primary">{site.display_name}</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            <span className="font-mono">{site.subdomain}.wkna49network.com</span>
+            <span className="font-mono">{site.subdomain}.wkna49.com</span>
             {site.custom_domain && <> · custom: <span className="font-mono">{site.custom_domain}</span></>}
           </p>
         </div>
@@ -124,6 +124,23 @@ function SiteCard({ site }: { site: ManagedSiteRow }) {
       {site.status === "pending_provision" && (
         <div className="mt-4 rounded-md border bg-amber-50 p-4 text-sm text-amber-900">
           <strong>Setting up your site.</strong> Our team is provisioning your hosting. You'll get an email when it's live (usually within 1 business day).
+        </div>
+      )}
+      {!site.onboarding_completed_at && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border-2 border-[color:var(--breaking)] bg-[color:var(--breaking)]/5 p-4 text-sm">
+          <div>
+            <strong className="text-primary">Finish setting up your Affiliate Station.</strong>{" "}
+            <span className="text-muted-foreground">
+              Take 2 minutes to add your branding and (optionally) list in the public directory.
+            </span>
+          </div>
+          <Link
+            to="/account/managed-sites/$siteId/onboarding"
+            params={{ siteId: site.id }}
+            className="h-9 inline-flex items-center rounded-md bg-[color:var(--breaking)] px-4 text-sm font-bold text-white"
+          >
+            Start onboarding →
+          </Link>
         </div>
       )}
 
