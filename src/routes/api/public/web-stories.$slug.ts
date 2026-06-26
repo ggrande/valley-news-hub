@@ -2,10 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { ensureWebStoryUploaded, publicStoryUrl } from "@/lib/web-story.server";
 
-// Google Web Stories (AMP). The canonical Web Story URL is the public
-// Supabase Storage URL (no Lovable script rewriter in that path). This route
-// is a convenience generator: on hit, it ensures the file is uploaded and
-// 302s to the storage URL. Sitemap/links point directly at storage.
+// Google Web Stories (AMP). The canonical Web Story URL lives on
+// GitHub Pages (Supabase Storage forces text/plain + x-robots-tag: none
+// + restrictive CSP, breaking AMP). On hit, ensure the file is committed
+// to the docs/ folder and 302 to the Pages URL.
 export const Route = createFileRoute("/api/public/web-stories/$slug")({
   server: {
     handlers: {
