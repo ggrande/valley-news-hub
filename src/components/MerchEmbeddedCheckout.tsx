@@ -17,7 +17,7 @@ export function MerchEmbeddedCheckout(props: Props) {
     const result = await createMerchCheckoutSession({
       data: {
         ...props,
-        returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
+        returnUrl: `${window.location.origin}/checkout/merch-return?session_id={CHECKOUT_SESSION_ID}`,
         environment: getStripeEnvironment(),
       },
     });
