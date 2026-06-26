@@ -10,11 +10,11 @@ import { useEffect } from "react";
 export const Route = createFileRoute("/network")({
   head: () => ({
     meta: [
-      { title: "Join Our Network — Run Your Own WKNA-49 Style News Site" },
-      { name: "description", content: "License the WKNA-49 news platform or get a managed mirror. Self-host for a one-time fee, or let us run it for you with automatic updates you approve." },
+      { title: "Become an Affiliate Station — Join the WKNA-49 Affiliate Network" },
+      { name: "description", content: "Launch your own local newsroom on the WKNA-49 platform. Run it yourself with a one-time license, or join as a Managed Affiliate Station and we'll host, update, and maintain it for you." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "Join the WKNA-49 Network" },
-      { property: "og:description", content: "Build your own AI-powered local news site. Self-host or fully managed." },
+      { property: "og:title", content: "Become an Affiliate Station — WKNA-49 Network" },
+      { property: "og:description", content: "Independent local news, powered by a shared platform. Self-host or fully managed." },
     ],
   }),
   component: NetworkPage,
@@ -23,11 +23,11 @@ export const Route = createFileRoute("/network")({
 });
 
 const FAQS: { q: string; a: string }[] = [
-  { q: "Who owns the content I publish?", a: "You do. Both tiers give you full ownership of articles, branding, and subscriber data." },
-  { q: "Can I switch between tiers?", a: "Yes. Move from self-hosted to managed (or back) at any time — your license entitles you to either." },
-  { q: "Do I need to know how to code?", a: "Self-host requires basic Git/deploy comfort. Managed Mirror requires none — we handle everything." },
-  { q: "What does 'scrubbed' source mean?", a: "The release ZIP strips our private credentials, station data, and operational secrets so you start with a clean slate." },
-  { q: "Is AI usage included?", a: "Self-hosters bring their own AI Gateway key (covered by Lovable Cloud free tier for most stations). Managed includes generous usage." },
+  { q: "Who owns the content I publish?", a: "You do. Every affiliate station owns its articles, branding, and subscriber data outright. The Affiliate Network is shared technology — not shared ownership." },
+  { q: "Can I switch between tiers?", a: "Yes. Move from self-hosted to a Managed Affiliate Station (or back) at any time — your license entitles you to either." },
+  { q: "Do I need to know how to code?", a: "Self-host requires basic Git/deploy comfort. Managed Affiliate Stations require none — we handle everything." },
+  { q: "What does 'scrubbed' source mean?", a: "The release ZIP strips our private credentials, station data, and operational secrets so your affiliate station starts with a clean slate." },
+  { q: "Is AI usage included?", a: "Self-hosters bring their own AI Gateway key (covered by Lovable Cloud free tier for most stations). Managed Affiliate Stations include generous usage." },
   { q: "How do refunds work?", a: "Self-host: 14-day money-back if you haven't downloaded. Managed: cancel anytime, prorated to the day." },
 ];
 
