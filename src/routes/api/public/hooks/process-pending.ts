@@ -514,7 +514,21 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
               .update({ status: "published", published_at: new Date().toISOString() })
               .eq("id", postId);
             if (pubErr) summary.errors.push(`publish ${postId}: ${pubErr.message}`);
-            else summary.published++;
+            else {
+              summary.published++;
+              // Fire-and-forget Web Story generation
+              try {
+                const { ensureWebStoryUploaded } = await import("@/lib/web-story.server");
+                const { data: post } = await admin
+                  .from("posts")
+                  .select("slug, title, dek, body, published_at, updated_at, featured_image, seo_description, author:authors(name), category:categories(name)")
+                  .eq("id", postId)
+                  .maybeSingle();
+                if (post) await ensureWebStoryUploaded(post as any);
+              } catch (err: any) {
+                summary.errors.push(`web-story ${postId}: ${err?.message ?? err}`);
+              }
+            }
           }
         }
 
