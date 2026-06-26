@@ -164,6 +164,12 @@ ${ctaPage}
             "Cache-Control": "public, max-age=300",
           },
         });
+      },
+    },
+  },
+});
+
+
 
 function esc(s: string) {
   return String(s ?? "")
