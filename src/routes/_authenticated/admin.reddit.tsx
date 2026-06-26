@@ -369,10 +369,13 @@ function formatCountdown(target: Date, now: Date): string {
 
 function AutomationPanel() {
   const runNow = useServerFn(runRedditAutomationNow);
+  const listJobs = useServerFn(listRedditListingJobs);
+  const getSessionStatus = useServerFn(getRedditSessionStatus);
   const q = useQuery({
     queryKey: ["automation-settings"],
     queryFn: async () => (await supabase.from("site_settings").select("*").like("key", "automation_%")).data ?? [],
   });
+
   const [vals, setVals] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [runBusy, setRunBusy] = useState(false);
