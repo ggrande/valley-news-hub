@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /network
 
 # Allow Google News and AI crawlers explicitly
 User-agent: Googlebot-News

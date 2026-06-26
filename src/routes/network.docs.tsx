@@ -6,6 +6,7 @@ export const Route = createFileRoute("/network/docs")({
     meta: [
       { title: "Self-Host Setup Guide — WKNA-49 Network" },
       { name: "description", content: "Step-by-step setup for self-hosting the WKNA-49 newsroom platform: Lovable Cloud, AI Gateway, deployment, and update flow." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: DocsPage,
