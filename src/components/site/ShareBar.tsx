@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Facebook, Linkedin, Link2, Mail, Share2, Check } from "lucide-react";
+import { Facebook, Linkedin, Link2, Mail, Share2, Check, Globe } from "lucide-react";
 
 type Props = {
   url: string;
@@ -7,6 +7,7 @@ type Props = {
   summary?: string;
   className?: string;
   label?: string;
+  storyUrl?: string;
 };
 
 // X / Twitter glyph (Lucide doesn't ship the post-rebrand mark).
