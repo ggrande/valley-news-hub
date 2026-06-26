@@ -51,7 +51,9 @@ function AdminMerchPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-black text-primary">Merch Orders</h1>
-          <p className="mt-1 text-sm text-muted-foreground">All Print-on-demand orders. Failed submissions are flagged red — click Retry to resubmit to Printful.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            All Print-on-demand orders. Failed submissions are flagged red — click Retry to resubmit to Printful.
+          </p>
         </div>
         <Button onClick={() => handleRetry()} disabled={busyId !== null} variant="outline">
           {busyId === "all" ? "Retrying…" : "Retry all failed"}
@@ -62,10 +64,7 @@ function AdminMerchPage() {
       <div className="mt-6 overflow-x-auto rounded-lg border bg-card">
         <table className="w-full text-sm">
           <thead className="bg-muted text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr></tr></thead></table></div></div>
-  );
-}
-// placeholder — table rebuilt below
+            <tr>
               <th className="px-3 py-2">Date</th>
               <th className="px-3 py-2">Customer</th>
               <th className="px-3 py-2">Items</th>
@@ -73,6 +72,7 @@ function AdminMerchPage() {
               <th className="px-3 py-2">Status</th>
               <th className="px-3 py-2">Printful</th>
               <th className="px-3 py-2">Env</th>
+              <th className="px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -94,6 +94,18 @@ function AdminMerchPage() {
                 </td>
                 <td className="px-3 py-2 text-xs">{o.printful_order_id ?? "—"}</td>
                 <td className="px-3 py-2 text-xs">{o.environment}</td>
+                <td className="px-3 py-2">
+                  {o.status === "submit_failed" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busyId !== null}
+                      onClick={() => handleRetry(o.id)}
+                    >
+                      {busyId === o.id ? "…" : "Retry"}
+                    </Button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
