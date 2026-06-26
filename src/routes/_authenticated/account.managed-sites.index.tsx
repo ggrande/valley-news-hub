@@ -153,6 +153,12 @@ function SiteCard({ site }: { site: ManagedSiteRow }) {
       update({ data: { siteId: site.id, display_name: name, custom_domain: domain || null, auto_apply_security: autoSec } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-managed-sites"] }),
   });
+  const purge = useServerFn(purgeAndResetTenant);
+  const purgeMut = useMutation({
+    mutationFn: () => purge({ data: { siteId: site.id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-managed-sites"] }),
+    onError: (e: Error) => alert(e.message),
+  });
   const acceptMut = useMutation({
     mutationFn: () => accept({ data: { siteId: site.id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-managed-sites"] }),
