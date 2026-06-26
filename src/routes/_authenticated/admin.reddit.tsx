@@ -534,146 +534,56 @@ function AutomationPanel() {
         })}
       </div>
       {saving && <p className="mt-2 text-xs text-muted-foreground">Saving {saving}…</p>}
-    </div>
-  );
-}
 
-function SessionListingPanel() {
-  const fetchLive = useServerFn(runRedditListingFetch);
-  const listJobs = useServerFn(listRedditListingJobs);
-  const getStatus = useServerFn(getRedditSessionStatus);
-  const [subreddit, setSubreddit] = useState("");
-  const [sort, setSort] = useState<"new" | "hot" | "top" | "rising" | "best">("hot");
-  const [topWindow, setTopWindow] = useState<"hour" | "day" | "week" | "month" | "year" | "all">("day");
-  const [limit, setLimit] = useState(25);
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-
-  const status = useQuery({
-    queryKey: ["reddit-session-status"],
-    queryFn: async () => getStatus(),
-    refetchInterval: 15000,
-  });
-  const jobs = useQuery({
-    queryKey: ["reddit-listing-jobs"],
-    queryFn: async () => listJobs({ data: { limit: 5 } }),
-    refetchInterval: 5000,
-  });
-
-  const fire = async () => {
-    if (!subreddit.trim()) { setErr("Subreddit required"); return; }
-    setBusy(true); setErr(null); setMsg("Dispatching GitHub Actions worker (logged-in browser)…");
-    try {
-      const r: any = await fetchLive({ data: { subreddit: subreddit.trim(), sort, top_window: topWindow, limit } });
-      setMsg(`Job ${String(r.job_id).slice(0, 8)}… dispatched. Results land in ~30–60s.`);
-      jobs.refetch();
-    } catch (e) { setErr((e as Error).message); setMsg(null); }
-    finally { setBusy(false); }
-  };
-
-  const s = status.data;
-  const sessionLabel =
-    !s?.has_session ? "No session — paste cookies on Automation page"
-    : s.session_status === "active" ? `Active (u/${s.reddit_username ?? "?"})`
-    : s.session_status === "expired" ? "Expired — recapture"
-    : s.session_status ?? "unknown";
-  const sessionColor =
-    s?.session_status === "active" ? "bg-green-100 text-green-800"
-    : s?.has_session ? "bg-amber-100 text-amber-800"
-    : "bg-slate-100 text-muted-foreground";
-
-  return (
-    <div className="rounded-lg border bg-white p-5">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <h2 className="font-display text-lg font-bold text-primary">Live fetch with session cookies</h2>
-          <p className="text-sm text-muted-foreground">
-            Routes the listing request through a real logged-in browser on GitHub Actions to bypass Reddit's
-            IP block on edge/worker IPs. Shares the same cookie jar as the Automation page.
-          </p>
-        </div>
-        <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${sessionColor}`}>
-          {sessionLabel}
-        </span>
-      </div>
-
-      {s?.session_captured_at && (
-        <p className="mb-3 text-xs text-muted-foreground">
-          Cookies captured {new Date(s.session_captured_at).toLocaleString()}. Refreshed on every successful run.
-        </p>
-      )}
-      {s?.session_last_error && (
-        <p className="mb-3 text-xs text-[color:var(--breaking)]">Last session error: {s.session_last_error}</p>
-      )}
-
-      <div className="grid gap-3 sm:grid-cols-5">
-        <input
-          value={subreddit}
-          onChange={(e) => setSubreddit(e.target.value)}
-          placeholder="subreddit (e.g. PoisonAI)"
-          className="h-9 rounded border px-3 text-sm sm:col-span-2"
-        />
-        <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="h-9 rounded border px-2 text-sm">
-          <option value="new">new</option>
-          <option value="hot">hot</option>
-          <option value="rising">rising</option>
-          <option value="top">top</option>
-          <option value="best">best</option>
-        </select>
-        {sort === "top" ? (
-          <select value={topWindow} onChange={(e) => setTopWindow(e.target.value as any)} className="h-9 rounded border px-2 text-sm">
-            <option value="hour">hour</option>
-            <option value="day">day</option>
-            <option value="week">week</option>
-            <option value="month">month</option>
-            <option value="year">year</option>
-            <option value="all">all</option>
-          </select>
-        ) : <div />}
-        <input
-          type="number"
-          min={1}
-          max={100}
-          value={limit}
-          onChange={(e) => setLimit(Math.max(1, Math.min(100, Number(e.target.value) || 25)))}
-          className="h-9 rounded border px-2 text-sm"
-        />
-      </div>
-
-      <button
-        onClick={fire}
-        disabled={busy || !s?.has_session}
-        className="mt-3 h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-      >
-        {busy ? "Dispatching…" : "Fetch live & import"}
-      </button>
-
-      {msg && <p className="mt-3 text-sm text-muted-foreground">{msg}</p>}
-      {err && <p className="mt-3 text-sm text-[color:var(--breaking)]">{err}</p>}
-
-      {(jobs.data?.length ?? 0) > 0 && (
-        <div className="mt-4 overflow-hidden rounded border">
-          <table className="w-full text-xs">
-            <thead className="bg-slate-50 text-left uppercase text-muted-foreground">
-              <tr><th className="p-2">Sub / Sort</th><th className="p-2">Status</th><th className="p-2">Posts</th><th className="p-2">Imported</th><th className="p-2">When</th></tr>
-            </thead>
-            <tbody>
-              {(jobs.data ?? []).map((j: any) => (
-                <tr key={j.id} className="border-t">
-                  <td className="p-2">r/{j.subreddit} · {j.sort}{j.top_window ? `/${j.top_window}` : ""}</td>
-                  <td className="p-2">
-                    <span className={`rounded px-2 py-0.5 ${j.status === "succeeded" ? "bg-green-100 text-green-800" : j.status === "failed" ? "bg-red-100 text-red-800" : "bg-slate-100"}`}>{j.status}</span>
-                  </td>
-                  <td className="p-2 tabular-nums">{j.posts_count ?? "—"}</td>
-                  <td className="p-2 tabular-nums">{j.imported_count ?? "—"}</td>
-                  <td className="p-2 text-muted-foreground" title={j.error ?? ""}>{new Date(j.created_at).toLocaleTimeString()}{j.error ? " · error" : ""}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {useSessionCookies && (
+        <div className="mt-5 rounded-md border bg-slate-50 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold text-primary">Reddit session cookies</div>
+              <div className="text-xs text-muted-foreground">
+                Automation will dispatch a logged-in GitHub Actions worker per subreddit.
+                Manage cookies on the <Link to="/admin/reddit-automation" className="underline">Reddit Automation</Link> page.
+              </div>
+            </div>
+            <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+              s?.session_status === "active" ? "bg-green-100 text-green-800"
+              : s?.has_session ? "bg-amber-100 text-amber-800"
+              : "bg-slate-100 text-muted-foreground"
+            }`}>
+              {!s?.has_session ? "No session"
+                : s.session_status === "active" ? `Active (u/${s.reddit_username ?? "?"})`
+                : s.session_status === "expired" ? "Expired — recapture"
+                : s.session_status ?? "unknown"}
+            </span>
+          </div>
+          {s?.session_last_error && (
+            <p className="mt-2 text-xs text-[color:var(--breaking)]">Last session error: {s.session_last_error}</p>
+          )}
+          {(jobs.data?.length ?? 0) > 0 && (
+            <div className="mt-3 overflow-hidden rounded border bg-white">
+              <table className="w-full text-xs">
+                <thead className="bg-slate-50 text-left uppercase text-muted-foreground">
+                  <tr><th className="p-2">Sub / Sort</th><th className="p-2">Status</th><th className="p-2">Posts</th><th className="p-2">Imported</th><th className="p-2">When</th></tr>
+                </thead>
+                <tbody>
+                  {(jobs.data ?? []).map((j: any) => (
+                    <tr key={j.id} className="border-t">
+                      <td className="p-2">r/{j.subreddit} · {j.sort}{j.top_window ? `/${j.top_window}` : ""}</td>
+                      <td className="p-2">
+                        <span className={`rounded px-2 py-0.5 ${j.status === "succeeded" ? "bg-green-100 text-green-800" : j.status === "failed" ? "bg-red-100 text-red-800" : "bg-slate-100"}`}>{j.status}</span>
+                      </td>
+                      <td className="p-2 tabular-nums">{j.posts_count ?? "—"}</td>
+                      <td className="p-2 tabular-nums">{j.imported_count ?? "—"}</td>
+                      <td className="p-2 text-muted-foreground" title={j.error ?? ""}>{new Date(j.created_at).toLocaleTimeString()}{j.error ? " · error" : ""}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
+
