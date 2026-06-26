@@ -26,6 +26,7 @@ const NAV = [
   { to: "/admin/licenses", label: "Network Licenses" },
   { to: "/admin/managed-sites", label: "Managed Sites" },
   { to: "/admin/merch", label: "Merch Orders" },
+  { to: "/admin/merch-settings", label: "Merch Settings" },
 ];
 
 function AdminLayout() {
