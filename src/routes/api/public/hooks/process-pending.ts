@@ -538,7 +538,9 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
             }
             summary.imported++;
           }
+          }
         }
+
 
         // Refresh live upvote counts for recent imports (last 14 days) so the
         // admin table shows a current value, not the score at import time.
