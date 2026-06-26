@@ -130,10 +130,9 @@ ${ctaPage}
 </body>
 </html>`;
 
-        // Public buckets are blocked by workspace policy, so we host the
-        // file privately and 302-redirect to a long-lived signed URL on the
-        // storage origin. The storage CDN does not run the Lovable script
-        // rewriter, so the served HTML stays clean AMP.
+        // Upload the AMP HTML to the public `web-stories` bucket and 302 to
+        // the public storage URL. The storage CDN does not run the Lovable
+        // script rewriter, so the served HTML stays clean AMP.
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const path = `${p.slug}/index.html`;
@@ -142,14 +141,14 @@ ${ctaPage}
             upsert: true,
             cacheControl: "300",
           });
-          const { data: signed } = await supabaseAdmin.storage
+          const { data: pub } = supabaseAdmin.storage
             .from("web-stories")
-            .createSignedUrl(path, 60 * 60 * 24 * 365); // 1 year
-          if (signed?.signedUrl) {
+            .getPublicUrl(path);
+          if (pub?.publicUrl) {
             return new Response(null, {
               status: 302,
               headers: {
-                Location: signed.signedUrl,
+                Location: pub.publicUrl,
                 "Cache-Control": "public, max-age=300",
               },
             });
@@ -165,10 +164,6 @@ ${ctaPage}
             "Cache-Control": "public, max-age=300",
           },
         });
-      },
-    },
-  },
-});
 
 function esc(s: string) {
   return String(s ?? "")
