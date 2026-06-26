@@ -72,6 +72,68 @@ function Page() {
           {sites.map((s) => <SiteCard key={s.id} site={s} />)}
         </div>
       )}
+
+      <LicensesSection />
+    </div>
+  );
+}
+
+function LicensesSection() {
+  const fetchLicenses = useServerFn(listMyLicenses);
+  const requestDownload = useServerFn(getMyLicenseDownloadUrl);
+  const { data: licenses = [], isLoading } = useQuery({
+    queryKey: ["my-licenses"],
+    queryFn: () => fetchLicenses(),
+  });
+
+  const downloadMut = useMutation({
+    mutationFn: (licenseId: string) => requestDownload({ data: { licenseId } }),
+    onSuccess: (res: any) => window.open(res.url, "_blank"),
+    onError: (e: Error) => alert(e.message),
+  });
+
+  if (isLoading || licenses.length === 0) return null;
+
+  return (
+    <div className="mt-10">
+      <h2 className="font-display text-xl font-bold text-primary">Self-host Licenses</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        License keys from your self-host purchases. Use these to activate a self-hosted install.
+      </p>
+      <div className="mt-4 space-y-3">
+        {licenses.map((lic) => (
+          <div key={lic.id} className="rounded-lg border bg-card p-4 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="font-mono text-xs break-all">{lic.license_key}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{lic.email}</div>
+              </div>
+              <div className="flex items-center gap-2 text-[10px]">
+                <Badge tone={lic.revoked ? "danger" : "ok"}>{lic.revoked ? "Revoked" : "Active"}</Badge>
+                <Badge tone="muted">{lic.channel}</Badge>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
+              <div><div className="text-muted-foreground uppercase tracking-wide">Version</div><div className="font-medium">{lic.current_version ?? "—"}</div></div>
+              <div><div className="text-muted-foreground uppercase tracking-wide">Downloads</div><div className="font-medium">{lic.downloads_used}/{lic.downloads_max}</div></div>
+              <div><div className="text-muted-foreground uppercase tracking-wide">Last check</div><div className="font-medium">{lic.last_check_at ? new Date(lic.last_check_at).toLocaleDateString() : "Never"}</div></div>
+              <div><div className="text-muted-foreground uppercase tracking-wide">Issued</div><div className="font-medium">{new Date(lic.created_at).toLocaleDateString()}</div></div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={() => { navigator.clipboard.writeText(lic.license_key); }}
+                className="h-8 rounded-md border px-3 text-xs font-semibold"
+              >Copy key</button>
+              <button
+                onClick={() => downloadMut.mutate(lic.id)}
+                disabled={lic.revoked || downloadMut.isPending}
+                className="h-8 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+              >{downloadMut.isPending ? "Preparing…" : "Download latest"}</button>
+              <a href="/network/changelog" className="h-8 inline-flex items-center rounded-md px-3 text-xs font-semibold text-primary underline">Changelog</a>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
