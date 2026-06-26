@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/admin/merch")({
 });
 
 function AdminMerchPage() {
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ["admin-merch-orders"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -25,17 +25,47 @@ function AdminMerchPage() {
       return data ?? [];
     },
   });
+  const retryFn = useServerFn(retryMerchOrders);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const handleRetry = async (id?: string) => {
+    setBusyId(id ?? "all");
+    try {
+      const res: any = await retryFn({ data: { id } });
+      if (res.error) toast.error(res.error);
+      else {
+        const ok = res.results.filter((r: any) => r.ok).length;
+        const fail = res.results.filter((r: any) => r.error).length;
+        toast.success(`Retried ${res.retried} — ${ok} ok, ${fail} failed`);
+      }
+      await refetch();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Retry failed");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-black text-primary">Merch Orders</h1>
-      <p className="mt-1 text-sm text-muted-foreground">All Print-on-demand orders. Failed submissions are flagged red — check Printful dashboard and resubmit manually if needed.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-black text-primary">Merch Orders</h1>
+          <p className="mt-1 text-sm text-muted-foreground">All Print-on-demand orders. Failed submissions are flagged red — click Retry to resubmit to Printful.</p>
+        </div>
+        <Button onClick={() => handleRetry()} disabled={busyId !== null} variant="outline">
+          {busyId === "all" ? "Retrying…" : "Retry all failed"}
+        </Button>
+      </div>
 
       {isLoading && <p className="mt-6 text-sm text-muted-foreground">Loading…</p>}
       <div className="mt-6 overflow-x-auto rounded-lg border bg-card">
         <table className="w-full text-sm">
           <thead className="bg-muted text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
+            <tr></tr></thead></table></div></div>
+  );
+}
+// placeholder — table rebuilt below
               <th className="px-3 py-2">Date</th>
               <th className="px-3 py-2">Customer</th>
               <th className="px-3 py-2">Items</th>
