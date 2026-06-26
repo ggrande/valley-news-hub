@@ -649,8 +649,6 @@ function ProvisioningPanel({
 }) {
   const fetchStatus = useServerFn(getProvisioningStatus);
   const initiate = useServerFn(initiateSupabaseConnect);
-  const listOrgs = useServerFn(listConnectedOrganizations);
-  const provision = useServerFn(provisionTenantProject);
   const finalize = useServerFn(finalizeTenantProvisioning);
 
   const status = useQuery({
@@ -660,15 +658,6 @@ function ProvisioningPanel({
       const s = q.state.data?.state;
       return s === "provisioning" || s === "migrating" || s === "linking" ? 4000 : false;
     },
-  });
-
-  const [chosenOrg, setChosenOrg] = useState<string>("");
-  const [region, setRegion] = useState("us-east-1");
-
-  const orgs = useQuery({
-    queryKey: ["sb-orgs", siteId],
-    queryFn: () => listOrgs({ data: { siteId } }),
-    enabled: !!status.data?.hasRefreshToken && !status.data?.project,
   });
 
   // Auto-finalize when project is in provisioning/migrating state
