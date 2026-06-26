@@ -63,19 +63,51 @@ export const updateRedditAutomationSettings = createServerFn({ method: "POST" })
 
 export const listRedditNotifications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { status?: string; limit?: number }) => input)
+  .inputValidator((input: {
+    status?: string;
+    limit?: number;
+    windowHours?: number | null;
+    minUpvotes?: number | null;
+    sortBy?: "created_at" | "upvotes";
+  }) => input)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const limit = data.limit ?? 100;
+
     let q = supabaseAdmin
       .from("reddit_comment_notifications")
-      .select("id, post_id, reddit_thread_url:thread_url, subreddit, status, mode_at_enqueue, attempt_count, failure_reason, created_at, posted_at, reddit_comment_permalink, posts!inner(title, slug)")
+      .select(
+        "id, post_id, reddit_import_id, reddit_thread_url:thread_url, subreddit, status, mode_at_enqueue, attempt_count, failure_reason, created_at, posted_at, reddit_comment_permalink, posts!inner(title, slug, status), reddit_imports(current_score, source_score)"
+      )
       .order("created_at", { ascending: false })
-      .limit(data.limit ?? 50);
+      .limit(500);
     if (data.status) q = q.eq("status", data.status);
+    if (data.windowHours && data.windowHours > 0) {
+      const cutoff = new Date(Date.now() - data.windowHours * 3600_000).toISOString();
+      q = q.gte("created_at", cutoff);
+    }
     const { data: rows, error } = await q;
     if (error) throw error;
-    return rows ?? [];
+
+    let enriched = (rows ?? []).map((r: any) => {
+      const score = r.reddit_imports?.current_score ?? r.reddit_imports?.source_score ?? null;
+      return {
+        ...r,
+        upvotes: typeof score === "number" ? score : null,
+        post_status: r.posts?.status ?? null,
+      };
+    });
+
+    if (typeof data.minUpvotes === "number" && data.minUpvotes > 0) {
+      enriched = enriched.filter((r) => typeof r.upvotes === "number" && r.upvotes >= (data.minUpvotes as number));
+    }
+
+    if (data.sortBy === "upvotes") {
+      enriched.sort((a, b) => (b.upvotes ?? -1) - (a.upvotes ?? -1));
+    }
+
+    return enriched.slice(0, limit);
   });
 
 export const getRedditNotification = createServerFn({ method: "GET" })
