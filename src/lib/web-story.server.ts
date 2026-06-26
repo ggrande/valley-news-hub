@@ -175,7 +175,6 @@ async function gh(path: string, init: RequestInit = {}) {
 let pagesEnsured = false;
 async function ensurePagesEnabled(owner: string, repo: string) {
   if (pagesEnsured) return;
-  // Idempotent: GET first, then POST if missing. 409 on POST = already exists.
   const got = await gh(`/repos/${owner}/${repo}/pages`);
   if (got.status === 200) {
     pagesEnsured = true;
@@ -185,7 +184,7 @@ async function ensurePagesEnabled(owner: string, repo: string) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      source: { branch: "main", path: "/docs" },
+      source: { branch: STORIES_BRANCH, path: "/" },
     }),
   });
   if (res.status === 201 || res.status === 409) {
@@ -194,15 +193,50 @@ async function ensurePagesEnabled(owner: string, repo: string) {
   }
   const txt = await res.text().catch(() => "");
   console.warn("[web-stories] ensurePagesEnabled non-fatal:", res.status, txt.slice(0, 200));
-  // Don't throw — committing the file still works; Pages may be set up later.
+}
+
+let branchEnsured = false;
+async function ensureStoriesBranch(owner: string, repo: string) {
+  if (branchEnsured) return;
+  const got = await gh(`/repos/${owner}/${repo}/git/ref/heads/${STORIES_BRANCH}`);
+  if (got.status === 200) {
+    branchEnsured = true;
+    return;
+  }
+  // Create branch from default branch's HEAD.
+  const repoRes = await gh(`/repos/${owner}/${repo}`);
+  if (!repoRes.ok) {
+    console.warn("[web-stories] ensureStoriesBranch: cannot read repo", repoRes.status);
+    return;
+  }
+  const repoJson: any = await repoRes.json();
+  const defBranch = repoJson?.default_branch ?? "main";
+  const headRes = await gh(`/repos/${owner}/${repo}/git/ref/heads/${defBranch}`);
+  if (!headRes.ok) {
+    console.warn("[web-stories] ensureStoriesBranch: cannot read default head", headRes.status);
+    return;
+  }
+  const headJson: any = await headRes.json();
+  const sha = headJson?.object?.sha;
+  if (!sha) return;
+  const mk = await gh(`/repos/${owner}/${repo}/git/refs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ref: `refs/heads/${STORIES_BRANCH}`, sha }),
+  });
+  if (mk.ok || mk.status === 422) branchEnsured = true;
+  else {
+    const txt = await mk.text().catch(() => "");
+    console.warn("[web-stories] ensureStoriesBranch non-fatal:", mk.status, txt.slice(0, 200));
+  }
 }
 
 let cnameEnsured = false;
 async function ensureCnameFile(owner: string, repo: string) {
   if (cnameEnsured) return;
-  const path = "docs/CNAME";
+  const path = "CNAME";
   const want = STORIES_HOST + "\n";
-  const getRes = await gh(`/repos/${owner}/${repo}/contents/${path}`);
+  const getRes = await gh(`/repos/${owner}/${repo}/contents/${path}?ref=${STORIES_BRANCH}`);
   let sha: string | undefined;
   if (getRes.status === 200) {
     const j: any = await getRes.json();
@@ -222,6 +256,7 @@ async function ensureCnameFile(owner: string, repo: string) {
       message: `web-stories: set CNAME to ${STORIES_HOST}`,
       content: b64(want),
       sha,
+      branch: STORIES_BRANCH,
       committer: { name: "WKNA Web Stories Bot", email: "bot@wkna49.com" },
     }),
   });
@@ -249,19 +284,21 @@ export async function ensureWebStoryUploaded(post: WebStoryPost): Promise<string
   if (!process.env.GH_DISPATCH_PAT) throw new Error("GH_DISPATCH_PAT not configured");
 
   const html = renderWebStoryHtml(post);
-  const path = `docs/web-stories/${post.slug}/index.html`;
+  const path = `web-stories/${post.slug}/index.html`;
   const url = publicStoryUrl(post.slug);
 
+  await ensureStoriesBranch(r.owner, r.repo);
   await ensurePagesEnabled(r.owner, r.repo);
   await ensureCnameFile(r.owner, r.repo);
 
-  // GET current SHA if file exists (Contents API requires sha for updates).
+  // GET current SHA if file exists on gh-pages.
   let sha: string | undefined;
-  const getRes = await gh(`/repos/${r.owner}/${r.repo}/contents/${encodeURIComponent(path).replace(/%2F/g, "/")}`);
+  const getRes = await gh(
+    `/repos/${r.owner}/${r.repo}/contents/${encodeURIComponent(path).replace(/%2F/g, "/")}?ref=${STORIES_BRANCH}`,
+  );
   if (getRes.status === 200) {
     const j: any = await getRes.json();
     sha = j?.sha;
-    // Skip rewrite if content is byte-identical (avoid noisy commits on every sitemap hit).
     try {
       const existingB64 = String(j?.content ?? "").replace(/\n/g, "");
       if (existingB64 && existingB64 === b64(html)) {
@@ -281,6 +318,7 @@ export async function ensureWebStoryUploaded(post: WebStoryPost): Promise<string
         message: `web-story: publish ${post.slug}`,
         content: b64(html),
         sha,
+        branch: STORIES_BRANCH,
         committer: { name: "WKNA Web Stories Bot", email: "bot@wkna49.com" },
       }),
     },
@@ -291,3 +329,4 @@ export async function ensureWebStoryUploaded(post: WebStoryPost): Promise<string
   }
   return url;
 }
+
