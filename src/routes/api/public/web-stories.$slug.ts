@@ -130,6 +130,35 @@ ${ctaPage}
 </body>
 </html>`;
 
+        // Host the AMP HTML as a file in Lovable Cloud storage so the
+        // Lovable script-injection rewriter (which targets app routes only)
+        // never touches it. We upsert the file (cheap, idempotent) and
+        // 302-redirect to a long-lived signed URL on the storage origin.
+        try {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const path = `${p.slug}.html`;
+          await supabaseAdmin.storage.from("web-stories").upload(path, html, {
+            contentType: "text/html; charset=utf-8",
+            upsert: true,
+            cacheControl: "300",
+          });
+          const { data: signed } = await supabaseAdmin.storage
+            .from("web-stories")
+            .createSignedUrl(path, 60 * 60 * 24 * 365); // 1 year
+          if (signed?.signedUrl) {
+            return new Response(null, {
+              status: 302,
+              headers: {
+                Location: signed.signedUrl,
+                "Cache-Control": "public, max-age=300",
+              },
+            });
+          }
+        } catch (err) {
+          console.error("[web-stories] storage upload failed", err);
+        }
+
+        // Fallback: serve inline (rewriter may inject scripts here).
         return new Response(html, {
           headers: {
             "Content-Type": "text/html; charset=utf-8",
