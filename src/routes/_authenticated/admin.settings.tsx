@@ -39,6 +39,9 @@ Style: real-life documentary photojournalism, natural lighting, true-to-life col
 const KEYS = [
   { key: "allow_public_comments", label: "Allow public comment submission", type: "bool", default: false },
   { key: "show_imported_discussion", label: "Show imported discussion comments on articles", type: "bool", default: true },
+  { key: "verdict_arena_enabled", label: "⚖️ Verdict Arena (community can vote to keep/remove controversial posts)", type: "bool", default: false },
+  { key: "verdict_ghost_can_decide", label: "Allow ghost personas to push battles past the win threshold (testing only)", type: "bool", default: false },
+  { key: "verdict_daily_claim", label: "Verdict daily credit claim", type: "number", default: 50 },
   { key: "ai_max_comments", label: "Max comments used in AI generation", type: "number", default: 100 },
   { key: "ai_target_length", label: "Default AI article length", type: "text", default: "500-800 words" },
   { key: "ai_system_prompt", label: "AI system prompt (voice & rules)", type: "textarea", default: DEFAULT_SYSTEM_PROMPT, rows: 10 },

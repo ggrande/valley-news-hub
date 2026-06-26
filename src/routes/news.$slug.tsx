@@ -5,6 +5,9 @@ import { ArticleCard } from "@/components/site/ArticleCard";
 import { ArticleImage } from "@/components/site/ArticleImage";
 import { SupportButton } from "@/components/site/SupportButton";
 import { ShareBar } from "@/components/site/ShareBar";
+import { VerdictArena } from "@/components/site/VerdictArena";
+import { RemovedArticle } from "@/components/site/RemovedArticle";
+import { useSettingEnabled } from "@/lib/use-verdict-enabled";
 import { formatDate } from "@/lib/news-data";
 import { ShoppingBag } from "lucide-react";
 import { dbPostToArticle, fetchCommentsForPost, fetchPostBySlug, fetchPublishedPosts, fetchSetting } from "@/lib/posts-queries";
@@ -99,8 +102,37 @@ export const Route = createFileRoute("/news/$slug")({
 
 function ArticlePage() {
   const { post } = Route.useLoaderData();
-  const a = dbPostToArticle(post);
+  if ((post as any).status === "community_removed") {
+    return <RemovedArticleView post={post} />;
+  }
+  return <PublishedArticleView post={post} />;
+}
 
+function RemovedArticleView({ post }: { post: any }) {
+  const snap = post.removed_snapshot ?? {};
+  const battle = useQuery({
+    queryKey: ["battle-final", post.id],
+    queryFn: async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data } = await (supabase as any).rpc("get_battle_state", { _post_id: post.id });
+      return Array.isArray(data) ? data[0] : data;
+    },
+  });
+  return (
+    <RemovedArticle
+      title={snap.title ?? post.title}
+      dek={snap.dek ?? post.dek}
+      originalBody={snap.body ?? post.body}
+      keep={battle.data?.keep_credits ?? 0}
+      remove={battle.data?.remove_credits ?? 0}
+      decidedAt={battle.data?.decided_at}
+    />
+  );
+}
+
+function PublishedArticleView({ post }: { post: any }) {
+  const a = dbPostToArticle(post);
+  const verdictEnabled = useSettingEnabled();
   const related = useQuery({ queryKey: ["related"], queryFn: () => fetchPublishedPosts({ limit: 4 }) });
   const showComments = useQuery({ queryKey: ["setting-show-comments"], queryFn: () => fetchSetting<boolean>("show_imported_discussion", true) });
   const comments = useQuery({
@@ -109,7 +141,7 @@ function ArticlePage() {
     enabled: !!showComments.data,
   });
 
-  const relatedArticles = (related.data ?? []).filter((p) => p.slug !== post.slug).slice(0, 3).map(dbPostToArticle);
+  const relatedArticles = (related.data ?? []).filter((p: any) => p.slug !== post.slug).slice(0, 3).map(dbPostToArticle);
 
   return (
     <Layout>
@@ -132,6 +164,9 @@ function ArticlePage() {
             />
           </div>
         </div>
+        {verdictEnabled && post.is_controversial && (
+          <VerdictArena postId={post.id} postSlug={post.slug} />
+        )}
         {post.featured_image ? (
           <img src={post.featured_image} alt={post.hero_caption ?? a.title} className="mx-auto mt-8 aspect-[16/8] max-w-5xl rounded-lg object-cover" />
         ) : (

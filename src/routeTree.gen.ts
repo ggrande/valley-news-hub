@@ -48,6 +48,7 @@ import { Route as CheckoutMerchReturnRouteImport } from './routes/checkout.merch
 import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminVerdictRouteImport } from './routes/_authenticated/admin.verdict'
 import { Route as AuthenticatedAdminSubmissionsRouteImport } from './routes/_authenticated/admin.submissions'
 import { Route as AuthenticatedAdminSiteContentRouteImport } from './routes/_authenticated/admin.site-content'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
@@ -73,6 +74,7 @@ import { Route as ApiPublicWebStoriesSlugRouteImport } from './routes/api/public
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicNetworkIngestReleaseRouteImport } from './routes/api/public/network/ingest-release'
 import { Route as ApiPublicNetworkCheckUpdateRouteImport } from './routes/api/public/network/check-update'
+import { Route as ApiPublicHooksVerdictGhostTickRouteImport } from './routes/api/public/hooks/verdict-ghost-tick'
 import { Route as ApiPublicHooksRetryMerchRouteImport } from './routes/api/public/hooks/retry-merch'
 import { Route as ApiPublicHooksRedditListingJobRouteImport } from './routes/api/public/hooks/reddit-listing-job'
 import { Route as ApiPublicHooksRedditListingCallbackRouteImport } from './routes/api/public/hooks/reddit-listing-callback'
@@ -281,6 +283,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminVerdictRoute =
+  AuthenticatedAdminVerdictRouteImport.update({
+    id: '/verdict',
+    path: '/verdict',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminSubmissionsRoute =
   AuthenticatedAdminSubmissionsRouteImport.update({
     id: '/submissions',
@@ -426,6 +434,12 @@ const ApiPublicNetworkCheckUpdateRoute =
     path: '/api/public/network/check-update',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksVerdictGhostTickRoute =
+  ApiPublicHooksVerdictGhostTickRouteImport.update({
+    id: '/api/public/hooks/verdict-ghost-tick',
+    path: '/api/public/hooks/verdict-ghost-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRetryMerchRoute =
   ApiPublicHooksRetryMerchRouteImport.update({
     id: '/api/public/hooks/retry-merch',
@@ -563,6 +577,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
+  '/admin/verdict': typeof AuthenticatedAdminVerdictRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
@@ -575,6 +590,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/reddit-listing-callback': typeof ApiPublicHooksRedditListingCallbackRoute
   '/api/public/hooks/reddit-listing-job': typeof ApiPublicHooksRedditListingJobRoute
   '/api/public/hooks/retry-merch': typeof ApiPublicHooksRetryMerchRoute
+  '/api/public/hooks/verdict-ghost-tick': typeof ApiPublicHooksVerdictGhostTickRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -640,6 +656,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
+  '/admin/verdict': typeof AuthenticatedAdminVerdictRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
@@ -652,6 +669,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/reddit-listing-callback': typeof ApiPublicHooksRedditListingCallbackRoute
   '/api/public/hooks/reddit-listing-job': typeof ApiPublicHooksRedditListingJobRoute
   '/api/public/hooks/retry-merch': typeof ApiPublicHooksRetryMerchRoute
+  '/api/public/hooks/verdict-ghost-tick': typeof ApiPublicHooksVerdictGhostTickRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -720,6 +738,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/_authenticated/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
+  '/_authenticated/admin/verdict': typeof AuthenticatedAdminVerdictRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/_authenticated/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
@@ -732,6 +751,7 @@ export interface FileRoutesById {
   '/api/public/hooks/reddit-listing-callback': typeof ApiPublicHooksRedditListingCallbackRoute
   '/api/public/hooks/reddit-listing-job': typeof ApiPublicHooksRedditListingJobRoute
   '/api/public/hooks/retry-merch': typeof ApiPublicHooksRetryMerchRoute
+  '/api/public/hooks/verdict-ghost-tick': typeof ApiPublicHooksVerdictGhostTickRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -800,6 +820,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/site-content'
     | '/admin/submissions'
+    | '/admin/verdict'
     | '/admin/'
     | '/admin/import/$batchId'
     | '/admin/posts/$id'
@@ -812,6 +833,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reddit-listing-callback'
     | '/api/public/hooks/reddit-listing-job'
     | '/api/public/hooks/retry-merch'
+    | '/api/public/hooks/verdict-ghost-tick'
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
@@ -877,6 +899,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/site-content'
     | '/admin/submissions'
+    | '/admin/verdict'
     | '/admin'
     | '/admin/import/$batchId'
     | '/admin/posts/$id'
@@ -889,6 +912,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reddit-listing-callback'
     | '/api/public/hooks/reddit-listing-job'
     | '/api/public/hooks/retry-merch'
+    | '/api/public/hooks/verdict-ghost-tick'
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
@@ -956,6 +980,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/site-content'
     | '/_authenticated/admin/submissions'
+    | '/_authenticated/admin/verdict'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/import/$batchId'
     | '/_authenticated/admin/posts/$id'
@@ -968,6 +993,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reddit-listing-callback'
     | '/api/public/hooks/reddit-listing-job'
     | '/api/public/hooks/retry-merch'
+    | '/api/public/hooks/verdict-ghost-tick'
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
@@ -1019,6 +1045,7 @@ export interface RootRouteChildren {
   ApiPublicHooksRedditListingCallbackRoute: typeof ApiPublicHooksRedditListingCallbackRoute
   ApiPublicHooksRedditListingJobRoute: typeof ApiPublicHooksRedditListingJobRoute
   ApiPublicHooksRetryMerchRoute: typeof ApiPublicHooksRetryMerchRoute
+  ApiPublicHooksVerdictGhostTickRoute: typeof ApiPublicHooksVerdictGhostTickRoute
   ApiPublicNetworkCheckUpdateRoute: typeof ApiPublicNetworkCheckUpdateRoute
   ApiPublicNetworkIngestReleaseRoute: typeof ApiPublicNetworkIngestReleaseRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1301,6 +1328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/verdict': {
+      id: '/_authenticated/admin/verdict'
+      path: '/verdict'
+      fullPath: '/admin/verdict'
+      preLoaderRoute: typeof AuthenticatedAdminVerdictRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/submissions': {
       id: '/_authenticated/admin/submissions'
       path: '/submissions'
@@ -1476,6 +1510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNetworkCheckUpdateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/verdict-ghost-tick': {
+      id: '/api/public/hooks/verdict-ghost-tick'
+      path: '/api/public/hooks/verdict-ghost-tick'
+      fullPath: '/api/public/hooks/verdict-ghost-tick'
+      preLoaderRoute: typeof ApiPublicHooksVerdictGhostTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/retry-merch': {
       id: '/api/public/hooks/retry-merch'
       path: '/api/public/hooks/retry-merch'
@@ -1631,6 +1672,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminSiteContentRoute: typeof AuthenticatedAdminSiteContentRoute
   AuthenticatedAdminSubmissionsRoute: typeof AuthenticatedAdminSubmissionsRoute
+  AuthenticatedAdminVerdictRoute: typeof AuthenticatedAdminVerdictRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -1654,6 +1696,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminSiteContentRoute: AuthenticatedAdminSiteContentRoute,
   AuthenticatedAdminSubmissionsRoute: AuthenticatedAdminSubmissionsRoute,
+  AuthenticatedAdminVerdictRoute: AuthenticatedAdminVerdictRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
@@ -1751,6 +1794,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksRedditListingCallbackRoute,
   ApiPublicHooksRedditListingJobRoute: ApiPublicHooksRedditListingJobRoute,
   ApiPublicHooksRetryMerchRoute: ApiPublicHooksRetryMerchRoute,
+  ApiPublicHooksVerdictGhostTickRoute: ApiPublicHooksVerdictGhostTickRoute,
   ApiPublicNetworkCheckUpdateRoute: ApiPublicNetworkCheckUpdateRoute,
   ApiPublicNetworkIngestReleaseRoute: ApiPublicNetworkIngestReleaseRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
@@ -1761,13 +1805,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

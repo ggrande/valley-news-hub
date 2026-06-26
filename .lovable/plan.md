@@ -1,125 +1,160 @@
+# Court of Public Opinion — Verdict Arena
 
-# Current state vs. plan — Affiliate Network
+A flashy, real-time tug-of-war where readers spend **Verdict Credits** to **KEEP** or **REMOVE** a controversial article. Battles end via a momentum-threshold rule, ghost contributors keep early battles alive, and a quadratic + dynamic cost curve keeps whales powerful but not omnipotent.
 
-## What's already shipped
+## Feature flag (kill switch)
 
-- **Pricing & checkout** — `/network` with two tiers (Independent $49.99 one-time, Managed $9.99/mo), Stripe embedded checkout, billing portal.
-- **Post-payment data** — webhook creates a `network_purchases` row, mints `licenses` for self-host, and inserts a `managed_sites` row with `status: pending_provision`.
-- **Repositioned copy** — "Affiliate Station / Affiliate Network" throughout `/network`, `/network/docs`, `/network/changelog`.
-- **Public directory** — `/network/stations` + `affiliate_directory_entries` table + `list_public_affiliate_stations()` RPC.
-- **Onboarding wizard UI** — 4-step wizard at `/account/managed-sites/$siteId/onboarding` (Identity → Branding → Domain → Review).
-- **My Stations dashboard** — `/account/managed-sites` with billing portal, release accept/reject, "Finish setup" CTA.
-- **Release pipeline** — GitHub Action builds a scrubbed ZIP, ingest endpoint stores it, stations get update banners.
+Single setting `verdict_arena_enabled` (default **off**) in `site_settings`. When off:
+- No Arena UI renders anywhere.
+- No wallet badge in header.
+- "Open battle" controls hidden in admin.
+- Existing battles remain in DB but article pages render normally.
+- Cron tick is a no-op.
+- Site looks 100% identical to today.
 
-## What's missing (the actual gap)
+## Scope
 
-The webhook only writes a DB row. Nothing actually **stands up an affiliate's site or admin**. There's no per-tenant scoping in this codebase (posts, site_content, authors are all global to WKNA-49), so a buyer cannot "land in their admin" inside this app. The wizard collects data that has no destination yet, and `/checkout/return` is a generic confirmation instead of dropping them into setup.
+- Opt-in per post: admin toggles `is_controversial` on a post. Battles never appear on regular news.
+- Currency: **Verdict Credits** (virtual). 50/day free + optional Stripe top-up.
+- Identity: frictionless. Browser fingerprint + IP is the default. No email or signup required to vote.
+- Outcome: losing side → post fully unpublished, header replaced with "Removed by public verdict" banner, body rendered as █ blocks (original preserved in DB for admin restore).
 
-Also missing: admin moderation for self-host directory submissions, lifecycle emails, and any way to fully test the buyer journey today.
+## User experience
 
----
+**On a controversial article**, a sticky **Verdict Arena** panel appears below the hero:
+- Two columns: **KEEP** (gold) vs **REMOVE** (crimson). A center rope shifts based on credit share.
+- Live momentum indicator (arrow + "+312 credits in last 5 min on KEEP").
+- Vote button shows your next-vote cost.
+- Big flashy moment per vote: rope yanks with spring animation, particles burst from the winning side, screen-shake on votes ≥100 credits, "WHALE INCOMING" banner ≥500.
+- Recent voters ticker (mixes real + ghost handles).
+- Status line: "REMOVE needs to hold +500 lead for 8 more minutes to win."
 
-# The plan: hybrid instant-config + background dedicated deploy
+**Wallet badge** in header (coin icon):
+- Balance, "Claim daily 50" button, top-up modal (packs via Stripe embedded checkout).
+- Voting itself is anonymous — wallet is tied to a signed HttpOnly fingerprint cookie.
 
-The buyer experience:
+**Removed post state**: hero replaced with `RemovedArticle` banner (verdict tally, link to "Why this was removed" explainer). Body component renders block characters of equivalent length per paragraph. Comments hidden. Schema.org/sitemap/RSS suppressed. `noindex` meta added.
 
-```text
-Stripe checkout (sandbox-testable)
-        │
-        ▼
-Auto-redirect → /account/managed-sites/{id}/onboarding
-        │  (collect name, branding, domain — exists already)
-        ▼
-"Provisioning your station…" status screen with live progress
-        │  ┌─ create GitHub repo from template (workflow_dispatch)
-        │  ├─ create Supabase project via Management API
-        │  ├─ write env + secrets into the new repo
-        │  ├─ trigger first deploy
-        │  └─ seed site_content from wizard answers
-        ▼
-"Your station is live!" → button opens THEIR new admin URL in a new tab
+## Mechanics
+
+### Win condition — threshold + momentum
+- Battle is live indefinitely once opened.
+- Side wins when lead ≥ **L credits** for **T continuous minutes**, where L and T scale with total volume.
+  - Small battles: L=200, T=5 min.
+  - Big battles: L=2,000, T=15 min.
+- Lead-flip resets the timer → comeback windows.
+- Hard ceiling: 7 days max; current leader wins at expiry.
+
+### Cost curve
+Per-user *n*-th vote in a battle:
 ```
+base_cost(n) = ceil(n^1.6)               // softer than pure quadratic
+dynamic_mult = 1 + (your_side_share - 0.5) * engagement_factor
+final_cost   = ceil(base_cost * max(0.5, dynamic_mult))
+```
+- `engagement_factor` grows with unique participants (more voices → harder to dominate).
+- Winning side pays more per vote; underdog discounted (encourages comebacks).
+- Whales can still swing quiet battles; in a hot battle their 50th vote might cost 800 credits.
 
-The buyer never waits on a blank screen — they fill out the wizard while provisioning runs in parallel. If they finish faster than the deploy, we show the spinner; if the deploy finishes first, the wizard ends with a green "Open my admin" button.
+### Verdict Credits economy
+- Daily claim: **50 credits** per identity (fingerprint+IP gated).
+- Top-up packs via Stripe embedded checkout (real money, **live from day 1**, reusing `createStripeClient` from `stripe.server.ts`):
+  - 100 credits — $1.99
+  - 500 credits — $7.99
+  - 2,500 credits — $29.99
+- Credits non-refundable, non-withdrawable (avoids gambling classification — votes are entertainment, no cash payout).
+- **Victory dividend**: when a battle resolves, every wallet on the winning side gets **ceil(10% of credits they spent in that battle)** refunded. Loop incentive, still no cash out.
 
-## Build steps
+### Ghost contributors (cold-start & testing)
+- `ghost_personas` table: ~60 fictional handles with personality weights (bias, frequency, avg size).
+- Background drip via cron + on each real vote (`tickGhosts(battleId)`).
+- Ghost weight tapers as real participants join.
+- Per-battle `ghost_mode = 'aggressive' | 'subtle' | 'off'` (default subtle).
+- Production safety: ghost votes flagged `is_ghost=true`. Config `ghost_can_decide` (default **false**) means ghosts never push a battle past the win threshold — only real credits trigger removal. Easy to flip on for testing.
 
-### 1. Post-checkout redirect (small, ship first)
-- Change `subscription_data.metadata` in `network-payments.functions.ts` so the webhook can resolve the new `managed_sites.id`.
-- Update `return_url` for `tier=managed_mirror` to `/checkout/managed-onboarding-return?session_id={CHECKOUT_SESSION_ID}`.
-- New route `checkout.managed-onboarding-return.tsx` that polls `network_purchases` by session id, finds the freshly-created `managed_sites` row, then `redirect()`s to `/account/managed-sites/{id}/onboarding`.
+### Anti-abuse (no friction by default)
+1. **Signed HttpOnly fingerprint cookie** — primary identity. Derived from a stable browser fingerprint + server-side random salt; signed with a server secret.
+2. **IP hash** — second key. Daily claim & per-minute vote rate-limited per IP.
+3. **Cookie + IP combo gate** — new cookie + same IP within 24h ≠ fresh daily claim.
+4. **Velocity heuristics** — flag suspicious patterns (e.g. 10 identical votes from same /24 in 60s) → wallet quarantined for admin review.
+5. **Optional escalation** — only if abuse heuristics fire, the wallet is prompted for a magic-link email verification to keep voting (reuses `tenant-auth.functions.ts` pattern). Honest users never see it.
+6. Acknowledged tradeoff: no native rate-limit primitive — we use a Postgres counter table with windowed rows.
 
-### 2. Provisioning state machine
-Add columns to `managed_sites`:
-- `provision_state` text (`queued`, `repo_created`, `db_created`, `deploying`, `ready`, `failed`)
-- `provision_steps` jsonb (per-step status + timestamps for the progress UI)
-- `github_repo` text, `supabase_project_ref` text, `live_url` text, `admin_url` text
-- `provision_error` text
+## Data model (new tables, all RLS-locked, writes through server fns)
 
-### 3. Provisioning workflow + dispatcher
-- New `.github/workflows/provision-affiliate.yml` triggered by `workflow_dispatch` from the webhook. Inputs: `siteId`, `subdomain`, `displayName`, `ownerEmail`.
-- Workflow steps:
-  1. Create new GitHub repo from the WKNA-49 template (`gh repo create --template`)
-  2. Create new Supabase project via Management API
-  3. Run all migrations against the new project
-  4. Write GitHub repo secrets (`SUPABASE_*`, `LOVABLE_API_KEY`, etc.) via `gh secret set`
-  5. Trigger Lovable Cloud / Cloudflare Pages deploy (whichever platform we pick — see Open question below)
-  6. Seed `site_content` rows from the wizard answers in our master DB
-  7. POST back to `/api/public/hooks/provision-callback` with `live_url`, `admin_url`, success/failure, per-step trace
-- Each step also pings the callback so the user sees live progress.
+- `verdict_battles` — `id, post_id, status (live|decided|cancelled), winner, opened_at, decided_at, lead_threshold, momentum_window_sec, ghost_mode, current_lead_side, lead_since, totals_jsonb`
+- `verdict_votes` — `id, battle_id, wallet_id, fingerprint_hash, ip_hash, side, credits, vote_n, cost_charged, is_ghost, created_at`
+- `verdict_wallets` — `id, fingerprint_hash (unique), balance, lifetime_purchased, last_daily_claim_at, quarantined`
+- `verdict_credit_packs` — Stripe purchases ledger (pack_id, stripe_session, credits_granted, wallet_id)
+- `ghost_personas` — `id, handle, bias, frequency, size_curve`
+- `verdict_abuse_flags` — `wallet_id, ip_hash, reason, created_at`
+- `verdict_rate_windows` — windowed counter rows for ad-hoc rate limiting
 
-### 4. Status-aware onboarding wizard
-- Add a **Step 0 "Provisioning"** that polls `getMyManagedSiteProfile` every 2s and shows a checklist:
-  ```text
-  ✓ Spinning up your repository
-  ✓ Creating your database
-  ◌ Deploying your site         (in progress)
-  ◌ Activating your admin
-  ```
-- If provisioning finishes before the buyer reaches Step 4, the final button changes from "Finish setup" to **"Open my admin →"** linking to `admin_url`.
-- If provisioning fails, surface the error with a "Retry" button that re-dispatches the workflow.
+Public read: only aggregated battle state via SECURITY DEFINER function. Per-vote rows never exposed.
 
-### 5. Admin moderation for self-host directory
-- New `/admin/affiliate-directory` listing pending `affiliate_directory_entries` with approve/reject buttons (admins only via `has_role`).
+## Server functions / routes
 
-### 6. Lifecycle emails (uses the existing email infra)
-- **Welcome email** on `checkout.session.completed` — order summary + onboarding link.
-- **Provisioning complete** email — live URL + admin URL + first-login instructions.
-- **Onboarding nudge** — 24h after purchase if `onboarding_completed_at` is null.
+- `getBattleState(postId)` — public; returns tallies, your-next-cost, momentum, ticker, status.
+- `castVote({battleId, side, credits})` — fingerprint-gated; atomic SELECT FOR UPDATE on battle + wallet; runs cost curve; checks win condition; emits realtime event.
+- `claimDailyCredits()` — fingerprint+IP gated.
+- `purchaseCreditPack(packId)` — Stripe embedded checkout → webhook credits wallet.
+- `tickGhosts(battleId)` — internal; invoked by cron + on each real vote.
+- `adminToggleControversial(postId)` / `adminOpenBattle(postId)` / `adminRestorePost(postId)` — admin only.
+- `/api/public/hooks/verdict-ghost-tick` — pg_cron every 1 min using `apikey` header (canonical pattern).
+- Stripe webhook extended in `src/routes/api/public/payments/webhook.ts` to credit wallets on `verdict_pack` purchases.
 
-### 7. Sandbox end-to-end test path
-Once all of the above is in:
-1. Use Stripe sandbox card `4242 4242 4242 4242` on `/network` → buy Managed tier
-2. Get auto-redirected into the wizard
-3. Watch the live provisioning checklist
-4. Fill in branding while it runs
-5. Hit "Open my admin" → land on the new station's admin URL, fully owned by the buyer
-6. Publish a test article on the new station
+All gated behind `verdict_arena_enabled`; when off, server fns short-circuit with `{ disabled: true }`.
 
-We can run that whole flow in this environment without touching real money.
+## Real-time
 
----
+- Supabase Realtime channel `battle:{id}` — broadcasts each vote so the rope animates live for all viewers (throttled to 4 events/sec per battle).
 
-# Open question I need answered before building
+## Post removal flow
 
-**Which deployment platform should each affiliate's site land on?**
-You mentioned earlier we'd discussed a specific platform, but I want to confirm before I wire the GitHub Action — the choice changes step 5 of the workflow and which API token I need stored:
+1. Battle resolves → `posts.status = 'community_removed'`, snapshot original body to `posts.removed_snapshot`.
+2. `news.$slug.tsx` detects status → renders `<RemovedArticle>`.
+3. Suppressed from sitemap, RSS, news-sitemap, schema.org JSON-LD; `<meta name="robots" content="noindex,nofollow">` injected.
+4. Admin can restore from `/admin/posts/$id` or new `/admin/verdict` dashboard.
 
-- **Lovable Cloud** — closest to how WKNA-49 itself runs; needs a Lovable deploy API token.
-- **Cloudflare Pages** — fast, free tier, simple `wrangler` deploy; needs `CLOUDFLARE_API_TOKEN` + account id.
-- **Netlify** — matches the existing self-host one-click template; needs `NETLIFY_AUTH_TOKEN`.
-- **Vercel** — needs `VERCEL_TOKEN` + team id.
+## Affiliate site posture
 
-Pick one and tell me; I'll request the secret via the add-secret flow and proceed.
+wkna49.com-only initially. Affiliate stations get a `features.verdict_arena` flag defaulting **off** so this never auto-ships to their mirrors.
 
----
+## Files
 
-# Technical notes (for reference)
+**New**
+- `supabase/migrations/<ts>_verdict_arena.sql` — tables, RLS, grants, SECURITY DEFINER read fn, helper fns.
+- `src/lib/verdict.functions.ts` — server fns (getBattleState, castVote, claimDailyCredits, purchaseCreditPack, admin fns).
+- `src/lib/verdict-ghost.server.ts` — ghost engine.
+- `src/lib/verdict-abuse.server.ts` — fingerprint/IP rate limiter + quarantine heuristics.
+- `src/lib/verdict-fingerprint.ts` — client fingerprint helper.
+- `src/components/site/VerdictArena.tsx` — sticky tug-of-war UI.
+- `src/components/site/verdict/Rope.tsx`, `Ticker.tsx`, `VoteButton.tsx`, `WhalePulse.tsx`, `WalletDrawer.tsx`, `TopUpModal.tsx`.
+- `src/components/site/RemovedArticle.tsx` — banner + █ body.
+- `src/components/site/WalletBadge.tsx` — header coin pill.
+- `src/routes/api/public/hooks/verdict-ghost-tick.ts` — cron endpoint (apikey-authed).
+- `src/routes/_authenticated/admin.verdict.tsx` — admin dashboard (live battles, ghost mode, restore, kill-switch).
 
-- The `GH_DISPATCH_PAT` secret already exists; it needs `repo` + `workflow` + `admin:org` scopes to create repos from a template.
-- Supabase Management API token (`SUPABASE_ACCESS_TOKEN`) is required for the per-tenant DB creation — not currently stored; I will request it.
-- Per-tenant admin auth: the new project gets its own Supabase auth; the buyer's email is auto-invited as the admin user during step 1 via Supabase Admin API on the new project.
-- Webhook idempotency: provisioning is keyed on `managed_sites.id`; the callback uses `provision_state` transitions to ignore replays.
-- All new tables / column additions ship as one Supabase migration with proper GRANTs + RLS scoped to `owner_user_id` and `has_role('admin')`.
-- No changes to the existing WKNA-49 admin tenancy — the master site stays single-tenant; each affiliate runs in its own isolated project.
+**Modified**
+- `src/routes/news.$slug.tsx` — when flag on AND `is_controversial`: mount `<VerdictArena>`; when status `community_removed`: render `<RemovedArticle>`.
+- `src/routes/news-sitemap[.]xml.ts`, `src/routes/rss[.]xml.ts`, `src/routes/sitemap[.]xml.ts` — suppress `community_removed`.
+- `src/routes/_authenticated/admin.posts.$id.tsx` — Controversial toggle + Open Battle button (flag-gated).
+- `src/routes/_authenticated/admin.settings.tsx` — add `verdict_arena_enabled` toggle.
+- `src/components/site/Header.tsx` — conditional `<WalletBadge>`.
+- `src/routes/api/public/payments/webhook.ts` — handle `verdict_pack` checkout completion.
+- `src/integrations/supabase/types.ts` — auto-regenerated.
 
+**Secrets**
+- `VERDICT_FINGERPRINT_SIGNING_KEY` — generated via `generate_secret`.
+
+## Build pre-check
+
+Current build is failing on a Vite chunk error (pre-existing). I'll triage and fix that first in build mode before layering this feature in.
+
+## Defaults locked in
+
+- Daily claim: 50 credits.
+- Anonymous voting via fingerprint+IP; email magic-link only as abuse escalation.
+- Victory dividend: 10%, rounded up.
+- Stripe top-ups live from day 1.
+- Feature globally toggleable; off = invisible.

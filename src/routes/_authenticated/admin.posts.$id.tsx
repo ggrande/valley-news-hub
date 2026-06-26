@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { adminOpenBattle, adminToggleControversial } from "@/lib/verdict.functions";
+import { useSettingEnabled } from "@/lib/use-verdict-enabled";
 
 export const Route = createFileRoute("/_authenticated/admin/posts/$id")({
   component: PostEditor,
@@ -152,6 +154,7 @@ function PostEditor() {
               <Toggle label="Breaking news" v={form.is_breaking} on={(v) => set("is_breaking", v)} />
               <Toggle label="Weather alert" v={form.is_weather_alert} on={(v) => set("is_weather_alert", v)} />
               <Toggle label="Pinned / featured" v={form.is_pinned} on={(v) => set("is_pinned", v)} />
+              <VerdictControls postId={isNew ? null : id!} initialControversial={!!form.is_controversial} />
             </div>
             <div className="mt-4 space-y-2">
               <button disabled={saving} onClick={() => save(false)} className="h-10 w-full rounded bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-60">Save</button>
@@ -177,4 +180,40 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 function Toggle({ label, v, on }: { label: string; v: boolean; on: (v: boolean) => void }) {
   return <label className="flex items-center gap-2"><input type="checkbox" checked={!!v} onChange={(e) => on(e.target.checked)} /> {label}</label>;
+}
+
+function VerdictControls({ postId, initialControversial }: { postId: string | null; initialControversial: boolean }) {
+  const enabled = useSettingEnabled();
+  const [contro, setContro] = useState(initialControversial);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  if (!enabled || !postId) return null;
+  const toggle = async (v: boolean) => {
+    setContro(v);
+    setBusy(true);
+    try {
+      await (adminToggleControversial as any)({ data: { postId, value: v } });
+    } finally { setBusy(false); }
+  };
+  const open = async (ghostMode: "off" | "subtle" | "aggressive") => {
+    setBusy(true); setMsg(null);
+    try {
+      const r: any = await (adminOpenBattle as any)({ data: { postId, ghostMode } });
+      setMsg(r?.alreadyOpen ? "Battle already live" : "Battle opened");
+    } catch (e: any) { setMsg(e.message); }
+    finally { setBusy(false); }
+  };
+  return (
+    <div className="mt-2 rounded border border-primary/30 bg-primary/5 p-2">
+      <label className="flex items-center gap-2"><input type="checkbox" checked={contro} onChange={(e) => toggle(e.target.checked)} disabled={busy} /> ⚖️ Controversial (allow Verdict Arena)</label>
+      {contro && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <button type="button" onClick={() => open("subtle")} disabled={busy} className="rounded bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-50">Open battle (subtle ghosts)</button>
+          <button type="button" onClick={() => open("aggressive")} disabled={busy} className="rounded border border-primary px-2 py-1 text-xs font-semibold disabled:opacity-50">Aggressive ghosts</button>
+          <button type="button" onClick={() => open("off")} disabled={busy} className="rounded border px-2 py-1 text-xs disabled:opacity-50">No ghosts</button>
+        </div>
+      )}
+      {msg && <p className="mt-1 text-[10px] text-muted-foreground">{msg}</p>}
+    </div>
+  );
 }

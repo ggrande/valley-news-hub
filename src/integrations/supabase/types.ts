@@ -409,6 +409,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ghost_personas: {
+        Row: {
+          active: boolean
+          bias: number
+          created_at: string
+          frequency: number
+          handle: string
+          id: string
+          size_max: number
+          size_min: number
+        }
+        Insert: {
+          active?: boolean
+          bias?: number
+          created_at?: string
+          frequency?: number
+          handle: string
+          id?: string
+          size_max?: number
+          size_min?: number
+        }
+        Update: {
+          active?: boolean
+          bias?: number
+          created_at?: string
+          frequency?: number
+          handle?: string
+          id?: string
+          size_max?: number
+          size_min?: number
+        }
+        Relationships: []
+      }
       import_batches: {
         Row: {
           created_at: string
@@ -1108,6 +1141,7 @@ export type Database = {
           hero_image_reason: string | null
           id: string
           is_breaking: boolean
+          is_controversial: boolean
           is_pinned: boolean
           is_weather_alert: boolean
           og_image: string | null
@@ -1121,6 +1155,7 @@ export type Database = {
           reddit_comment_url: string | null
           reddit_import_id: string | null
           related_post_ids: string[] | null
+          removed_snapshot: Json | null
           seo_description: string | null
           seo_title: string | null
           slug: string
@@ -1151,6 +1186,7 @@ export type Database = {
           hero_image_reason?: string | null
           id?: string
           is_breaking?: boolean
+          is_controversial?: boolean
           is_pinned?: boolean
           is_weather_alert?: boolean
           og_image?: string | null
@@ -1164,6 +1200,7 @@ export type Database = {
           reddit_comment_url?: string | null
           reddit_import_id?: string | null
           related_post_ids?: string[] | null
+          removed_snapshot?: Json | null
           seo_description?: string | null
           seo_title?: string | null
           slug: string
@@ -1194,6 +1231,7 @@ export type Database = {
           hero_image_reason?: string | null
           id?: string
           is_breaking?: boolean
+          is_controversial?: boolean
           is_pinned?: boolean
           is_weather_alert?: boolean
           og_image?: string | null
@@ -1207,6 +1245,7 @@ export type Database = {
           reddit_comment_url?: string | null
           reddit_import_id?: string | null
           related_post_ids?: string[] | null
+          removed_snapshot?: Json | null
           seo_description?: string | null
           seo_title?: string | null
           slug?: string
@@ -1915,11 +1954,312 @@ export type Database = {
         }
         Relationships: []
       }
+      verdict_abuse_flags: {
+        Row: {
+          created_at: string
+          id: string
+          ip_hash: string | null
+          reason: string
+          resolved: boolean
+          wallet_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          reason: string
+          resolved?: boolean
+          wallet_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          reason?: string
+          resolved?: boolean
+          wallet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verdict_abuse_flags_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "verdict_wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verdict_battles: {
+        Row: {
+          created_at: string
+          current_lead_side: string | null
+          decided_at: string | null
+          ends_at: string
+          ghost_mode: string
+          id: string
+          keep_credits: number
+          lead_since: string | null
+          lead_threshold: number
+          momentum_window_sec: number
+          opened_at: string
+          participant_count: number
+          post_id: string
+          remove_credits: number
+          status: string
+          updated_at: string
+          winner: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_lead_side?: string | null
+          decided_at?: string | null
+          ends_at?: string
+          ghost_mode?: string
+          id?: string
+          keep_credits?: number
+          lead_since?: string | null
+          lead_threshold?: number
+          momentum_window_sec?: number
+          opened_at?: string
+          participant_count?: number
+          post_id: string
+          remove_credits?: number
+          status?: string
+          updated_at?: string
+          winner?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_lead_side?: string | null
+          decided_at?: string | null
+          ends_at?: string
+          ghost_mode?: string
+          id?: string
+          keep_credits?: number
+          lead_since?: string | null
+          lead_threshold?: number
+          momentum_window_sec?: number
+          opened_at?: string
+          participant_count?: number
+          post_id?: string
+          remove_credits?: number
+          status?: string
+          updated_at?: string
+          winner?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verdict_battles_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verdict_credit_packs: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          credits_granted: number
+          currency: string
+          environment: string | null
+          id: string
+          pack_id: string
+          status: string
+          stripe_session_id: string | null
+          updated_at: string
+          wallet_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          credits_granted: number
+          currency?: string
+          environment?: string | null
+          id?: string
+          pack_id: string
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+          wallet_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          credits_granted?: number
+          currency?: string
+          environment?: string | null
+          id?: string
+          pack_id?: string
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verdict_credit_packs_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "verdict_wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verdict_rate_windows: {
+        Row: {
+          count: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      verdict_votes: {
+        Row: {
+          battle_id: string
+          cost_charged: number
+          created_at: string
+          credits: number
+          dividend_paid: number
+          fingerprint_hash: string | null
+          ghost_handle: string | null
+          id: string
+          ip_hash: string | null
+          is_ghost: boolean
+          side: string
+          vote_n: number
+          wallet_id: string | null
+        }
+        Insert: {
+          battle_id: string
+          cost_charged: number
+          created_at?: string
+          credits: number
+          dividend_paid?: number
+          fingerprint_hash?: string | null
+          ghost_handle?: string | null
+          id?: string
+          ip_hash?: string | null
+          is_ghost?: boolean
+          side: string
+          vote_n: number
+          wallet_id?: string | null
+        }
+        Update: {
+          battle_id?: string
+          cost_charged?: number
+          created_at?: string
+          credits?: number
+          dividend_paid?: number
+          fingerprint_hash?: string | null
+          ghost_handle?: string | null
+          id?: string
+          ip_hash?: string | null
+          is_ghost?: boolean
+          side?: string
+          vote_n?: number
+          wallet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verdict_votes_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "verdict_battles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verdict_votes_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "verdict_wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verdict_wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          fingerprint_hash: string
+          id: string
+          last_daily_claim_at: string | null
+          lifetime_earned: number
+          lifetime_purchased: number
+          quarantined: boolean
+          updated_at: string
+          verified_email: string | null
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          fingerprint_hash: string
+          id?: string
+          last_daily_claim_at?: string | null
+          lifetime_earned?: number
+          lifetime_purchased?: number
+          quarantined?: boolean
+          updated_at?: string
+          verified_email?: string | null
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          fingerprint_hash?: string
+          id?: string
+          last_daily_claim_at?: string | null
+          lifetime_earned?: number
+          lifetime_purchased?: number
+          quarantined?: boolean
+          updated_at?: string
+          verified_email?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_battle_state: {
+        Args: { _post_id: string }
+        Returns: {
+          battle_id: string
+          current_lead_side: string
+          decided_at: string
+          ends_at: string
+          keep_credits: number
+          lead_since: string
+          lead_threshold: number
+          momentum_window_sec: number
+          opened_at: string
+          participant_count: number
+          remove_credits: number
+          status: string
+          winner: string
+        }[]
+      }
+      get_battle_ticker: {
+        Args: { _battle_id: string; _limit?: number }
+        Returns: {
+          created_at: string
+          credits: number
+          is_ghost: boolean
+          label: string
+          side: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1960,7 +2300,12 @@ export type Database = {
         | "manual_import"
         | "wire_style"
         | "community_tip"
-      post_status: "draft" | "review" | "published" | "archived"
+      post_status:
+        | "draft"
+        | "review"
+        | "published"
+        | "archived"
+        | "community_removed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2107,7 +2452,13 @@ export const Constants = {
         "wire_style",
         "community_tip",
       ],
-      post_status: ["draft", "review", "published", "archived"],
+      post_status: [
+        "draft",
+        "review",
+        "published",
+        "archived",
+        "community_removed",
+      ],
     },
   },
 } as const
