@@ -657,15 +657,21 @@ function ProvisioningPanel({
   sessionCode,
   answersComplete,
   onOpenNewsroom,
+  onRetry,
+  retryDisabled,
 }: {
   siteId: string;
   sessionCode: string;
   answersComplete: boolean;
   onOpenNewsroom: () => void;
+  onRetry: () => void | Promise<void>;
+  retryDisabled?: boolean;
 }) {
   const fetchStatus = useServerFn(getProvisioningStatus);
   const initiate = useServerFn(initiateSupabaseConnect);
   const finalize = useServerFn(finalizeTenantProvisioning);
+  const fetchAttempts = useServerFn(listProvisionAttempts);
+  const resetForRetry = useServerFn(resetProvisioningForRetry);
 
   const status = useQuery({
     queryKey: ["provisioning-status", siteId],
