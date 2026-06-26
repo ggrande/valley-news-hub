@@ -55,7 +55,7 @@ function AdminMerchPage() {
             All Print-on-demand orders. Failed submissions are flagged red — click Retry to resubmit to Printful.
           </p>
         </div>
-        <Button onClick={() => handleRetry()} disabled={busyId !== null} variant="outline">
+        <Button onClick={() => handleRetry()} disabled={busyId !== null || !orders.some((o: any) => o.status === "submit_failed")} variant="outline">
           {busyId === "all" ? "Retrying…" : "Retry all failed"}
         </Button>
       </div>
@@ -72,7 +72,7 @@ function AdminMerchPage() {
               <th className="px-3 py-2">Status</th>
               <th className="px-3 py-2">Printful</th>
               <th className="px-3 py-2">Env</th>
-              <th className="px-3 py-2"></th>
+              <th className="px-3 py-2 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -94,11 +94,11 @@ function AdminMerchPage() {
                 </td>
                 <td className="px-3 py-2 text-xs">{o.printful_order_id ?? "—"}</td>
                 <td className="px-3 py-2 text-xs">{o.environment}</td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 text-right">
                   {o.status === "submit_failed" && (
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="default"
                       disabled={busyId !== null}
                       onClick={() => handleRetry(o.id)}
                     >
