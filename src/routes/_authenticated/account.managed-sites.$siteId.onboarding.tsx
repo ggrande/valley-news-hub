@@ -682,6 +682,15 @@ function ProvisioningPanel({
     },
   });
 
+  const attempts = useQuery({
+    queryKey: ["provision-attempts", siteId],
+    queryFn: () => fetchAttempts({ data: { siteId } }),
+    refetchInterval: (q) => {
+      const s = status.data?.state;
+      return s === "provisioning" || s === "migrating" || s === "linking" ? 6000 : false;
+    },
+  });
+
   // Auto-finalize when project is in provisioning/migrating state
   const finalizingRef = useRef(false);
   useEffect(() => {
