@@ -47,16 +47,16 @@ function NetworkPage() {
     <Layout>
       <PaymentTestModeBanner />
       <PageHeader
-        eyebrow="Join Our Network"
-        title="Run your own WKNA-49 style newsroom"
-        description="License the platform we built to power WKNA 49 News — AI-curated stories, automated Reddit ingestion, full SEO, and a beautiful broadcast-style design. Pick the model that fits you."
+        eyebrow="Join Our Affiliate Network"
+        title="Become an Affiliate Station"
+        description="Launch your own independent local newsroom on the same platform that powers WKNA 49 News — AI-curated stories, automated Reddit ingestion, full SEO, and a broadcast-style design. Pick the affiliate path that fits you."
       />
       <section className="mx-auto max-w-6xl px-4 py-12 grid gap-6 md:grid-cols-2">
         <PlanCard
           tier="self_host_license"
-          name="Self-Host License"
+          name="Independent Affiliate"
           price="$49.99"
-          unit="one-time"
+          unit="one-time license"
           tagline="Own it. Deploy it anywhere."
           features={[
             "Full scrubbed source code",
@@ -64,6 +64,7 @@ function NetworkPage() {
             "Update notifications + downloads",
             "Editable site content (About, branding, contact info)",
             "Bring your own Lovable Cloud, AI, and domain",
+            "Listing in the Affiliate Stations directory",
             "Community support",
           ]}
           cta="Get the license"
@@ -78,16 +79,17 @@ function NetworkPage() {
         />
         <PlanCard
           tier="managed_mirror"
-          name="Managed Mirror"
+          name="Managed Affiliate Station"
           price="$9.99"
           unit="per month"
           tagline="We run it. You publish."
           features={[
             "We host & maintain everything",
             "Automatic updates — accept or reject each release",
-            "Per-site CMS for all branding & policies",
+            "Guided onboarding wizard",
+            "Per-station CMS for all branding & policies",
             "Reddit automation included",
-            "Custom domain support",
+            "Custom domain + Affiliate Stations directory",
             "Priority email support",
           ]}
           cta="Start subscription"
@@ -101,6 +103,21 @@ function NetworkPage() {
             })
           }
         />
+      </section>
+
+      <section className="border-t bg-card/40">
+        <div className="mx-auto max-w-4xl px-4 py-10 text-center">
+          <h2 className="font-display text-2xl font-black text-primary">See who's already on the network</h2>
+          <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground">
+            Every Affiliate Station gets a spot in our public directory so readers can find their local newsroom.
+          </p>
+          <Link
+            to="/network/stations"
+            className="mt-5 inline-flex h-10 items-center rounded-md border-2 border-primary px-5 text-sm font-semibold text-primary"
+          >
+            Browse Affiliate Stations →
+          </Link>
+        </div>
       </section>
 
       <section className="border-t bg-[color:var(--ivory)]">
