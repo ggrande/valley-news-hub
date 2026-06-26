@@ -109,7 +109,7 @@ export const Route = createFileRoute("/api/public/web-stories/$slug")({
         // not inject tracking scripts (which would break AMP validation).
         const html = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html amp="amp" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" amp="amp" lang="en">
 <head>
   <meta charset="utf-8"/>
   <title>${esc(title)} — WKNA 49 News</title>
