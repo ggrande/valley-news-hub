@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { adminOpenBattle, adminToggleControversial } from "@/lib/verdict.functions";
+import { useSettingEnabled } from "@/lib/use-verdict-enabled";
 
 export const Route = createFileRoute("/_authenticated/admin/posts/$id")({
   component: PostEditor,
@@ -152,6 +154,7 @@ function PostEditor() {
               <Toggle label="Breaking news" v={form.is_breaking} on={(v) => set("is_breaking", v)} />
               <Toggle label="Weather alert" v={form.is_weather_alert} on={(v) => set("is_weather_alert", v)} />
               <Toggle label="Pinned / featured" v={form.is_pinned} on={(v) => set("is_pinned", v)} />
+              <VerdictControls postId={isNew ? null : id!} initialControversial={!!form.is_controversial} />
             </div>
             <div className="mt-4 space-y-2">
               <button disabled={saving} onClick={() => save(false)} className="h-10 w-full rounded bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-60">Save</button>

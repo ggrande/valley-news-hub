@@ -63,12 +63,12 @@ export async function fetchPublishedPosts(opts?: { limit?: number; categorySlug?
 export async function fetchPostBySlug(slug: string) {
   const { data, error } = await supabase
     .from("posts")
-    .select(POST_SELECT)
+    .select(POST_SELECT + ", is_controversial, removed_snapshot")
     .eq("slug", slug)
-    .eq("status", "published")
+    .in("status", ["published", "community_removed"] as any)
     .maybeSingle();
   if (error) throw error;
-  return data as unknown as DbPost | null;
+  return data as unknown as (DbPost & { is_controversial?: boolean; removed_snapshot?: any }) | null;
 }
 
 export async function fetchCommentsForPost(postId: string) {

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Menu, Search, Radio, X } from "lucide-react";
 import { Logo } from "./Logo";
 import { SupportButton } from "./SupportButton";
+import { WalletBadge } from "./WalletBadge";
 
 const NAV = [
   { to: "/news", label: "News" },
@@ -41,6 +42,7 @@ export function Header() {
               <Radio className="size-4" />
               Watch Live
             </Link>
+            <WalletBadge />
             <SupportButton variant="navy" label="Support" />
           </div>
           <button
