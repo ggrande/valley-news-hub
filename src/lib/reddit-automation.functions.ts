@@ -83,10 +83,6 @@ export const listRedditNotifications = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(500);
     if (data.status) q = q.eq("status", data.status);
-    if (data.windowHours && data.windowHours > 0) {
-      const cutoff = new Date(Date.now() - data.windowHours * 3600_000).toISOString();
-      q = q.gte("created_at", cutoff);
-    }
     const { data: rows, error } = await q;
     if (error) throw error;
 
@@ -98,8 +94,17 @@ export const listRedditNotifications = createServerFn({ method: "GET" })
         post_status: r.posts?.status ?? null,
         reddit_posted_at: r.reddit_imports?.original_created_at ?? null,
       };
-
     });
+
+    // Filter by time window based on the ORIGINAL Reddit post time, not enqueue time
+    if (data.windowHours && data.windowHours > 0) {
+      const cutoffMs = Date.now() - data.windowHours * 3600_000;
+      enriched = enriched.filter((r) => {
+        if (!r.reddit_posted_at) return false;
+        const t = new Date(r.reddit_posted_at).getTime();
+        return Number.isFinite(t) && t >= cutoffMs;
+      });
+    }
 
     if (typeof data.minUpvotes === "number" && data.minUpvotes > 0) {
       enriched = enriched.filter((r) => typeof r.upvotes === "number" && r.upvotes >= (data.minUpvotes as number));
@@ -107,6 +112,13 @@ export const listRedditNotifications = createServerFn({ method: "GET" })
 
     if (data.sortBy === "upvotes") {
       enriched.sort((a, b) => (b.upvotes ?? -1) - (a.upvotes ?? -1));
+    } else {
+      // Default sort: newest Reddit post time first (fall back to enqueue time)
+      enriched.sort((a, b) => {
+        const at = a.reddit_posted_at ? new Date(a.reddit_posted_at).getTime() : new Date(a.created_at).getTime();
+        const bt = b.reddit_posted_at ? new Date(b.reddit_posted_at).getTime() : new Date(b.created_at).getTime();
+        return bt - at;
+      });
     }
 
     return enriched.slice(0, limit);
