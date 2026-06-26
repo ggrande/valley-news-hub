@@ -337,11 +337,13 @@ const AUTOMATION_KEYS = [
   ] },
   { key: "automation_min_score", label: "Minimum upvote score (skip below)", type: "number", default: 0 },
   { key: "automation_moderation_hold_hours", label: "Moderation hold (hours before a post is eligible — set to 0 for high-volume subreddits)", type: "number", default: 3 },
+  { key: "automation_use_session_cookies", label: "Use logged-in Reddit session (routes the fetch through GitHub Actions with WKNA49 cookies — required for IP-blocked subs)", type: "bool", default: false },
 
   { key: "automation_auto_generate", label: "Auto-generate article drafts from imports", type: "bool", default: false },
   { key: "automation_generate_limit", label: "Max drafts to generate per run", type: "number", default: 20 },
   { key: "automation_auto_filler_image", label: "Auto-generate AI hero image when none was provided (only for drafts that pass moderation)", type: "bool", default: false },
   { key: "automation_auto_publish", label: "Auto-publish drafts that pass moderation", type: "bool", default: false },
+
 ] as const;
 
 function nextCronFire(): Date {
