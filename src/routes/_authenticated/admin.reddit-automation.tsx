@@ -12,6 +12,7 @@ import {
   captureRedditSession,
   debugGitHubStatus,
   setRedditSessionCookies,
+  refreshNotificationQueue,
 } from "@/lib/reddit-automation.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/reddit-automation")({
