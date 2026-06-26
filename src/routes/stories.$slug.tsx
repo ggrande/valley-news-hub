@@ -18,7 +18,9 @@ export const Route = createFileRoute("/stories/$slug")({
 
 function StoryEmbed() {
   const { slug } = Route.useParams();
-  const src = `https://stories.wkna49.com/web-stories/${slug}/`;
+  // Hit the trigger endpoint so the AMP doc is (re)generated and committed
+  // on demand; it 302s to the canonical stories subdomain URL.
+  const src = `/api/public/web-stories/${slug}`;
   return (
     <div className="fixed inset-0 bg-black">
       <iframe
