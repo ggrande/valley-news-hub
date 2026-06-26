@@ -96,6 +96,36 @@ function OnboardingPage() {
   const fetchProfile = useServerFn(getMyManagedSiteProfile);
   const saveProfile = useServerFn(updateMyManagedSiteProfile);
 
+  // If this page was opened in a popup as the OAuth callback target,
+  // notify the opener and close — the parent window owns the wizard.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get("supabase") === "connected";
+    const err = params.get("supabase_error");
+    if ((connected || err) && window.opener && window.opener !== window) {
+      try {
+        window.opener.postMessage(
+          { type: "supabase-oauth", ok: connected, error: err ?? null },
+          window.location.origin,
+        );
+      } catch {
+        /* noop */
+      }
+      window.close();
+    }
+  }, []);
+
+  const fetchStatus = useServerFn(getProvisioningStatus);
+  const status = useQuery({
+    queryKey: ["provisioning-status", siteId],
+    queryFn: () => fetchStatus({ data: { siteId } }),
+    refetchInterval: (q) => {
+      const s = q.state.data?.state;
+      return s === "provisioning" || s === "migrating" || s === "linking" ? 4000 : false;
+    },
+  });
+
   const { data: profile, isLoading } = useQuery({
     queryKey: ["managed-site-profile", siteId],
     queryFn: () => fetchProfile({ data: { siteId } }),
@@ -108,6 +138,7 @@ function OnboardingPage() {
   useEffect(() => {
     if (profile && Object.keys(form).length === 0) setForm(profile);
   }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const patch = (p: Partial<ManagedSiteDirectoryProfile>) => setForm((f) => ({ ...f, ...p }));
 
