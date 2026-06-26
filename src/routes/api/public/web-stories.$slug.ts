@@ -102,21 +102,27 @@ export const Route = createFileRoute("/api/public/web-stories/$slug")({
     </amp-story-page-attachment>
   </amp-story-page>`;
 
-        const html = `<!doctype html>
-<html ⚡ lang="en">
+        // Polyglot XHTML5 AMP: valid XML *and* valid AMP HTML.
+        // - `amp="amp"` instead of bare `⚡` / `amp` (XML requires attr values)
+        // - xmlns on <html>, self-closed void elements (<meta/>, <link/>, <amp-img/>)
+        // Served as application/xhtml+xml so the platform's HTML rewriter does
+        // not inject tracking scripts (which would break AMP validation).
+        const html = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" amp="amp" lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"/>
   <title>${esc(title)} — WKNA 49 News</title>
-  <link rel="canonical" href="${esc(canonical)}">
-  <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
-  <meta name="description" content="${esc(summary)}">
-  <script async src="https://cdn.ampproject.org/v0.js"></script>
-  <script async custom-element="amp-story" src="https://cdn.ampproject.org/v0/amp-story-1.0.js"></script>
+  <link rel="canonical" href="${esc(canonical)}"/>
+  <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1"/>
+  <meta name="description" content="${esc(summary)}"/>
+  <script async="async" src="https://cdn.ampproject.org/v0.js"></script>
+  <script async="async" custom-element="amp-story" src="https://cdn.ampproject.org/v0/amp-story-1.0.js"></script>
   <script type="application/ld+json">${JSON.stringify(ldJson)}</script>
-  <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
+  <style amp-boilerplate="amp-boilerplate">body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate="amp-boilerplate">body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
 </head>
 <body>
-<amp-story standalone
+<amp-story standalone="standalone"
   title="${esc(title)}"
   publisher="${esc(PUBLISHER)}"
   publisher-logo-src="${esc(PUBLISHER_LOGO)}"
@@ -128,12 +134,9 @@ ${ctaPage}
 </body>
 </html>`;
 
-        // AMP HTML is not valid XML (uses `<html ⚡>` etc.), so it must be served
-        // as text/html. Lovable's edge HTML rewriter may inject scripts here; if
-        // Google's AMP validator rejects, we move to off-platform hosting.
         return new Response(html, {
           headers: {
-            "Content-Type": "text/html; charset=utf-8",
+            "Content-Type": "application/xhtml+xml; charset=utf-8",
             "Cache-Control": "public, max-age=300, s-maxage=600",
           },
         });
