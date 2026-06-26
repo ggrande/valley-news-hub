@@ -291,7 +291,7 @@ export const provisionTenantProject = createServerFn({ method: "POST" })
           .from("tenant_provision_attempts")
           .update({
             status: "failed",
-            error: lastErr.message.slice(0, 1000),
+            error: (lastErr?.message ?? "Project creation failed").slice(0, 1000),
             finished_at: new Date().toISOString(),
           })
           .eq("id", attemptId);
