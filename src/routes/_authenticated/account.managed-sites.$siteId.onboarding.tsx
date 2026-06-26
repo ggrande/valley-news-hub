@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   getMyManagedSiteProfile,
@@ -26,15 +26,60 @@ export const Route = createFileRoute("/_authenticated/account/managed-sites/$sit
   component: OnboardingPage,
 });
 
-type Step = 0 | 1 | 2 | 3 | 4;
+// ---------- Onboarding "question" steps (left side) ----------
+type Step = 0 | 1 | 2 | 3;
 
 const STEPS: { key: Step; label: string; blurb: string }[] = [
-  { key: 0, label: "Backend", blurb: "Connect your Supabase project" },
-  { key: 1, label: "Identity", blurb: "Name your affiliate station" },
-  { key: 2, label: "Branding", blurb: "Logo & tagline for the directory" },
-  { key: 3, label: "Domain", blurb: "Connect a custom domain (optional)" },
-  { key: 4, label: "Go live", blurb: "Review and finish" },
+  { key: 0, label: "Identity", blurb: "Name your affiliate station" },
+  { key: 1, label: "Branding", blurb: "Logo & tagline for the directory" },
+  { key: 2, label: "Domain", blurb: "Connect a custom domain (optional)" },
+  { key: 3, label: "Review", blurb: "Review and finish" },
 ];
+
+// ---------- Maxis-style flavor messages (right side) ----------
+const FLAVOR_MESSAGES = [
+  "Loading journalistic integrity…",
+  "Aligning spin generators…",
+  "Acoustically tuning echo chamber…",
+  "Polishing press credentials…",
+  "Provisioning anonymous sources…",
+  "Negotiating with the printing press…",
+  "Calibrating Pulitzer probability matrix…",
+  "Drafting strongly-worded corrections…",
+  "Convening editorial board…",
+  "Sharpening red pens…",
+  "Brewing newsroom coffee (extra strong)…",
+  "Spinning up satellite uplinks…",
+  "Filing FOIA requests with the universe…",
+  "Securing the front page…",
+  "Stretching column inches…",
+  "Translating press releases into English…",
+  "Counting words, then counting them again…",
+  "Asking the tough questions…",
+  "Setting copy desk to 'merciless'…",
+  "Warming up the breaking-news klaxon…",
+  "Bribing the weather…",
+  "Issuing temporary press passes…",
+  "Reticulating splines, just in case…",
+];
+
+// ---------- Helpers ----------
+function shortSessionCode(siteId: string): string {
+  // Deterministic 8-char code from siteId (refresh-stable).
+  let h = 0;
+  for (let i = 0; i < siteId.length; i++) h = ((h << 5) - h + siteId.charCodeAt(i)) | 0;
+  const hex = (h >>> 0).toString(36).toUpperCase().padStart(7, "0");
+  return `WKNA-${hex.slice(0, 4)}-${siteId.slice(0, 4).toUpperCase()}`;
+}
+
+const STATE_PCT: Record<string, number> = {
+  awaiting_oauth: 5,
+  linking: 20,
+  provisioning: 55,
+  migrating: 85,
+  ready: 100,
+  failed: 100,
+};
 
 function OnboardingPage() {
   const { siteId } = Route.useParams();
@@ -50,6 +95,7 @@ function OnboardingPage() {
 
   const [step, setStep] = useState<Step>(0);
   const [form, setForm] = useState<Partial<ManagedSiteDirectoryProfile>>({});
+  const [answersComplete, setAnswersComplete] = useState(false);
 
   useEffect(() => {
     if (profile && Object.keys(form).length === 0) setForm(profile);
@@ -66,14 +112,14 @@ function OnboardingPage() {
   const saveStep = async (next: Step | "finish") => {
     if (!profile) return;
     const payload: Parameters<typeof saveProfile>[0]["data"] = { siteId };
-    if (step === 1) {
+    if (step === 0) {
       if (!form.display_name?.trim()) {
         toast.error("Please enter a station name");
         return;
       }
       payload.display_name = form.display_name;
     }
-    if (step === 2) {
+    if (step === 1) {
       payload.directory_tagline = form.directory_tagline ?? null;
       payload.directory_city = form.directory_city ?? null;
       payload.directory_region = form.directory_region ?? null;
@@ -81,7 +127,7 @@ function OnboardingPage() {
       payload.directory_website_url = form.directory_website_url ?? null;
       payload.directory_opt_in = !!form.directory_opt_in;
     }
-    if (step === 3) {
+    if (step === 2) {
       payload.custom_domain = form.custom_domain ?? null;
     }
     if (next === "finish") {
@@ -93,8 +139,8 @@ function OnboardingPage() {
       qc.invalidateQueries({ queryKey: ["my-managed-sites"] });
     }
     if (next === "finish") {
-      toast.success("Your affiliate station is set up!");
-      navigate({ to: "/account/managed-sites" });
+      setAnswersComplete(true);
+      toast.success("Answers saved — you can launch your newsroom when provisioning completes.");
     } else {
       setStep(next);
     }
@@ -105,197 +151,247 @@ function OnboardingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-6 md:p-10">
+    <div className="mx-auto max-w-7xl p-4 md:p-8">
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <Link to="/account/managed-sites" className="hover:underline">
           ← My Affiliate Stations
         </Link>
-        <span>Step {step + 1} of {STEPS.length}</span>
+        <span>
+          Setup session{" "}
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono">
+            {shortSessionCode(siteId)}
+          </code>
+        </span>
       </div>
 
       <h1 className="mt-3 font-display text-3xl font-black text-primary">
         Welcome to the Affiliate Network
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        A few quick details and your Affiliate Station is ready to publish.
+        While we get things ready in the background, let's set up your station.
       </p>
 
-      <ol className="mt-6 grid grid-cols-5 gap-2">
-        {STEPS.map((s) => (
-          <li
-            key={s.key}
-            className={`rounded-md border px-2 py-2 text-center text-[11px] font-semibold ${
-              s.key === step
-                ? "border-primary bg-primary text-primary-foreground"
-                : s.key < step
-                  ? "border-[color:var(--broadcast)] text-[color:var(--broadcast)]"
-                  : "border-border text-muted-foreground"
-            }`}
-          >
-            {s.key < step ? "✓ " : `${s.key + 1}. `}
-            {s.label}
-          </li>
-        ))}
-      </ol>
-
-      <div className="mt-8 rounded-xl border bg-card p-6 shadow-sm">
-        <h2 className="font-display text-xl font-bold text-primary">{STEPS[step].blurb}</h2>
-
-        {step === 0 && <SupabaseConnectStep siteId={siteId} onReady={() => setStep(1)} />}
-
-        {step === 1 && (
-          <div className="mt-5 space-y-4">
-            <Field label="Station name" hint="Shown to readers and in the directory.">
-              <input
-                value={form.display_name ?? ""}
-                onChange={(e) => patch({ display_name: e.target.value })}
-                className="w-full rounded border px-3 py-2 text-sm"
-                placeholder="e.g. Hudson Valley Daily"
-              />
-            </Field>
-            <p className="text-xs text-muted-foreground">
-              Your station URL is{" "}
-              <span className="font-mono">{profile.subdomain}.wkna49.com</span> — you can map a
-              custom domain in step 4.
-            </p>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="mt-5 space-y-4">
-            <Field label="Tagline" hint="One sentence about what your station covers.">
-              <input
-                value={form.directory_tagline ?? ""}
-                onChange={(e) => patch({ directory_tagline: e.target.value })}
-                className="w-full rounded border px-3 py-2 text-sm"
-                maxLength={200}
-                placeholder="Independent news for the Hudson Valley."
-              />
-            </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="City">
-                <input
-                  value={form.directory_city ?? ""}
-                  onChange={(e) => patch({ directory_city: e.target.value })}
-                  className="w-full rounded border px-3 py-2 text-sm"
-                  placeholder="Kingston"
-                />
-              </Field>
-              <Field label="State / Region">
-                <input
-                  value={form.directory_region ?? ""}
-                  onChange={(e) => patch({ directory_region: e.target.value })}
-                  className="w-full rounded border px-3 py-2 text-sm"
-                  placeholder="NY"
-                />
-              </Field>
-            </div>
-            <Field label="Logo URL" hint="Square image works best (PNG / SVG, hosted anywhere).">
-              <input
-                value={form.directory_logo_url ?? ""}
-                onChange={(e) => patch({ directory_logo_url: e.target.value })}
-                className="w-full rounded border px-3 py-2 text-sm font-mono"
-                placeholder="https://…/logo.png"
-              />
-            </Field>
-            <label className="flex items-start gap-2 rounded-md bg-muted/40 p-3 text-sm">
-              <input
-                type="checkbox"
-                checked={!!form.directory_opt_in}
-                onChange={(e) => patch({ directory_opt_in: e.target.checked })}
-                className="mt-1"
-              />
-              <span>
-                <strong>List my station in the public Affiliate Stations directory.</strong>{" "}
-                <span className="text-muted-foreground">
-                  Readers will see your name, tagline, logo, and a link to your site.
-                </span>
+      <div className="mt-6 grid gap-4 lg:grid-cols-10">
+        {/* LEFT — Onboarding questions */}
+        <div className="lg:col-span-7">
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-xl font-bold text-primary">
+                {STEPS[step].blurb}
+              </h2>
+              <span className="text-xs text-muted-foreground">
+                Step {step + 1} of {STEPS.length}
               </span>
-            </label>
-          </div>
-        )}
+            </div>
 
-        {step === 3 && (
-          <div className="mt-5 space-y-4">
-            <Field
-              label="Custom domain"
-              hint="Optional. Skip for now and add it later from your station settings."
-            >
-              <input
-                value={form.custom_domain ?? ""}
-                onChange={(e) => patch({ custom_domain: e.target.value })}
-                className="w-full rounded border px-3 py-2 text-sm font-mono"
-                placeholder="news.example.com"
-              />
-            </Field>
-            <div className="rounded-md bg-muted/40 p-4 text-xs text-muted-foreground">
-              <p className="font-semibold text-foreground">DNS setup</p>
-              <p className="mt-1">
-                Once you save, point a CNAME from your domain to{" "}
-                <span className="font-mono">{profile.subdomain}.wkna49.com</span>. Our team will
-                provision SSL automatically.
-              </p>
+            <ol className="mt-4 grid grid-cols-4 gap-2">
+              {STEPS.map((s) => (
+                <li
+                  key={s.key}
+                  className={`rounded-md border px-2 py-1.5 text-center text-[11px] font-semibold ${
+                    s.key === step
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : s.key < step || answersComplete
+                        ? "border-[color:var(--broadcast)] text-[color:var(--broadcast)]"
+                        : "border-border text-muted-foreground"
+                  }`}
+                >
+                  {s.key < step || answersComplete ? "✓ " : `${s.key + 1}. `}
+                  {s.label}
+                </li>
+              ))}
+            </ol>
+
+            <div className="mt-6">
+              {step === 0 && (
+                <div className="space-y-4">
+                  <Field label="Station name" hint="Shown to readers and in the directory.">
+                    <input
+                      value={form.display_name ?? ""}
+                      onChange={(e) => patch({ display_name: e.target.value })}
+                      className="w-full rounded border px-3 py-2 text-sm"
+                      placeholder="e.g. Hudson Valley Daily"
+                    />
+                  </Field>
+                  <p className="text-xs text-muted-foreground">
+                    Your station URL is{" "}
+                    <span className="font-mono">{profile.subdomain}.wkna49.com</span> — you can
+                    map a custom domain in a moment.
+                  </p>
+                </div>
+              )}
+
+              {step === 1 && (
+                <div className="space-y-4">
+                  <Field label="Tagline" hint="One sentence about what your station covers.">
+                    <input
+                      value={form.directory_tagline ?? ""}
+                      onChange={(e) => patch({ directory_tagline: e.target.value })}
+                      className="w-full rounded border px-3 py-2 text-sm"
+                      maxLength={200}
+                      placeholder="Independent news for the Hudson Valley."
+                    />
+                  </Field>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="City">
+                      <input
+                        value={form.directory_city ?? ""}
+                        onChange={(e) => patch({ directory_city: e.target.value })}
+                        className="w-full rounded border px-3 py-2 text-sm"
+                        placeholder="Kingston"
+                      />
+                    </Field>
+                    <Field label="State / Region">
+                      <input
+                        value={form.directory_region ?? ""}
+                        onChange={(e) => patch({ directory_region: e.target.value })}
+                        className="w-full rounded border px-3 py-2 text-sm"
+                        placeholder="NY"
+                      />
+                    </Field>
+                  </div>
+                  <Field
+                    label="Logo URL"
+                    hint="Square image works best (PNG / SVG, hosted anywhere)."
+                  >
+                    <input
+                      value={form.directory_logo_url ?? ""}
+                      onChange={(e) => patch({ directory_logo_url: e.target.value })}
+                      className="w-full rounded border px-3 py-2 text-sm font-mono"
+                      placeholder="https://…/logo.png"
+                    />
+                  </Field>
+                  <label className="flex items-start gap-2 rounded-md bg-muted/40 p-3 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={!!form.directory_opt_in}
+                      onChange={(e) => patch({ directory_opt_in: e.target.checked })}
+                      className="mt-1"
+                    />
+                    <span>
+                      <strong>List my station in the public Affiliate Stations directory.</strong>{" "}
+                      <span className="text-muted-foreground">
+                        Readers will see your name, tagline, logo, and a link to your site.
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="space-y-4">
+                  <Field
+                    label="Custom domain"
+                    hint="Optional. Skip for now and add it later from your station settings."
+                  >
+                    <input
+                      value={form.custom_domain ?? ""}
+                      onChange={(e) => patch({ custom_domain: e.target.value })}
+                      className="w-full rounded border px-3 py-2 text-sm font-mono"
+                      placeholder="news.example.com"
+                    />
+                  </Field>
+                  <div className="rounded-md bg-muted/40 p-4 text-xs text-muted-foreground">
+                    <p className="font-semibold text-foreground">DNS setup</p>
+                    <p className="mt-1">
+                      Once you save, point a CNAME from your domain to{" "}
+                      <span className="font-mono">{profile.subdomain}.wkna49.com</span>. Our team
+                      will provision SSL automatically.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div className="space-y-3 text-sm">
+                  <Row label="Station name" value={form.display_name} />
+                  <Row label="Tagline" value={form.directory_tagline} />
+                  <Row
+                    label="Location"
+                    value={
+                      [form.directory_city, form.directory_region].filter(Boolean).join(", ") ||
+                      "—"
+                    }
+                  />
+                  <Row label="Logo URL" value={form.directory_logo_url} mono />
+                  <Row
+                    label="Custom domain"
+                    value={form.custom_domain || "(using subdomain)"}
+                    mono
+                  />
+                  <Row
+                    label="Public directory"
+                    value={form.directory_opt_in ? "Listed" : "Hidden"}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 flex flex-wrap justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setStep(Math.max(0, step - 1) as Step)}
+                disabled={saveMut.isPending || step === 0}
+                className="h-10 rounded-md border px-4 text-sm font-semibold disabled:opacity-40"
+              >
+                ← Back
+              </button>
+              {step < 3 ? (
+                <button
+                  type="button"
+                  onClick={() => saveStep((step + 1) as Step)}
+                  disabled={saveMut.isPending}
+                  className="h-10 rounded-md bg-primary px-6 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                >
+                  {saveMut.isPending ? "Saving…" : "Continue"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => saveStep("finish")}
+                  disabled={saveMut.isPending || answersComplete}
+                  className="h-10 rounded-md bg-[color:var(--breaking)] px-6 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  {answersComplete
+                    ? "✓ Answers saved"
+                    : saveMut.isPending
+                      ? "Saving…"
+                      : "Save answers"}
+                </button>
+              )}
             </div>
           </div>
-        )}
+        </div>
 
-        {step === 4 && (
-          <div className="mt-5 space-y-3 text-sm">
-            <Row label="Station name" value={form.display_name} />
-            <Row label="Tagline" value={form.directory_tagline} />
-            <Row
-              label="Location"
-              value={[form.directory_city, form.directory_region].filter(Boolean).join(", ") || "—"}
-            />
-            <Row label="Logo URL" value={form.directory_logo_url} mono />
-            <Row label="Custom domain" value={form.custom_domain || "(using subdomain)"} mono />
-            <Row
-              label="Public directory"
-              value={form.directory_opt_in ? "Listed" : "Hidden"}
-            />
-            <p className="mt-4 text-xs text-muted-foreground">
-              You can change any of this anytime from your station settings.
-            </p>
-          </div>
-        )}
-
-        {step !== 0 && (
-          <div className="mt-8 flex flex-wrap justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => setStep(Math.max(0, step - 1) as Step)}
-              disabled={saveMut.isPending}
-              className="h-10 rounded-md border px-4 text-sm font-semibold disabled:opacity-40"
-            >
-              ← Back
-            </button>
-            {step < 4 ? (
-              <button
-                type="button"
-                onClick={() => saveStep((step + 1) as Step)}
-                disabled={saveMut.isPending}
-                className="h-10 rounded-md bg-primary px-6 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-              >
-                {saveMut.isPending ? "Saving…" : "Continue"}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => saveStep("finish")}
-                disabled={saveMut.isPending}
-                className="h-10 rounded-md bg-[color:var(--breaking)] px-6 text-sm font-bold text-white disabled:opacity-50"
-              >
-                {saveMut.isPending ? "Finishing…" : "Finish setup"}
-              </button>
-            )}
-          </div>
-        )}
+        {/* RIGHT — Provisioning progress */}
+        <div className="lg:col-span-3">
+          <ProvisioningPanel
+            siteId={siteId}
+            sessionCode={shortSessionCode(siteId)}
+            answersComplete={answersComplete}
+            onOpenNewsroom={() => navigate({ to: "/account/managed-sites" })}
+          />
+        </div>
       </div>
     </div>
   );
 }
 
-function SupabaseConnectStep({ siteId, onReady }: { siteId: string; onReady: () => void }) {
+// =====================================================================
+// Provisioning panel (right side)
+// =====================================================================
+
+function ProvisioningPanel({
+  siteId,
+  sessionCode,
+  answersComplete,
+  onOpenNewsroom,
+}: {
+  siteId: string;
+  sessionCode: string;
+  answersComplete: boolean;
+  onOpenNewsroom: () => void;
+}) {
   const fetchStatus = useServerFn(getProvisioningStatus);
   const initiate = useServerFn(initiateSupabaseConnect);
   const listOrgs = useServerFn(listConnectedOrganizations);
@@ -307,7 +403,7 @@ function SupabaseConnectStep({ siteId, onReady }: { siteId: string; onReady: () 
     queryFn: () => fetchStatus({ data: { siteId } }),
     refetchInterval: (q) => {
       const s = q.state.data?.state;
-      return s === "provisioning" || s === "migrating" ? 5000 : false;
+      return s === "provisioning" || s === "migrating" || s === "linking" ? 4000 : false;
     },
   });
 
@@ -320,9 +416,69 @@ function SupabaseConnectStep({ siteId, onReady }: { siteId: string; onReady: () 
     enabled: !!status.data?.hasRefreshToken && !status.data?.project,
   });
 
+  // Auto-finalize when project is in provisioning/migrating state
+  const finalizingRef = useRef(false);
   useEffect(() => {
-    if (status.data?.state === "ready") onReady();
-  }, [status.data?.state]); // eslint-disable-line react-hooks/exhaustive-deps
+    const s = status.data?.state;
+    if ((s === "provisioning" || s === "migrating") && status.data?.project && !finalizingRef.current) {
+      finalizingRef.current = true;
+      finalize({ data: { siteId } })
+        .catch(() => {
+          /* silent — next poll will retry */
+        })
+        .finally(() => {
+          setTimeout(() => {
+            finalizingRef.current = false;
+            status.refetch();
+          }, 1500);
+        });
+    }
+  }, [status.data?.state, status.data?.project]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Rotating flavor messages
+  const [msgIdx, setMsgIdx] = useState(() => Math.floor(Math.random() * FLAVOR_MESSAGES.length));
+  useEffect(() => {
+    const s = status.data?.state;
+    if (s === "ready" || s === "failed") return;
+    const t = setInterval(
+      () => setMsgIdx((i) => (i + 1 + Math.floor(Math.random() * (FLAVOR_MESSAGES.length - 1))) % FLAVOR_MESSAGES.length),
+      2400,
+    );
+    return () => clearInterval(t);
+  }, [status.data?.state]);
+
+  // Smoothly animate progress toward target percent
+  const targetPct = STATE_PCT[status.data?.state ?? "awaiting_oauth"] ?? 0;
+  const [pct, setPct] = useState(targetPct);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPct((p) => {
+        if (p >= targetPct) return targetPct;
+        return Math.min(targetPct, p + 0.6);
+      });
+    }, 120);
+    return () => clearInterval(id);
+  }, [targetPct]);
+
+  const s = status.data;
+  const stateLabel = useMemo(() => {
+    switch (s?.state) {
+      case "awaiting_oauth":
+        return "Awaiting Supabase authorization";
+      case "linking":
+        return "Linking your Supabase account";
+      case "provisioning":
+        return "Provisioning database…";
+      case "migrating":
+        return "Running newsroom migrations…";
+      case "ready":
+        return "Connected";
+      case "failed":
+        return "Provisioning failed";
+      default:
+        return "Initializing…";
+    }
+  }, [s?.state]);
 
   const startConnect = async () => {
     try {
@@ -334,11 +490,9 @@ function SupabaseConnectStep({ siteId, onReady }: { siteId: string; onReady: () 
   };
 
   const startProvision = async () => {
-    if (!chosenOrg) return toast.error("Pick an organization");
+    if (!chosenOrg) return toast.error("Pick a Supabase organization");
     try {
-      const r = await provision({
-        data: { siteId, organizationId: chosenOrg, region },
-      });
+      const r = await provision({ data: { siteId, organizationId: chosenOrg, region } });
       toast.success(r.message);
       status.refetch();
     } catch (e) {
@@ -346,124 +500,229 @@ function SupabaseConnectStep({ siteId, onReady }: { siteId: string; onReady: () 
     }
   };
 
-  const runFinalize = async () => {
-    try {
-      const r = await finalize({ data: { siteId } });
-      toast[r.ok ? "success" : "info"](r.message);
-      status.refetch();
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  };
-
-  const s = status.data;
+  const isReady = s?.state === "ready";
+  const isFailed = s?.state === "failed";
 
   return (
-    <div className="mt-5 space-y-4 text-sm">
-      <p className="text-muted-foreground">
-        Your station runs on its own Supabase project that <strong>you own</strong> — your data,
-        your storage, your auth users. We provision it under your Supabase account and keep an
-        encrypted token so we can manage updates on your behalf.
-      </p>
+    <div className="sticky top-4 rounded-xl border bg-card p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Provisioning
+        </p>
+        <code
+          className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground"
+          title="Quote this code if you need support"
+        >
+          {sessionCode}
+        </code>
+      </div>
 
-      {s?.state === "ready" ? (
-        <div className="rounded-md border border-[color:var(--broadcast)]/40 bg-[color:var(--broadcast)]/10 p-4">
-          <p className="font-semibold text-[color:var(--broadcast)]">✓ Supabase connected</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Project ref: <span className="font-mono">{s.project?.ref}</span>
-            {s.org?.name && <> · Org: {s.org.name}</>}
-          </p>
-          <button
-            type="button"
-            onClick={onReady}
-            className="mt-3 h-9 rounded-md bg-primary px-4 text-xs font-semibold text-primary-foreground"
+      {/* Spinner + percent */}
+      <div className="mt-4 flex flex-col items-center">
+        <CircularProgress percent={pct} state={isReady ? "ready" : isFailed ? "failed" : "active"} />
+        <p className="mt-3 text-sm font-semibold text-foreground">{stateLabel}</p>
+        {!isReady && !isFailed && (
+          <p
+            key={msgIdx}
+            className="mt-1 min-h-[2.2em] animate-fade-in text-center text-xs italic text-muted-foreground"
           >
-            Continue →
-          </button>
-        </div>
-      ) : !s?.hasRefreshToken ? (
-        <div className="rounded-md border bg-muted/30 p-4">
-          <p className="font-semibold">Step 1: Connect your Supabase account</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            You'll be sent to Supabase to authorize this app. New to Supabase? Create a free
-            account first — it takes 30 seconds.
+            {FLAVOR_MESSAGES[msgIdx]}
           </p>
+        )}
+        {isFailed && s?.error && (
+          <p className="mt-1 text-center text-xs text-[color:var(--breaking)]">{s.error}</p>
+        )}
+      </div>
+
+      {/* Action area depending on phase */}
+      <div className="mt-5 space-y-3 text-sm">
+        {!s?.hasRefreshToken && !isReady && (
           <button
             type="button"
             onClick={startConnect}
-            className="mt-3 h-10 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground"
+            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
           >
             Connect Supabase →
           </button>
-        </div>
-      ) : !s?.project ? (
-        <div className="rounded-md border bg-muted/30 p-4 space-y-3">
-          <p className="font-semibold">Step 2: Pick an organization &amp; create your project</p>
-          {orgs.isLoading && <p className="text-xs text-muted-foreground">Loading your organizations…</p>}
-          {orgs.error && (
-            <p className="text-xs text-[color:var(--breaking)]">{(orgs.error as Error).message}</p>
-          )}
-          {orgs.data && (
-            <>
-              <Field label="Supabase organization">
-                <select
-                  value={chosenOrg}
-                  onChange={(e) => setChosenOrg(e.target.value)}
-                  className="w-full rounded border px-3 py-2 text-sm"
-                >
-                  <option value="">— pick one —</option>
-                  {orgs.data.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Region">
-                <select
-                  value={region}
-                  onChange={(e) => setRegion(e.target.value)}
-                  className="w-full rounded border px-3 py-2 text-sm"
-                >
-                  <option value="us-east-1">US East (N. Virginia)</option>
-                  <option value="us-west-1">US West (N. California)</option>
-                  <option value="eu-west-1">EU West (Ireland)</option>
-                  <option value="eu-central-1">EU Central (Frankfurt)</option>
-                  <option value="ap-southeast-1">Asia (Singapore)</option>
-                  <option value="ap-southeast-2">Asia Pacific (Sydney)</option>
-                </select>
-              </Field>
-              <button
-                type="button"
-                onClick={startProvision}
-                disabled={!chosenOrg}
-                className="h-10 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        )}
+
+        {s?.hasRefreshToken && !s?.project && !isReady && (
+          <div className="space-y-2">
+            <Field label="Supabase organization">
+              <select
+                value={chosenOrg}
+                onChange={(e) => setChosenOrg(e.target.value)}
+                className="w-full rounded border px-2 py-1.5 text-xs"
               >
-                Create project
-              </button>
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="rounded-md border bg-muted/30 p-4 space-y-3">
-          <p className="font-semibold">Step 3: Finalizing your project…</p>
-          <p className="text-xs text-muted-foreground">
-            Project <span className="font-mono">{s.project.ref}</span> is being provisioned (this
-            usually takes 1–2 minutes). State: <strong>{s.state}</strong>
-          </p>
-          {s.error && (
-            <p className="text-xs text-[color:var(--breaking)]">Error: {s.error}</p>
-          )}
+                <option value="">— pick one —</option>
+                {orgs.data?.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Region">
+              <select
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                className="w-full rounded border px-2 py-1.5 text-xs"
+              >
+                <option value="us-east-1">US East (Virginia)</option>
+                <option value="us-west-1">US West (California)</option>
+                <option value="eu-west-1">EU West (Ireland)</option>
+                <option value="eu-central-1">EU Central (Frankfurt)</option>
+                <option value="ap-southeast-1">Asia (Singapore)</option>
+                <option value="ap-southeast-2">Asia (Sydney)</option>
+              </select>
+            </Field>
+            <button
+              type="button"
+              onClick={startProvision}
+              disabled={!chosenOrg}
+              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              Create project
+            </button>
+          </div>
+        )}
+
+        {isReady && (
+          <div className="space-y-3 text-center">
+            <div className="flex flex-col items-center gap-1 rounded-md border border-[color:var(--broadcast)]/40 bg-[color:var(--broadcast)]/10 p-3">
+              <SupabaseLogo className="h-8 w-8" />
+              <p className="text-sm font-bold text-[color:var(--broadcast)]">Connected</p>
+              {s.project?.ref && (
+                <p className="text-[10px] font-mono text-muted-foreground">{s.project.ref}</p>
+              )}
+            </div>
+            <a
+              href={
+                s.project?.ref
+                  ? `https://supabase.com/dashboard/project/${s.project.ref}`
+                  : "https://supabase.com/dashboard"
+              }
+              target="_blank"
+              rel="noreferrer"
+              className="block w-full rounded-md border px-4 py-2 text-sm font-semibold hover:bg-muted"
+            >
+              Open Supabase Admin →
+            </a>
+            <button
+              type="button"
+              onClick={onOpenNewsroom}
+              disabled={!answersComplete}
+              title={
+                answersComplete
+                  ? "Open your newsroom"
+                  : "Finish the onboarding questions to unlock"
+              }
+              className="block w-full rounded-md bg-[color:var(--breaking)] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Open Newsroom Admin →
+            </button>
+            {!answersComplete && (
+              <p className="text-[11px] text-muted-foreground">
+                Finish the questions on the left to unlock your newsroom.
+              </p>
+            )}
+          </div>
+        )}
+
+        {isFailed && (
           <button
             type="button"
-            onClick={runFinalize}
-            className="h-9 rounded-md border px-4 text-xs font-semibold"
+            onClick={() => status.refetch()}
+            className="w-full rounded-md border px-4 py-2 text-sm font-semibold"
           >
-            Check status &amp; finish migrations
+            Retry status check
           </button>
-        </div>
-      )}
+        )}
+      </div>
+
+      <p className="mt-4 border-t pt-3 text-[10px] leading-relaxed text-muted-foreground">
+        Safe to refresh — we'll resume right where you left off. If something goes wrong, share
+        session code <span className="font-mono">{sessionCode}</span> with support.
+      </p>
     </div>
+  );
+}
+
+// =====================================================================
+// Bits
+// =====================================================================
+
+function CircularProgress({
+  percent,
+  state,
+}: {
+  percent: number;
+  state: "active" | "ready" | "failed";
+}) {
+  const r = 42;
+  const c = 2 * Math.PI * r;
+  const offset = c - (Math.min(100, Math.max(0, percent)) / 100) * c;
+  const color =
+    state === "ready"
+      ? "var(--broadcast)"
+      : state === "failed"
+        ? "var(--breaking)"
+        : "var(--primary)";
+  return (
+    <div className="relative h-28 w-28">
+      <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          fill="none"
+          stroke="currentColor"
+          className="text-muted"
+          strokeWidth="8"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="8"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 0.3s linear" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-2xl font-black text-foreground">{Math.round(percent)}%</span>
+        {state === "ready" && (
+          <span className="text-[10px] font-semibold uppercase text-[color:var(--broadcast)]">
+            Done
+          </span>
+        )}
+        {state === "failed" && (
+          <span className="text-[10px] font-semibold uppercase text-[color:var(--breaking)]">
+            Error
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SupabaseLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 109 113" className={className} aria-hidden>
+      <path
+        d="M63.7076 110.284C60.8481 113.885 55.0502 111.912 54.9813 107.314L53.9738 40.0627H99.1935C107.384 40.0627 111.952 49.5228 106.859 55.9374L63.7076 110.284Z"
+        fill="#3ECF8E"
+      />
+      <path
+        d="M45.317 2.07103C48.1765 -1.53037 53.9745 0.442937 54.0434 5.041L54.4849 72.2922H9.83113C1.64038 72.2922 -2.92775 62.8321 2.1655 56.4175L45.317 2.07103Z"
+        fill="#3ECF8E"
+        fillOpacity="0.5"
+      />
+    </svg>
   );
 }
 
