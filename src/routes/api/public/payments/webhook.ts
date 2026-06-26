@@ -76,8 +76,11 @@ async function handleMerchCheckoutCompleted(session: any, env: StripeEnv) {
 
   try {
     const { createOrder } = await import("@/lib/printful.server");
+    // Printful caps external_id at 32 chars. Stripe session ids are ~70 chars.
+    // Use the merch_orders row UUID (36 chars) — still too long, so strip dashes (32).
+    const externalId = String((inserted as any).id).replace(/-/g, "");
     const result = await createOrder({
-      external_id: session.id,
+      external_id: externalId,
       recipient: recipient as any,
       items: [{ sync_variant_id: syncVariantId, quantity }],
       confirm: env === "live", // only auto-fulfill in production
