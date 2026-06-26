@@ -413,9 +413,15 @@ function Page() {
 
                   <td className="py-2 pr-3">
                     {n.posts?.slug ? (
-                      <Link to="/news/$slug" params={{ slug: n.posts.slug }} className="font-medium hover:underline">{n.posts?.title ?? "(post)"}</Link>
+                      <Link to="/news/$slug" params={{ slug: n.posts.slug }} className="font-medium hover:underline">
+                        {n.status === "skipped" && <span className="mr-1 text-xs font-bold text-gray-500">[Skipped]</span>}
+                        {n.posts?.title ?? "(post)"}
+                      </Link>
                     ) : (
-                      <span>{n.posts?.title ?? "—"}</span>
+                      <span>
+                        {n.status === "skipped" && <span className="mr-1 text-xs font-bold text-gray-500">[Skipped]</span>}
+                        {n.posts?.title ?? "—"}
+                      </span>
                     )}
                   </td>
                   <td className="py-2 pr-3 text-xs">
@@ -437,8 +443,10 @@ function Page() {
                   <td className="py-2 pr-3 text-xs">{n.attempt_count}</td>
                   <td className="py-2 pr-3">
                     <div className="flex gap-2">
-                      {(n.status === "awaiting_approval" || n.status === "queued") && (
-                        <button onClick={() => approve.mutate(n.id)} className="rounded border border-green-300 bg-green-50 px-2 py-1 text-xs font-semibold text-green-800">Approve & post</button>
+                      {(n.status === "awaiting_approval" || n.status === "queued" || n.status === "skipped") && (
+                        <button onClick={() => approve.mutate(n.id)} className="rounded border border-green-300 bg-green-50 px-2 py-1 text-xs font-semibold text-green-800">
+                          {n.status === "skipped" ? "Approve & post (retry)" : "Approve & post"}
+                        </button>
                       )}
                       {n.status !== "posted" && n.status !== "skipped" && (
                         <button onClick={() => skip.mutate(n.id)} className="rounded border px-2 py-1 text-xs font-semibold">Skip</button>
