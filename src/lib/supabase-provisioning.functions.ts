@@ -393,6 +393,133 @@ export const resetProvisioningForRetry = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ---------- 4d. PURGE ORPHANS & FULL RESET ----------
+//
+// Nuclear option: scan the user's connected Supabase org for any orphan
+// projects from previous failed attempts on THIS site, delete them via the
+// Management API, and reset the station back to a clean "linking" state so
+// the wizard can start over fresh.
+//
+// Safety rails:
+//  - We only ever delete projects whose name matches a name we ourselves
+//    attempted (tracked in tenant_provision_attempts) OR matches the
+//    canonical base name pattern for this site.
+//  - We never delete a project that's claimed by a different managed_sites
+//    row (so users can't grief each other or wipe their other stations).
+
+export const purgeAndResetTenant = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { siteId: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sbo = await import("@/lib/supabase-oauth.server");
+
+    const { data: site, error } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .select(
+        "id, owner_user_id, display_name, subdomain, provision_state, supabase_org_id, supabase_project_ref, supabase_refresh_token_enc",
+      )
+      .eq("id", data.siteId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!site || site.owner_user_id !== context.userId)
+      throw new Error("Site not found or access denied");
+    if (site.provision_state === "provisioning" || site.provision_state === "migrating")
+      throw new Error("Provisioning is already in progress — wait for it to settle before purging.");
+
+    const deleted: { ref: string; name: string }[] = [];
+    const skipped: { ref: string; name: string; reason: string }[] = [];
+
+    // Need an access token to talk to Supabase Mgmt API. If they've never
+    // OAuthed we just clear local state.
+    if (site.supabase_refresh_token_enc && site.supabase_org_id) {
+      const accessToken = await getValidAccessToken(context.userId, data.siteId);
+
+      // Build the set of names we've ever tried for this site, plus the
+      // canonical base name pattern.
+      const { data: attemptRows } = await (supabaseAdmin as any)
+        .from("tenant_provision_attempts")
+        .select("attempted_project_name, supabase_project_ref")
+        .eq("site_id", data.siteId);
+      const triedNames = new Set<string>();
+      const triedRefs = new Set<string>();
+      for (const r of attemptRows ?? []) {
+        if (r.attempted_project_name) triedNames.add(r.attempted_project_name);
+        if (r.supabase_project_ref) triedRefs.add(r.supabase_project_ref);
+      }
+      if (site.supabase_project_ref) triedRefs.add(site.supabase_project_ref);
+      const baseName = `${site.display_name} (${site.subdomain})`.slice(0, 44);
+
+      let projects: import("@/lib/supabase-oauth.server").SbProject[] = [];
+      try {
+        projects = await sbo.listProjects(accessToken);
+      } catch (e) {
+        throw new Error(`Could not list Supabase projects: ${(e as Error).message}`);
+      }
+
+      const candidates = projects.filter((p) => {
+        if (p.organization_id !== site.supabase_org_id) return false;
+        const nameMatches =
+          triedNames.has(p.name) || p.name === baseName || p.name.startsWith(baseName);
+        const refMatches = triedRefs.has(p.id);
+        return nameMatches || refMatches;
+      });
+
+      for (const p of candidates) {
+        // Skip if another station has already claimed this ref.
+        const { data: claimedBy } = await (supabaseAdmin as any)
+          .from("managed_sites")
+          .select("id")
+          .eq("supabase_project_ref", p.id)
+          .neq("id", data.siteId)
+          .maybeSingle();
+        if (claimedBy) {
+          skipped.push({ ref: p.id, name: p.name, reason: "claimed by another station" });
+          continue;
+        }
+        try {
+          await sbo.deleteProject(accessToken, p.id);
+          deleted.push({ ref: p.id, name: p.name });
+        } catch (e) {
+          skipped.push({ ref: p.id, name: p.name, reason: (e as Error).message.slice(0, 200) });
+        }
+      }
+    }
+
+    // Mark every attempt for this site as abandoned, with a note about the purge.
+    await (supabaseAdmin as any)
+      .from("tenant_provision_attempts")
+      .update({
+        status: "abandoned",
+        finished_at: new Date().toISOString(),
+        error: `Purged by full reset (${deleted.length} deleted, ${skipped.length} skipped).`,
+      })
+      .eq("site_id", data.siteId)
+      .in("status", ["pending", "failed"]);
+
+    // Wipe every provisioning-related field on the site itself. Keep the
+    // OAuth refresh token so the buyer doesn't have to re-authorize Supabase.
+    await (supabaseAdmin as any)
+      .from("managed_sites")
+      .update({
+        provision_state: site.supabase_refresh_token_enc ? "linking" : "awaiting_oauth",
+        provision_error: null,
+        provision_started_at: null,
+        provisioned_at: null,
+        supabase_project_ref: null,
+        supabase_project_url: null,
+        supabase_anon_key_enc: null,
+        supabase_anon_key_iv: null,
+        supabase_service_key_enc: null,
+        supabase_service_key_iv: null,
+        supabase_db_password_enc: null,
+        supabase_db_password_iv: null,
+      })
+      .eq("id", data.siteId);
+
+    return { ok: true, deleted, skipped };
+  });
+
 // ---------- session code helper ----------
 
 function makeSessionCode(): string {
