@@ -125,13 +125,13 @@ function NetworkPage() {
           <h2 className="font-display text-3xl font-black text-primary">How updates work</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-2">
             <div>
-              <h3 className="font-semibold text-primary">Self-hosters</h3>
+              <h3 className="font-semibold text-primary">Independent Affiliates</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Every release we ship to WKNA-49 is published to the network with a versioned ZIP and changelog. You'll see an update banner in your admin dashboard with a one-click download.
+                Every release we ship to WKNA-49 is published to the Affiliate Network with a versioned ZIP and changelog. You'll see an update banner in your admin dashboard with a one-click download.
               </p>
             </div>
             <div>
-              <h3 className="font-semibold text-primary">Managed mirrors</h3>
+              <h3 className="font-semibold text-primary">Managed Affiliate Stations</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 Updates are staged for you. When a new release is ready, you'll get an in-app prompt to <strong>accept</strong> or <strong>reject</strong> it — no surprise changes to your live site.
               </p>
