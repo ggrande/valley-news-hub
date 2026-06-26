@@ -124,11 +124,52 @@ async function fetchPostsByIds(ids: string[]): Promise<any[]> {
   return out;
 }
 
+function redditCreated(p: any): number {
+  return typeof p?.created_utc === "number" ? p.created_utc : 0;
+}
+
+function redditScore(p: any): number {
+  return typeof p?.score === "number" ? p.score : 0;
+}
+
+function topWindowAfter(window: string): number | null {
+  const now = Math.floor(Date.now() / 1000);
+  switch (window) {
+    case "hour": return now - 60 * 60;
+    case "day": return now - 24 * 60 * 60;
+    case "week": return now - 7 * 24 * 60 * 60;
+    case "month": return now - 31 * 24 * 60 * 60;
+    case "year": return now - 365 * 24 * 60 * 60;
+    default: return null;
+  }
+}
+
+function rankRedditPosts(posts: any[], sort: string, topWindow: string): any[] {
+  const now = Math.floor(Date.now() / 1000);
+  const filtered = sort === "top"
+    ? posts.filter((p) => {
+      const after = topWindowAfter(topWindow);
+      return after == null || redditCreated(p) >= after;
+    })
+    : posts;
+
+  const key = (p: any) => {
+    const score = redditScore(p);
+    const ageHours = Math.max(0.25, (now - redditCreated(p)) / 3600);
+    if (sort === "top") return score;
+    if (sort === "rising") return score / ageHours;
+    if (sort === "best") return score + Math.log10(Math.max(1, score + 1)) * 100;
+    if (sort === "hot") return score / Math.pow(ageHours + 2, 1.25);
+    return redditCreated(p);
+  };
+  return [...filtered].sort((a, b) => key(b) - key(a) || redditCreated(b) - redditCreated(a));
+}
+
 async function fetchSubredditListing(
   sub: string,
   limit: number,
-  _sort: string,
-  _topWindow: string,
+  sort: string,
+  topWindow: string,
 ): Promise<{ posts: any[]; error?: string }> {
   // Strategy: RSS for freshness, Arctic Shift archive for backfill. Merge,
   // de-dup, sort newest-first. RSS gives us today's posts; Arctic Shift
@@ -137,7 +178,11 @@ async function fetchSubredditListing(
   const seen = new Set<string>();
   const out: any[] = [];
 
-  // 1. RSS-driven recent posts (newest first)
+  const normalizedSort = ["new", "hot", "top", "rising", "best"].includes(sort) ? sort : "new";
+
+  // 1. RSS-driven recent posts (newest first). Reddit only exposes the latest
+  // feed reliably from worker environments, so ranked modes are handled by
+  // archive scoring below instead of trusting the feed ordering.
   const rss = await fetchRedditRssIds(sub, Math.min(limit, 100));
   if (rss.error) errors.push(`rss: ${rss.error}`);
   if (rss.ids.length) {
@@ -157,11 +202,16 @@ async function fetchSubredditListing(
     }
   }
 
-  // 2. Arctic Shift archive backfill (only if we still need more)
-  if (out.length < limit) {
+  // 2. Arctic Shift archive backfill. For Hot/Top/Rising/Best or a non-zero
+  // score threshold, scanning only the newest N posts silently misses older
+  // high-scoring candidates. Pull a wider recent window, rank locally, then
+  // apply the minimum-score filter later in the import loop.
+  const archiveTarget = normalizedSort === "new" ? limit : Math.max(500, limit * 25);
+  if (out.length < archiveTarget) {
     try {
       let before: number | null = null;
-      for (let page = 0; page < 5 && out.length < limit; page++) {
+      const maxPages = normalizedSort === "new" ? 5 : 15;
+      for (let page = 0; page < maxPages && out.length < archiveTarget; page++) {
         const params: Record<string, string> = {
           subreddit: sub, limit: "100", sort: "desc", sort_type: "created_utc",
         };
@@ -186,7 +236,7 @@ async function fetchSubredditListing(
     }
   }
 
-  return { posts: out.slice(0, limit), error: errors.length ? errors.join("; ") : undefined };
+  return { posts: rankRedditPosts(out, normalizedSort, topWindow).slice(0, limit), error: errors.length ? errors.join("; ") : undefined };
 }
 
 
