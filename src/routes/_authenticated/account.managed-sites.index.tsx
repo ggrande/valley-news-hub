@@ -277,6 +277,24 @@ function SiteCard({ site }: { site: ManagedSiteRow }) {
         >
           {saveMut.isPending ? "Saving…" : "Save settings"}
         </button>
+
+        <div className="mt-6 rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-900">
+          <div className="font-semibold">Danger zone</div>
+          <p className="mt-1">
+            Full reset deletes any orphan Supabase projects this station created and returns the wizard to the beginning. Other stations are never touched.
+          </p>
+          <button
+            onClick={() => {
+              if (confirm(`Full reset "${site.display_name}"? Orphan Supabase projects from previous attempts will be deleted.`)) {
+                purgeMut.mutate();
+              }
+            }}
+            disabled={purgeMut.isPending}
+            className="mt-2 h-8 rounded-md border border-red-400 bg-white px-3 text-xs font-semibold text-red-700 disabled:opacity-50"
+          >
+            {purgeMut.isPending ? "Resetting…" : "Full reset"}
+          </button>
+        </div>
       </details>
     </div>
   );
