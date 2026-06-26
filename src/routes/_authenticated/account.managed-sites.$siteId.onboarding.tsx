@@ -264,7 +264,7 @@ function OnboardingPage() {
             <button
               type="button"
               onClick={() => setStep(Math.max(0, step - 1) as Step)}
-              disabled={step === 0 || saveMut.isPending}
+              disabled={saveMut.isPending}
               className="h-10 rounded-md border px-4 text-sm font-semibold disabled:opacity-40"
             >
               ← Back
