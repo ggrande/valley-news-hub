@@ -409,6 +409,8 @@ function AutomationPanel() {
         if (typeof r?.published === "number") parts.push(`published ${r.published}`);
         if (typeof r?.filler_images === "number") parts.push(`${r.filler_images} filler images`);
         if (typeof r?.skipped_existing === "number") parts.push(`${r.skipped_existing} already known`);
+        if (typeof r?.skipped_moderation_hold === "number" && r.skipped_moderation_hold > 0) parts.push(`${r.skipped_moderation_hold} waiting for moderation hold`);
+        if (typeof r?.skipped_low_score === "number" && r.skipped_low_score > 0) parts.push(`${r.skipped_low_score} below min score`);
         if (r?.errors?.length) parts.push(`${r.errors.length} errors`);
         setRunMsg(`Done — ${parts.join(", ") || "no changes"}.`);
         if (r?.errors?.length) {
