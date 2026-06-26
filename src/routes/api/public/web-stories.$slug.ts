@@ -102,16 +102,10 @@ export const Route = createFileRoute("/api/public/web-stories/$slug")({
     </amp-story-page-attachment>
   </amp-story-page>`;
 
-        // Polyglot XHTML5 AMP: valid XML *and* valid AMP HTML.
-        // - `amp="amp"` instead of bare `⚡` / `amp` (XML requires attr values)
-        // - xmlns on <html>, self-closed void elements (<meta/>, <link/>, <amp-img/>)
-        // Served as application/xhtml+xml so the platform's HTML rewriter does
-        // not inject tracking scripts (which would break AMP validation).
-        // No <?xml ?> prolog: it's optional for UTF-8 XML, and browsers serving
-        // xhtml+xml fall into "generic XML tree view" when they see <?xml at byte 0
-        // without a recognized namespace. Output is still well-formed XML.
-        const html = `<!DOCTYPE html>
-<html amp="amp" lang="en">
+        // Raw AMP HTML response for Google Web Stories.
+        // No XML declaration, no xmlns, no XHTML content type.
+        const html = `<!doctype html>
+<html amp lang="en">
 <head>
   <meta charset="utf-8"/>
   <title>${esc(title)} — WKNA 49 News</title>
@@ -138,8 +132,8 @@ ${ctaPage}
 
         return new Response(html, {
           headers: {
-            "Content-Type": "application/xhtml+xml; charset=utf-8",
-            "Cache-Control": "public, max-age=300, s-maxage=600",
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "public, max-age=300",
           },
         });
       },
