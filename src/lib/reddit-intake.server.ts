@@ -144,6 +144,14 @@ export async function importRedditPosts(admin: any, posts: any[], options: Impor
     const title = (p.title ?? "").trim().toLowerCase();
     if (body === "[removed]" || body === "[deleted]" || title === "[removed]" || title === "[deleted]") continue;
     if (knownTitles.has(title)) { summary.skipped_existing++; continue; }
+    if (moderationHoldSec > 0 && typeof p.created_utc === "number" && nowSec - p.created_utc < moderationHoldSec) {
+      summary.skipped_moderation_hold++;
+      continue;
+    }
+    if (minScore > 0 && (typeof p.score !== "number" || p.score < minScore)) {
+      summary.skipped_low_score++;
+      continue;
+    }
 
     let comments: any[] = [];
     try { comments = await fetchPostComments(p.id); } catch { /* none */ }
