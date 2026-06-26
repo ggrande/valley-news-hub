@@ -39,9 +39,9 @@ function Page() {
     <div className="mx-auto max-w-5xl p-6 md:p-10">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-black text-primary">My Managed Sites</h1>
+          <h1 className="font-display text-3xl font-black text-primary">My Affiliate Stations</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Manage your hosted WKNA Network sites — review pending updates, customize branding, and set your custom domain.
+            Manage your Managed Affiliate Stations — review pending updates, customize branding, and set your custom domain.
           </p>
         </div>
         {sites.length > 0 && (
