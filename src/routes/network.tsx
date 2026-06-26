@@ -12,6 +12,7 @@ export const Route = createFileRoute("/network")({
     meta: [
       { title: "Join Our Network — Run Your Own WKNA-49 Style News Site" },
       { name: "description", content: "License the WKNA-49 news platform or get a managed mirror. Self-host for a one-time fee, or let us run it for you with automatic updates you approve." },
+      { name: "robots", content: "noindex, nofollow" },
       { property: "og:title", content: "Join the WKNA-49 Network" },
       { property: "og:description", content: "Build your own AI-powered local news site. Self-host or fully managed." },
     ],
