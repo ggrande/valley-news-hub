@@ -107,8 +107,10 @@ export const Route = createFileRoute("/api/public/web-stories/$slug")({
         // - xmlns on <html>, self-closed void elements (<meta/>, <link/>, <amp-img/>)
         // Served as application/xhtml+xml so the platform's HTML rewriter does
         // not inject tracking scripts (which would break AMP validation).
-        const html = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html>
+        // No <?xml ?> prolog: it's optional for UTF-8 XML, and browsers serving
+        // xhtml+xml fall into "generic XML tree view" when they see <?xml at byte 0
+        // without a recognized namespace. Output is still well-formed XML.
+        const html = `<!DOCTYPE html>
 <html amp="amp" lang="en">
 <head>
   <meta charset="utf-8"/>
