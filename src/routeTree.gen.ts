@@ -65,8 +65,8 @@ import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
 import { Route as AuthenticatedAccountOrdersRouteImport } from './routes/_authenticated/account.orders'
-import { Route as AuthenticatedAccountManagedSitesRouteImport } from './routes/_authenticated/account.managed-sites'
 import { Route as AuthenticatedAccountLicensesRouteImport } from './routes/_authenticated/account.licenses'
+import { Route as AuthenticatedAccountManagedSitesIndexRouteImport } from './routes/_authenticated/account.managed-sites.index'
 import { Route as ApiPublicWebStoriesSlugRouteImport } from './routes/api/public/web-stories.$slug'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicNetworkIngestReleaseRouteImport } from './routes/api/public/network/ingest-release'
@@ -379,16 +379,16 @@ const AuthenticatedAccountOrdersRoute =
     path: '/account/orders',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAccountManagedSitesRoute =
-  AuthenticatedAccountManagedSitesRouteImport.update({
-    id: '/account/managed-sites',
-    path: '/account/managed-sites',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedAccountLicensesRoute =
   AuthenticatedAccountLicensesRouteImport.update({
     id: '/account/licenses',
     path: '/account/licenses',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAccountManagedSitesIndexRoute =
+  AuthenticatedAccountManagedSitesIndexRouteImport.update({
+    id: '/account/managed-sites/',
+    path: '/account/managed-sites/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const ApiPublicWebStoriesSlugRoute = ApiPublicWebStoriesSlugRouteImport.update({
@@ -488,9 +488,9 @@ const ApiPublicIntegrationsSupabaseCallbackRoute =
   } as any)
 const AuthenticatedAccountManagedSitesSiteIdOnboardingRoute =
   AuthenticatedAccountManagedSitesSiteIdOnboardingRouteImport.update({
-    id: '/$siteId/onboarding',
-    path: '/$siteId/onboarding',
-    getParentRoute: () => AuthenticatedAccountManagedSitesRoute,
+    id: '/account/managed-sites/$siteId/onboarding',
+    path: '/account/managed-sites/$siteId/onboarding',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -530,7 +530,6 @@ export interface FileRoutesByFullPath {
   '/merch/': typeof MerchIndexRoute
   '/news/': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
-  '/account/managed-sites': typeof AuthenticatedAccountManagedSitesRouteWithChildren
   '/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
@@ -566,6 +565,7 @@ export interface FileRoutesByFullPath {
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
+  '/account/managed-sites/': typeof AuthenticatedAccountManagedSitesIndexRoute
   '/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
   '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
@@ -605,7 +605,6 @@ export interface FileRoutesByTo {
   '/merch': typeof MerchIndexRoute
   '/news': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
-  '/account/managed-sites': typeof AuthenticatedAccountManagedSitesRouteWithChildren
   '/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
@@ -641,6 +640,7 @@ export interface FileRoutesByTo {
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
+  '/account/managed-sites': typeof AuthenticatedAccountManagedSitesIndexRoute
   '/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
   '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
@@ -683,7 +683,6 @@ export interface FileRoutesById {
   '/merch/': typeof MerchIndexRoute
   '/news/': typeof NewsIndexRoute
   '/_authenticated/account/licenses': typeof AuthenticatedAccountLicensesRoute
-  '/_authenticated/account/managed-sites': typeof AuthenticatedAccountManagedSitesRouteWithChildren
   '/_authenticated/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/_authenticated/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/_authenticated/admin/authors': typeof AuthenticatedAdminAuthorsRoute
@@ -719,6 +718,7 @@ export interface FileRoutesById {
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
+  '/_authenticated/account/managed-sites/': typeof AuthenticatedAccountManagedSitesIndexRoute
   '/_authenticated/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
   '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
@@ -761,7 +761,6 @@ export interface FileRouteTypes {
     | '/merch/'
     | '/news/'
     | '/account/licenses'
-    | '/account/managed-sites'
     | '/account/orders'
     | '/admin/ai-log'
     | '/admin/authors'
@@ -797,6 +796,7 @@ export interface FileRouteTypes {
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
     | '/api/public/web-stories/$slug'
+    | '/account/managed-sites/'
     | '/account/managed-sites/$siteId/onboarding'
     | '/api/public/integrations/supabase/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -836,7 +836,6 @@ export interface FileRouteTypes {
     | '/merch'
     | '/news'
     | '/account/licenses'
-    | '/account/managed-sites'
     | '/account/orders'
     | '/admin/ai-log'
     | '/admin/authors'
@@ -872,6 +871,7 @@ export interface FileRouteTypes {
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
     | '/api/public/web-stories/$slug'
+    | '/account/managed-sites'
     | '/account/managed-sites/$siteId/onboarding'
     | '/api/public/integrations/supabase/callback'
   id:
@@ -913,7 +913,6 @@ export interface FileRouteTypes {
     | '/merch/'
     | '/news/'
     | '/_authenticated/account/licenses'
-    | '/_authenticated/account/managed-sites'
     | '/_authenticated/account/orders'
     | '/_authenticated/admin/ai-log'
     | '/_authenticated/admin/authors'
@@ -949,6 +948,7 @@ export interface FileRouteTypes {
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
     | '/api/public/web-stories/$slug'
+    | '/_authenticated/account/managed-sites/'
     | '/_authenticated/account/managed-sites/$siteId/onboarding'
     | '/api/public/integrations/supabase/callback'
   fileRoutesById: FileRoutesById
@@ -1394,18 +1394,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountOrdersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/account/managed-sites': {
-      id: '/_authenticated/account/managed-sites'
-      path: '/account/managed-sites'
-      fullPath: '/account/managed-sites'
-      preLoaderRoute: typeof AuthenticatedAccountManagedSitesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/account/licenses': {
       id: '/_authenticated/account/licenses'
       path: '/account/licenses'
       fullPath: '/account/licenses'
       preLoaderRoute: typeof AuthenticatedAccountLicensesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/account/managed-sites/': {
+      id: '/_authenticated/account/managed-sites/'
+      path: '/account/managed-sites'
+      fullPath: '/account/managed-sites/'
+      preLoaderRoute: typeof AuthenticatedAccountManagedSitesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/web-stories/$slug': {
@@ -1522,10 +1522,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/account/managed-sites/$siteId/onboarding': {
       id: '/_authenticated/account/managed-sites/$siteId/onboarding'
-      path: '/$siteId/onboarding'
+      path: '/account/managed-sites/$siteId/onboarding'
       fullPath: '/account/managed-sites/$siteId/onboarding'
       preLoaderRoute: typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRouteImport
-      parentRoute: typeof AuthenticatedAccountManagedSitesRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
@@ -1620,34 +1620,22 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
-interface AuthenticatedAccountManagedSitesRouteChildren {
-  AuthenticatedAccountManagedSitesSiteIdOnboardingRoute: typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
-}
-
-const AuthenticatedAccountManagedSitesRouteChildren: AuthenticatedAccountManagedSitesRouteChildren =
-  {
-    AuthenticatedAccountManagedSitesSiteIdOnboardingRoute:
-      AuthenticatedAccountManagedSitesSiteIdOnboardingRoute,
-  }
-
-const AuthenticatedAccountManagedSitesRouteWithChildren =
-  AuthenticatedAccountManagedSitesRoute._addFileChildren(
-    AuthenticatedAccountManagedSitesRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAccountLicensesRoute: typeof AuthenticatedAccountLicensesRoute
-  AuthenticatedAccountManagedSitesRoute: typeof AuthenticatedAccountManagedSitesRouteWithChildren
   AuthenticatedAccountOrdersRoute: typeof AuthenticatedAccountOrdersRoute
+  AuthenticatedAccountManagedSitesIndexRoute: typeof AuthenticatedAccountManagedSitesIndexRoute
+  AuthenticatedAccountManagedSitesSiteIdOnboardingRoute: typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAccountLicensesRoute: AuthenticatedAccountLicensesRoute,
-  AuthenticatedAccountManagedSitesRoute:
-    AuthenticatedAccountManagedSitesRouteWithChildren,
   AuthenticatedAccountOrdersRoute: AuthenticatedAccountOrdersRoute,
+  AuthenticatedAccountManagedSitesIndexRoute:
+    AuthenticatedAccountManagedSitesIndexRoute,
+  AuthenticatedAccountManagedSitesSiteIdOnboardingRoute:
+    AuthenticatedAccountManagedSitesSiteIdOnboardingRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
