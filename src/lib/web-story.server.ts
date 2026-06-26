@@ -249,6 +249,7 @@ export async function ensureWebStoryUploaded(post: WebStoryPost): Promise<string
   const url = publicStoryUrl(post.slug);
 
   await ensurePagesEnabled(r.owner, r.repo);
+  await ensureCnameFile(r.owner, r.repo);
 
   // GET current SHA if file exists (Contents API requires sha for updates).
   let sha: string | undefined;
