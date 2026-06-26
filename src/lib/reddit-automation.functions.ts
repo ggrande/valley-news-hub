@@ -157,7 +157,7 @@ export const approveRedditNotification = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .maybeSingle();
     if (!row) throw new Error("Notification not found");
-    if (row.status !== "awaiting_approval" && row.status !== "queued") {
+    if (row.status !== "awaiting_approval" && row.status !== "queued" && row.status !== "skipped") {
       throw new Error(`Cannot approve from status: ${row.status}`);
     }
 
