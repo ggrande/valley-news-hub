@@ -68,6 +68,7 @@ import { Route as AuthenticatedAccountLicensesRouteImport } from './routes/_auth
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicNetworkIngestReleaseRouteImport } from './routes/api/public/network/ingest-release'
 import { Route as ApiPublicNetworkCheckUpdateRouteImport } from './routes/api/public/network/check-update'
+import { Route as ApiPublicHooksRetryMerchRouteImport } from './routes/api/public/hooks/retry-merch'
 import { Route as ApiPublicHooksRedditCommentJobRouteImport } from './routes/api/public/hooks/reddit-comment-job'
 import { Route as ApiPublicHooksRedditCommentCallbackRouteImport } from './routes/api/public/hooks/reddit-comment-callback'
 import { Route as ApiPublicHooksProcessPendingRouteImport } from './routes/api/public/hooks/process-pending'
@@ -391,6 +392,12 @@ const ApiPublicNetworkCheckUpdateRoute =
     path: '/api/public/network/check-update',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRetryMerchRoute =
+  ApiPublicHooksRetryMerchRouteImport.update({
+    id: '/api/public/hooks/retry-merch',
+    path: '/api/public/hooks/retry-merch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRedditCommentJobRoute =
   ApiPublicHooksRedditCommentJobRouteImport.update({
     id: '/api/public/hooks/reddit-comment-job',
@@ -504,6 +511,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/hooks/retry-merch': typeof ApiPublicHooksRetryMerchRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -571,6 +579,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/hooks/retry-merch': typeof ApiPublicHooksRetryMerchRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -641,6 +650,7 @@ export interface FileRoutesById {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/hooks/retry-merch': typeof ApiPublicHooksRetryMerchRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -711,6 +721,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/hooks/retry-merch'
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
@@ -778,6 +789,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/hooks/retry-merch'
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
@@ -847,6 +859,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/hooks/retry-merch'
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
@@ -888,6 +901,7 @@ export interface RootRouteChildren {
   ApiPublicHooksProcessPendingRoute: typeof ApiPublicHooksProcessPendingRoute
   ApiPublicHooksRedditCommentCallbackRoute: typeof ApiPublicHooksRedditCommentCallbackRoute
   ApiPublicHooksRedditCommentJobRoute: typeof ApiPublicHooksRedditCommentJobRoute
+  ApiPublicHooksRetryMerchRoute: typeof ApiPublicHooksRetryMerchRoute
   ApiPublicNetworkCheckUpdateRoute: typeof ApiPublicNetworkCheckUpdateRoute
   ApiPublicNetworkIngestReleaseRoute: typeof ApiPublicNetworkIngestReleaseRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1308,6 +1322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNetworkCheckUpdateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/retry-merch': {
+      id: '/api/public/hooks/retry-merch'
+      path: '/api/public/hooks/retry-merch'
+      fullPath: '/api/public/hooks/retry-merch'
+      preLoaderRoute: typeof ApiPublicHooksRetryMerchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/reddit-comment-job': {
       id: '/api/public/hooks/reddit-comment-job'
       path: '/api/public/hooks/reddit-comment-job'
@@ -1535,6 +1556,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksRedditCommentCallbackRoute:
     ApiPublicHooksRedditCommentCallbackRoute,
   ApiPublicHooksRedditCommentJobRoute: ApiPublicHooksRedditCommentJobRoute,
+  ApiPublicHooksRetryMerchRoute: ApiPublicHooksRetryMerchRoute,
   ApiPublicNetworkCheckUpdateRoute: ApiPublicNetworkCheckUpdateRoute,
   ApiPublicNetworkIngestReleaseRoute: ApiPublicNetworkIngestReleaseRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
