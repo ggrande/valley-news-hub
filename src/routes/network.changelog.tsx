@@ -37,7 +37,7 @@ const releasesQuery = queryOptions({
 export const Route = createFileRoute("/network/changelog")({
   head: () => ({
     meta: [
-      { title: "Changelog — WKNA-49 Network Platform" },
+      { title: "Changelog — WKNA-49 Affiliate Network Platform" },
       { name: "description", content: "Every release of the WKNA-49 news platform, with notes and download links." },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -55,7 +55,7 @@ function ChangelogPage() {
       <PageHeader
         eyebrow="Platform updates"
         title="Changelog"
-        description="Every release shipped to network members. Self-hosters can download from their admin dashboard; managed mirrors get an in-app accept/reject prompt."
+        description="Every release shipped to network members. Self-hosters can download from their admin dashboard; Managed Affiliate Stations get an in-app accept/reject prompt."
       />
       <section className="mx-auto max-w-3xl px-4 py-12 space-y-8">
         {releases.length === 0 ? (
