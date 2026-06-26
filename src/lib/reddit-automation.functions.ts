@@ -96,7 +96,9 @@ export const listRedditNotifications = createServerFn({ method: "GET" })
         ...r,
         upvotes: typeof score === "number" ? score : null,
         post_status: r.posts?.status ?? null,
+        reddit_posted_at: r.reddit_imports?.original_created_at ?? null,
       };
+
     });
 
     if (typeof data.minUpvotes === "number" && data.minUpvotes > 0) {
