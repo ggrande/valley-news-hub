@@ -18,6 +18,8 @@ import { randomBytes } from "node:crypto";
 
 export type ProvisioningStatus = {
   siteId: string;
+  subdomain: string | null;
+  customDomain: string | null;
   state:
     | "awaiting_oauth"
     | "linking"
@@ -32,6 +34,7 @@ export type ProvisioningStatus = {
   finishedAt: string | null;
   hasRefreshToken: boolean;
 };
+
 
 // ---------- 1. INITIATE OAUTH ----------
 
