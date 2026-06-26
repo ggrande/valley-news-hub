@@ -119,7 +119,7 @@ export const createMerchCheckoutSession = createServerFn({ method: "POST" })
             product_data: {
               name: data.productName,
               ...(data.image && { images: [data.image] }),
-              tax_code: "txcd_30011000", // general apparel/physical goods fallback
+              // tax_code requires automatic_tax to be enabled.
             },
           },
         }],
