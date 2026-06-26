@@ -35,7 +35,7 @@ export const Route = createFileRoute("/api/public/web-stories/$slug")({
         const published = p.published_at ?? new Date().toISOString();
         const modified = p.updated_at ?? published;
         const canonical = `${BASE_URL}/news/${p.slug}`;
-        const storyUrl = `${BASE_URL}/web-stories/${p.slug}`;
+        const storyUrl = `${BASE_URL}/api/public/web-stories/${p.slug}`;
 
         // Split body into up to 4 short pages
         const paragraphs = String(p.body ?? "")
