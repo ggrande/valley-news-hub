@@ -1756,6 +1756,59 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_provision_attempts: {
+        Row: {
+          attempted_project_name: string
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          session_code: string
+          site_id: string
+          started_at: string
+          status: string
+          supabase_org_id: string
+          supabase_project_ref: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempted_project_name: string
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          session_code: string
+          site_id: string
+          started_at?: string
+          status?: string
+          supabase_org_id: string
+          supabase_project_ref?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempted_project_name?: string
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          session_code?: string
+          site_id?: string
+          started_at?: string
+          status?: string
+          supabase_org_id?: string
+          supabase_project_ref?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_provision_attempts_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "managed_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
