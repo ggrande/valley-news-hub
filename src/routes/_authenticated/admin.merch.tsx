@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { retryMerchOrders } from "@/lib/merch-admin.functions";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/merch")({
   head: () => ({ meta: [{ title: "Merch Orders — Admin" }, { name: "robots", content: "noindex" }] }),
@@ -8,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/admin/merch")({
 });
 
 function AdminMerchPage() {
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ["admin-merch-orders"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -20,11 +25,40 @@ function AdminMerchPage() {
       return data ?? [];
     },
   });
+  const retryFn = useServerFn(retryMerchOrders);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const handleRetry = async (id?: string) => {
+    setBusyId(id ?? "all");
+    try {
+      const res: any = await retryFn({ data: { id } });
+      if (res.error) toast.error(res.error);
+      else {
+        const ok = res.results.filter((r: any) => r.ok).length;
+        const fail = res.results.filter((r: any) => r.error).length;
+        toast.success(`Retried ${res.retried} — ${ok} ok, ${fail} failed`);
+      }
+      await refetch();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Retry failed");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-black text-primary">Merch Orders</h1>
-      <p className="mt-1 text-sm text-muted-foreground">All Print-on-demand orders. Failed submissions are flagged red — check Printful dashboard and resubmit manually if needed.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-black text-primary">Merch Orders</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            All Print-on-demand orders. Failed submissions are flagged red — click Retry to resubmit to Printful.
+          </p>
+        </div>
+        <Button onClick={() => handleRetry()} disabled={busyId !== null} variant="outline">
+          {busyId === "all" ? "Retrying…" : "Retry all failed"}
+        </Button>
+      </div>
 
       {isLoading && <p className="mt-6 text-sm text-muted-foreground">Loading…</p>}
       <div className="mt-6 overflow-x-auto rounded-lg border bg-card">
@@ -38,6 +72,7 @@ function AdminMerchPage() {
               <th className="px-3 py-2">Status</th>
               <th className="px-3 py-2">Printful</th>
               <th className="px-3 py-2">Env</th>
+              <th className="px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -59,6 +94,18 @@ function AdminMerchPage() {
                 </td>
                 <td className="px-3 py-2 text-xs">{o.printful_order_id ?? "—"}</td>
                 <td className="px-3 py-2 text-xs">{o.environment}</td>
+                <td className="px-3 py-2">
+                  {o.status === "submit_failed" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busyId !== null}
+                      onClick={() => handleRetry(o.id)}
+                    >
+                      {busyId === o.id ? "…" : "Retry"}
+                    </Button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
