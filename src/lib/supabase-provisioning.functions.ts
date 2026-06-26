@@ -235,7 +235,7 @@ export const finalizeTenantProvisioning = createServerFn({ method: "POST" })
     }
 
     // Fetch API keys
-    let keys: sbo.ApiKey[] = [];
+    let keys: import("@/lib/supabase-oauth.server").ApiKey[] = [];
     try {
       keys = await sbo.getApiKeys(accessToken, site.supabase_project_ref);
     } catch (e) {
