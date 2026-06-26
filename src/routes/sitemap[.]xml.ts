@@ -35,7 +35,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           }),
           ...recent.map((p: any) => {
             const lastmod = (p.updated_at ?? p.published_at ?? "").slice(0, 10);
-            return `  <url><loc>${BASE_URL}/web-stories/${p.slug}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}<changefreq>weekly</changefreq></url>`;
+            return `  <url><loc>${BASE_URL}/api/public/web-stories/${p.slug}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}<changefreq>weekly</changefreq></url>`;
           }),
         ];
         const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
