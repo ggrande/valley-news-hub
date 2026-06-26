@@ -12,6 +12,7 @@ import {
   captureRedditSession,
   debugGitHubStatus,
   setRedditSessionCookies,
+  refreshNotificationQueue,
 } from "@/lib/reddit-automation.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/reddit-automation")({
@@ -113,6 +114,15 @@ function Page() {
     mutationFn: (id: string) => retryRedditNotification({ data: { id } }),
     onSuccess: () => { toast.success("Retry dispatched"); qc.invalidateQueries({ queryKey: ["reddit-notifications"] }); },
     onError: (e: any) => toast.error(e?.message ?? "Retry failed"),
+  });
+
+  const refreshQueue = useMutation({
+    mutationFn: () => refreshNotificationQueue({ data: { windowHours } }),
+    onSuccess: (r: any) => {
+      toast.success(`Refreshed ${r?.refreshed ?? 0} upvote count${r?.refreshed === 1 ? "" : "s"} (scanned ${r?.scanned ?? 0})`);
+      qc.invalidateQueries({ queryKey: ["reddit-notifications"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Refresh failed"),
   });
 
   const sessionBadge = (() => {
@@ -310,6 +320,14 @@ function Page() {
             </p>
           </div>
           <div className="flex flex-wrap items-end gap-2 text-xs">
+            <button
+              onClick={() => refreshQueue.mutate()}
+              disabled={refreshQueue.isPending}
+              className="self-end rounded-md border bg-white px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+              title="Re-pull live upvote counts from Reddit and re-sync with the Posts table."
+            >
+              {refreshQueue.isPending ? "Refreshing…" : "Refresh now"}
+            </button>
             <label className="flex flex-col">
               <span className="font-semibold text-muted-foreground">Time window</span>
               <select
