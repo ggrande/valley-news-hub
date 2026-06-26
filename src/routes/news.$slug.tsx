@@ -159,6 +159,7 @@ function ArticlePage() {
             title={a.title}
             summary={a.summary}
             label="Share"
+            storyUrl={`https://wkna49.com/stories/${post.slug}`}
           />
         </div>
       </article>
