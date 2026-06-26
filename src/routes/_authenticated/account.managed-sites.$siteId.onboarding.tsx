@@ -24,6 +24,7 @@ import {
   finalizeTenantProvisioning,
   listProvisionAttempts,
   resetProvisioningForRetry,
+  purgeAndResetTenant,
   type ProvisionAttempt,
 } from "@/lib/supabase-provisioning.functions";
 
