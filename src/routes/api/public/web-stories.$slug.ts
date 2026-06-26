@@ -103,7 +103,7 @@ export const Route = createFileRoute("/api/public/web-stories/$slug")({
   </amp-story-page>`;
 
         // Raw AMP HTML response for Google Web Stories.
-        // No XML declaration, no xmlns, no XHTML content type.
+        // No XML declaration, no namespace attribute, no XHTML content type.
         const html = `<!doctype html>
 <html amp lang="en">
 <head>
