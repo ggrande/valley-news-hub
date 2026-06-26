@@ -215,6 +215,20 @@ export const publishPost = createServerFn({ method: "POST" })
       .eq("id", data.postId);
     if (error) throw error;
 
+    // Fire-and-forget Web Story generation (never block publish on it).
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { ensureWebStoryUploaded } = await import("@/lib/web-story.server");
+      const { data: post } = await supabaseAdmin
+        .from("posts")
+        .select("slug, title, dek, body, published_at, updated_at, featured_image, seo_description, author:authors(name), category:categories(name)")
+        .eq("id", data.postId)
+        .maybeSingle();
+      if (post) await ensureWebStoryUploaded(post as any);
+    } catch (err: any) {
+      console.warn("Web Story generation failed:", err?.message ?? err);
+    }
+
     // Fire-and-forget Reddit notification enqueue (never block publish on it).
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
