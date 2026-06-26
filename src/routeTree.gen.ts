@@ -40,6 +40,7 @@ import { Route as NetworkDocsRouteImport } from './routes/network.docs'
 import { Route as NetworkChangelogRouteImport } from './routes/network.changelog'
 import { Route as MerchIdRouteImport } from './routes/merch.$id'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as CheckoutMerchReturnRouteImport } from './routes/checkout.merch-return'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -228,6 +229,11 @@ const MerchIdRoute = MerchIdRouteImport.update({
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutMerchReturnRoute = CheckoutMerchReturnRouteImport.update({
+  id: '/checkout/merch-return',
+  path: '/checkout/merch-return',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMediaRoute = ApiMediaRouteImport.update({
@@ -458,6 +464,7 @@ export interface FileRoutesByFullPath {
   '/weather': typeof WeatherRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/media': typeof ApiMediaRoute
+  '/checkout/merch-return': typeof CheckoutMerchReturnRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
@@ -524,6 +531,7 @@ export interface FileRoutesByTo {
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRouteWithChildren
   '/api/media': typeof ApiMediaRoute
+  '/checkout/merch-return': typeof CheckoutMerchReturnRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
@@ -593,6 +601,7 @@ export interface FileRoutesById {
   '/weather': typeof WeatherRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/media': typeof ApiMediaRoute
+  '/checkout/merch-return': typeof CheckoutMerchReturnRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
@@ -662,6 +671,7 @@ export interface FileRouteTypes {
     | '/weather'
     | '/admin'
     | '/api/media'
+    | '/checkout/merch-return'
     | '/checkout/return'
     | '/merch/$id'
     | '/network/changelog'
@@ -728,6 +738,7 @@ export interface FileRouteTypes {
     | '/watch-live'
     | '/weather'
     | '/api/media'
+    | '/checkout/merch-return'
     | '/checkout/return'
     | '/merch/$id'
     | '/network/changelog'
@@ -796,6 +807,7 @@ export interface FileRouteTypes {
     | '/weather'
     | '/_authenticated/admin'
     | '/api/media'
+    | '/checkout/merch-return'
     | '/checkout/return'
     | '/merch/$id'
     | '/network/changelog'
@@ -864,6 +876,7 @@ export interface RootRouteChildren {
   WatchLiveRoute: typeof WatchLiveRoute
   WeatherRoute: typeof WeatherRouteWithChildren
   ApiMediaRoute: typeof ApiMediaRoute
+  CheckoutMerchReturnRoute: typeof CheckoutMerchReturnRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   MerchIdRoute: typeof MerchIdRoute
   NewsSlugRoute: typeof NewsSlugRoute
@@ -1097,6 +1110,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/merch-return': {
+      id: '/checkout/merch-return'
+      path: '/checkout/merch-return'
+      fullPath: '/checkout/merch-return'
+      preLoaderRoute: typeof CheckoutMerchReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/media': {
@@ -1502,6 +1522,7 @@ const rootRouteChildren: RootRouteChildren = {
   WatchLiveRoute: WatchLiveRoute,
   WeatherRoute: WeatherRouteWithChildren,
   ApiMediaRoute: ApiMediaRoute,
+  CheckoutMerchReturnRoute: CheckoutMerchReturnRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   MerchIdRoute: MerchIdRoute,
   NewsSlugRoute: NewsSlugRoute,
