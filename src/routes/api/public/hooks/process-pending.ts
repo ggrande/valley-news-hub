@@ -32,12 +32,9 @@ const BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// Live upvote counts from Reddit's public JSON API. api.reddit.com/api/info
-// accepts a comma-separated list of fullnames and returns current scores —
-// far more reliable than Arctic Shift's archived snapshot (which is often 0
-// because the post was archived seconds after creation). Returns a map of
-// post id -> current score. Silently returns an empty map on failure so the
-// caller can fall back to the archived value.
+// Best-available upvote counts. Reddit's public JSON endpoint is ideal when it
+// works, but it is often blocked from hosted workers. Fill any misses from the
+// archive so min-score filters and the admin table don't collapse to zero/one.
 async function fetchLiveScoresByIds(ids: string[]): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   if (!ids.length) return out;
@@ -62,6 +59,16 @@ async function fetchLiveScoresByIds(ids: string[]): Promise<Map<string, number>>
       }
     } catch { /* skip batch */ }
     await sleep(250);
+  }
+
+  const missing = ids.filter((id) => !out.has(id));
+  if (missing.length) {
+    try {
+      const archived = await fetchPostsByIds(missing);
+      for (const p of archived) {
+        if (p?.id && typeof p.score === "number" && !out.has(p.id)) out.set(p.id, p.score);
+      }
+    } catch { /* archive fallback failed; keep whatever live scores worked */ }
   }
   return out;
 }
