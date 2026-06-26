@@ -628,6 +628,19 @@ function OnboardingPage() {
             sessionCode={shortSessionCode(siteId)}
             answersComplete={answersComplete}
             onOpenNewsroom={() => navigate({ to: "/account/managed-sites" })}
+            onRetry={async () => {
+              if (!chosenOrg) {
+                setStep(0);
+                toast.error("Pick a Supabase organization on step 1 before retrying.");
+                return;
+              }
+              try {
+                await provisionMut.mutateAsync();
+              } catch {
+                /* toast already shown */
+              }
+            }}
+            retryDisabled={provisionMut.isPending}
           />
         </div>
       </div>
