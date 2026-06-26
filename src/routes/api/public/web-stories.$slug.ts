@@ -130,10 +130,10 @@ ${ctaPage}
 </body>
 </html>`;
 
-        // Host the AMP HTML as a file in Lovable Cloud storage so the
-        // Lovable script-injection rewriter (which targets app routes only)
-        // never touches it. We upsert the file (cheap, idempotent) and
-        // 302-redirect to a long-lived signed URL on the storage origin.
+        // Upload to storage, then PROXY the bytes back through this route
+        // as text/html (no redirect). Test whether the Lovable rewriter
+        // injects scripts when the body comes from a storage fetch rather
+        // than an inline string.
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const path = `${p.slug}.html`;
@@ -146,16 +146,19 @@ ${ctaPage}
             .from("web-stories")
             .createSignedUrl(path, 60 * 60 * 24 * 365); // 1 year
           if (signed?.signedUrl) {
-            return new Response(null, {
-              status: 302,
+            const upstream = await fetch(signed.signedUrl);
+            const body = await upstream.arrayBuffer();
+            return new Response(body, {
+              status: 200,
               headers: {
-                Location: signed.signedUrl,
+                "Content-Type": "text/html; charset=utf-8",
                 "Cache-Control": "public, max-age=300",
+                "X-Web-Story-Source": "storage-proxy",
               },
             });
           }
         } catch (err) {
-          console.error("[web-stories] storage upload failed", err);
+          console.error("[web-stories] storage proxy failed", err);
         }
 
         // Fallback: serve inline (rewriter may inject scripts here).
