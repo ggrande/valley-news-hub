@@ -7,7 +7,7 @@ const PUBLISHER_LOGO = "https://wkna49.com/logo.png";
 
 // Google Web Stories (AMP). Served as raw AMP HTML at /web-stories/:slug
 // Spec: https://developers.google.com/search/docs/appearance/web-stories
-export const Route = createFileRoute("/web-stories/$slug")({
+export const Route = createFileRoute("/api/public/web-stories/$slug")({
   server: {
     handlers: {
       GET: async ({ params }) => {
@@ -35,7 +35,7 @@ export const Route = createFileRoute("/web-stories/$slug")({
         const published = p.published_at ?? new Date().toISOString();
         const modified = p.updated_at ?? published;
         const canonical = `${BASE_URL}/news/${p.slug}`;
-        const storyUrl = `${BASE_URL}/web-stories/${p.slug}`;
+        const storyUrl = `${BASE_URL}/api/public/web-stories/${p.slug}`;
 
         // Split body into up to 4 short pages
         const paragraphs = String(p.body ?? "")
