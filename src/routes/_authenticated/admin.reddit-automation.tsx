@@ -459,7 +459,7 @@ function Page() {
       <section className="rounded-lg border bg-amber-50 p-4 text-xs text-amber-900">
         <p className="font-semibold">Setup checklist</p>
         <ol className="ml-5 mt-2 list-decimal space-y-1">
-          <li>Save Reddit username + password above.</li>
+          <li>Paste a fresh set of u/WKNA49 cookies into the <strong>Paste session cookies</strong> box above.</li>
           <li>Add the following <strong>repository secrets</strong> to this GitHub repo (Settings → Secrets and variables → Actions):
             <ul className="ml-4 mt-1 list-disc">
               <li><code>APP_BASE_URL</code> — e.g. <code>https://wkna49.com</code></li>
