@@ -67,13 +67,31 @@ export const Route = createFileRoute("/api/public/hooks/reddit-listing-callback"
           return Response.json({ ok: true });
         }
 
-        // 2. Run the intake import loop against the live posts.
+        // 2. Run the intake import loop against the live posts, honoring the
+        // same min_score / moderation_hold settings as the cron pipeline.
+        const { data: settingsRows } = await supabaseAdmin
+          .from("site_settings")
+          .select("key, value")
+          .in("key", ["automation_min_score", "automation_moderation_hold_hours"]);
+        const settings: Record<string, any> = {};
+        for (const r of (settingsRows as any[]) ?? []) {
+          const v = r.value;
+          settings[r.key] = v && typeof v === "object" && "value" in v ? v.value : v;
+        }
+        const minScore = Math.max(0, Number(settings.automation_min_score ?? 0));
+        const holdHours = Math.max(0, Number(settings.automation_moderation_hold_hours ?? 0));
+
         const { importRedditPosts } = await import("@/lib/reddit-intake.server");
         let imported = 0;
         let error: string | null = null;
+        let extra: any = null;
         try {
-          const r = await importRedditPosts(supabaseAdmin as any, payload.posts);
+          const r = await importRedditPosts(supabaseAdmin as any, payload.posts, {
+            minScore,
+            moderationHoldSec: Math.floor(holdHours * 3600),
+          });
           imported = r.imported;
+          extra = r;
         } catch (err: any) {
           error = err?.message ?? String(err);
         }
@@ -90,7 +108,8 @@ export const Route = createFileRoute("/api/public/hooks/reddit-listing-callback"
           })
           .eq("id", payload.job_id);
 
-        return Response.json({ ok: true, imported });
+        return Response.json({ ok: true, imported, summary: extra });
+
       },
     },
   },

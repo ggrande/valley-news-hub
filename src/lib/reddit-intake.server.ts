@@ -102,19 +102,28 @@ async function fetchPostComments(postId: string): Promise<any[]> {
 export type ImportSummary = {
   imported: number;
   skipped_existing: number;
+  skipped_low_score: number;
+  skipped_moderation_hold: number;
   errors: string[];
+};
+
+export type ImportOptions = {
+  /** Skip posts whose score is below this threshold. */
+  minScore?: number;
+  /** Skip posts younger than this many seconds (moderation hold). */
+  moderationHoldSec?: number;
 };
 
 /**
  * Insert Reddit posts into reddit_imports (with dedupe, media, comments).
  * Accepts the flat post shape returned by reddit's .json endpoint (data.children[].data)
  * or Arctic Shift archive rows — they share field names (id, title, selftext, etc.).
- *
- * Filtering (min score, moderation hold, etc.) is the caller's responsibility;
- * this helper only deduplicates against the reddit_imports table.
  */
-export async function importRedditPosts(admin: any, posts: any[]): Promise<ImportSummary> {
-  const summary: ImportSummary = { imported: 0, skipped_existing: 0, errors: [] };
+export async function importRedditPosts(admin: any, posts: any[], options: ImportOptions = {}): Promise<ImportSummary> {
+  const summary: ImportSummary = { imported: 0, skipped_existing: 0, skipped_low_score: 0, skipped_moderation_hold: 0, errors: [] };
+  const minScore = Math.max(0, options.minScore ?? 0);
+  const moderationHoldSec = Math.max(0, options.moderationHoldSec ?? 0);
+  const nowSec = Math.floor(Date.now() / 1000);
   if (!posts.length) return summary;
 
   const ids = posts.map((p) => p?.id).filter(Boolean) as string[];
@@ -135,6 +144,14 @@ export async function importRedditPosts(admin: any, posts: any[]): Promise<Impor
     const title = (p.title ?? "").trim().toLowerCase();
     if (body === "[removed]" || body === "[deleted]" || title === "[removed]" || title === "[deleted]") continue;
     if (knownTitles.has(title)) { summary.skipped_existing++; continue; }
+    if (moderationHoldSec > 0 && typeof p.created_utc === "number" && nowSec - p.created_utc < moderationHoldSec) {
+      summary.skipped_moderation_hold++;
+      continue;
+    }
+    if (minScore > 0 && (typeof p.score !== "number" || p.score < minScore)) {
+      summary.skipped_low_score++;
+      continue;
+    }
 
     let comments: any[] = [];
     try { comments = await fetchPostComments(p.id); } catch { /* none */ }
