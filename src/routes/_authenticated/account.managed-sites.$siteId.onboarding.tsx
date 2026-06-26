@@ -381,7 +381,7 @@ function OnboardingPage() {
               </span>
             </div>
 
-            <ol className="mt-4 grid grid-cols-4 gap-2">
+            <ol className="mt-4 grid grid-cols-5 gap-2">
               {STEPS.map((s) => (
                 <li
                   key={s.key}
@@ -402,6 +402,53 @@ function OnboardingPage() {
             <div className="mt-6">
               {step === 0 && (
                 <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Pick which Supabase organization should own your newsroom database and where
+                    it should live. We'll start provisioning in the background as soon as you
+                    continue.
+                  </p>
+                  <Field label="Supabase organization">
+                    <select
+                      value={chosenOrg}
+                      onChange={(e) => setChosenOrg(e.target.value)}
+                      disabled={!!status.data?.project}
+                      className="w-full rounded border px-3 py-2 text-sm"
+                    >
+                      <option value="">
+                        {orgs.isLoading ? "Loading organizations…" : "— pick one —"}
+                      </option>
+                      {orgs.data?.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Region" hint="Pick the closest region to your readers.">
+                    <select
+                      value={region}
+                      onChange={(e) => setRegion(e.target.value)}
+                      disabled={!!status.data?.project}
+                      className="w-full rounded border px-3 py-2 text-sm"
+                    >
+                      <option value="us-east-1">US East (Virginia)</option>
+                      <option value="us-west-1">US West (California)</option>
+                      <option value="eu-west-1">EU West (Ireland)</option>
+                      <option value="eu-central-1">EU Central (Frankfurt)</option>
+                      <option value="ap-southeast-1">Asia (Singapore)</option>
+                      <option value="ap-southeast-2">Asia (Sydney)</option>
+                    </select>
+                  </Field>
+                  {status.data?.project && (
+                    <p className="rounded-md border border-[color:var(--broadcast)]/40 bg-[color:var(--broadcast)]/10 p-3 text-xs text-[color:var(--broadcast)]">
+                      ✓ Project already started — continuing won't create another.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {step === 1 && (
+                <div className="space-y-4">
                   <Field label="Station name" hint="Shown to readers and in the directory.">
                     <input
                       value={form.display_name ?? ""}
@@ -418,7 +465,7 @@ function OnboardingPage() {
                 </div>
               )}
 
-              {step === 1 && (
+              {step === 2 && (
                 <div className="space-y-4">
                   <Field label="Tagline" hint="One sentence about what your station covers.">
                     <input
@@ -475,7 +522,7 @@ function OnboardingPage() {
                 </div>
               )}
 
-              {step === 2 && (
+              {step === 3 && (
                 <div className="space-y-4">
                   <Field
                     label="Custom domain"
@@ -499,7 +546,7 @@ function OnboardingPage() {
                 </div>
               )}
 
-              {step === 3 && (
+              {step === 4 && (
                 <div className="space-y-3 text-sm">
                   <Row label="Station name" value={form.display_name} />
                   <Row label="Tagline" value={form.directory_tagline} />
@@ -528,19 +575,29 @@ function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setStep(Math.max(0, step - 1) as Step)}
-                disabled={saveMut.isPending || step === 0}
+                disabled={saveMut.isPending || provisionMut.isPending || step === 0}
                 className="h-10 rounded-md border px-4 text-sm font-semibold disabled:opacity-40"
               >
                 ← Back
               </button>
-              {step < 3 ? (
+              {step < 4 ? (
                 <button
                   type="button"
                   onClick={() => saveStep((step + 1) as Step)}
-                  disabled={saveMut.isPending}
+                  disabled={
+                    saveMut.isPending ||
+                    provisionMut.isPending ||
+                    (step === 0 && !status.data?.project && !chosenOrg)
+                  }
                   className="h-10 rounded-md bg-primary px-6 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                 >
-                  {saveMut.isPending ? "Saving…" : "Continue"}
+                  {provisionMut.isPending
+                    ? "Starting provisioning…"
+                    : saveMut.isPending
+                      ? "Saving…"
+                      : step === 0 && !status.data?.project
+                        ? "Start provisioning & continue →"
+                        : "Continue"}
                 </button>
               ) : (
                 <button
@@ -559,6 +616,7 @@ function OnboardingPage() {
             </div>
           </div>
         </div>
+
 
         {/* RIGHT — Provisioning progress */}
         <div className="lg:col-span-3">
