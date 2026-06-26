@@ -53,17 +53,6 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  beforeLoad: async ({ location }) => {
-    // Host-aware redirect: on tenant subdomains, /admin and /account funnel
-    // into the station magic-link flow. Server-only logic is wrapped in a
-    // createIsomorphicFn so this route file stays client-safe.
-    const { getTenantRedirectTarget } = await import("../lib/tenant-host.isomorphic");
-    const target = await getTenantRedirectTarget(location.pathname);
-    if (target) {
-      const { redirect } = await import("@tanstack/react-router");
-      throw redirect({ to: target });
-    }
-  },
   head: () => ({
 
     meta: [
