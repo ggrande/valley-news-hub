@@ -26,11 +26,16 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/advertise", "/careers", "/corrections-policy", "/privacy-policy",
           "/terms-of-use", "/accessibility", "/public-file", "/rss.xml",
         ];
+        const recent = (posts ?? []).slice(0, 50);
         const urls = [
           ...staticPaths.map((p) => `  <url><loc>${BASE_URL}${p}</loc><changefreq>weekly</changefreq></url>`),
           ...(posts ?? []).map((p: any) => {
             const lastmod = (p.updated_at ?? p.published_at ?? "").slice(0, 10);
             return `  <url><loc>${BASE_URL}/news/${p.slug}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}<changefreq>daily</changefreq></url>`;
+          }),
+          ...recent.map((p: any) => {
+            const lastmod = (p.updated_at ?? p.published_at ?? "").slice(0, 10);
+            return `  <url><loc>${BASE_URL}/web-stories/${p.slug}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}<changefreq>weekly</changefreq></url>`;
           }),
         ];
         const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
