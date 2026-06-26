@@ -146,6 +146,8 @@ export async function createProject(
 
 export async function deleteProject(accessToken: string, ref: string): Promise<void> {
   await mgmt(accessToken, `/v1/projects/${ref}`, { method: "DELETE" });
+}
+
 
 export type ApiKey = { name: string; api_key: string };
 export async function getApiKeys(accessToken: string, ref: string): Promise<ApiKey[]> {
