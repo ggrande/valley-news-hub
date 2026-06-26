@@ -2,6 +2,21 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/site/Layout";
 import { listMerchProducts } from "@/lib/merch.functions";
+import { supabase } from "@/integrations/supabase/client";
+
+type MerchSettings = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  product_order: number[];
+};
+
+const DEFAULT_SETTINGS: MerchSettings = {
+  eyebrow: "Shop",
+  title: "WKNA 49 Merch",
+  description: "Wear the valley. Every order is printed on demand and shipped within 5–10 business days.",
+  product_order: [],
+};
 
 export const Route = createFileRoute("/merch/")({
   head: () => ({
@@ -25,24 +40,46 @@ function MerchIndex() {
     queryFn: () => listMerchProducts(),
   });
 
+  const { data: settings = DEFAULT_SETTINGS } = useQuery({
+    queryKey: ["merch_settings"],
+    queryFn: async (): Promise<MerchSettings> => {
+      const { data } = await supabase
+        .from("site_content")
+        .select("value")
+        .eq("key", "merch_settings")
+        .maybeSingle();
+      return { ...DEFAULT_SETTINGS, ...((data?.value as Partial<MerchSettings>) ?? {}) };
+    },
+  });
+
+  const ordered = (() => {
+    if (!settings.product_order.length) return products;
+    const rank = new Map(settings.product_order.map((id, i) => [id, i]));
+    return [...products].sort((a, b) => {
+      const ra = rank.has(a.id) ? rank.get(a.id)! : Number.MAX_SAFE_INTEGER;
+      const rb = rank.has(b.id) ? rank.get(b.id)! : Number.MAX_SAFE_INTEGER;
+      return ra - rb;
+    });
+  })();
+
   return (
     <Layout>
       <PageHeader
-        eyebrow="Shop"
-        title="WKNA 49 Merch"
-        description="Wear the valley. Every order is printed on demand and shipped within 5–10 business days."
+        eyebrow={settings.eyebrow}
+        title={settings.title}
+        description={settings.description}
       />
       <section className="mx-auto max-w-7xl px-4 py-10">
         {isLoading && <p className="text-sm text-muted-foreground">Loading merch…</p>}
         {error && <p className="text-sm text-red-600">Couldn't load merch right now. Try again shortly.</p>}
-        {!isLoading && !error && products.length === 0 && (
+        {!isLoading && !error && ordered.length === 0 && (
           <div className="rounded-lg border bg-card p-8 text-center">
             <p className="font-semibold text-primary">No merch listed yet.</p>
             <p className="mt-1 text-sm text-muted-foreground">Check back soon — designs are on the way.</p>
           </div>
         )}
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {products.map((p) => (
+          {ordered.map((p) => (
             <Link
               key={p.id}
               to="/merch/$id"

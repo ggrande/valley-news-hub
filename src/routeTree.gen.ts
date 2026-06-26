@@ -50,6 +50,7 @@ import { Route as AuthenticatedAdminReleasesRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminRedditAutomationRouteImport } from './routes/_authenticated/admin.reddit-automation'
 import { Route as AuthenticatedAdminRedditRouteImport } from './routes/_authenticated/admin.reddit'
 import { Route as AuthenticatedAdminPostsRouteImport } from './routes/_authenticated/admin.posts'
+import { Route as AuthenticatedAdminMerchSettingsRouteImport } from './routes/_authenticated/admin.merch-settings'
 import { Route as AuthenticatedAdminMerchRouteImport } from './routes/_authenticated/admin.merch'
 import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin.media'
 import { Route as AuthenticatedAdminManagedSitesRouteImport } from './routes/_authenticated/admin.managed-sites'
@@ -285,6 +286,12 @@ const AuthenticatedAdminPostsRoute = AuthenticatedAdminPostsRouteImport.update({
   path: '/posts',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminMerchSettingsRoute =
+  AuthenticatedAdminMerchSettingsRouteImport.update({
+    id: '/merch-settings',
+    path: '/merch-settings',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminMerchRoute = AuthenticatedAdminMerchRouteImport.update({
   id: '/merch',
   path: '/merch',
@@ -473,6 +480,7 @@ export interface FileRoutesByFullPath {
   '/admin/managed-sites': typeof AuthenticatedAdminManagedSitesRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/merch': typeof AuthenticatedAdminMerchRoute
+  '/admin/merch-settings': typeof AuthenticatedAdminMerchSettingsRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
@@ -538,6 +546,7 @@ export interface FileRoutesByTo {
   '/admin/managed-sites': typeof AuthenticatedAdminManagedSitesRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/merch': typeof AuthenticatedAdminMerchRoute
+  '/admin/merch-settings': typeof AuthenticatedAdminMerchSettingsRoute
   '/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
@@ -606,6 +615,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/managed-sites': typeof AuthenticatedAdminManagedSitesRoute
   '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
   '/_authenticated/admin/merch': typeof AuthenticatedAdminMerchRoute
+  '/_authenticated/admin/merch-settings': typeof AuthenticatedAdminMerchSettingsRoute
   '/_authenticated/admin/posts': typeof AuthenticatedAdminPostsRouteWithChildren
   '/_authenticated/admin/reddit': typeof AuthenticatedAdminRedditRouteWithChildren
   '/_authenticated/admin/reddit-automation': typeof AuthenticatedAdminRedditAutomationRoute
@@ -674,6 +684,7 @@ export interface FileRouteTypes {
     | '/admin/managed-sites'
     | '/admin/media'
     | '/admin/merch'
+    | '/admin/merch-settings'
     | '/admin/posts'
     | '/admin/reddit'
     | '/admin/reddit-automation'
@@ -739,6 +750,7 @@ export interface FileRouteTypes {
     | '/admin/managed-sites'
     | '/admin/media'
     | '/admin/merch'
+    | '/admin/merch-settings'
     | '/admin/posts'
     | '/admin/reddit'
     | '/admin/reddit-automation'
@@ -806,6 +818,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/managed-sites'
     | '/_authenticated/admin/media'
     | '/_authenticated/admin/merch'
+    | '/_authenticated/admin/merch-settings'
     | '/_authenticated/admin/posts'
     | '/_authenticated/admin/reddit'
     | '/_authenticated/admin/reddit-automation'
@@ -1156,6 +1169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPostsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/merch-settings': {
+      id: '/_authenticated/admin/merch-settings'
+      path: '/merch-settings'
+      fullPath: '/admin/merch-settings'
+      preLoaderRoute: typeof AuthenticatedAdminMerchSettingsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/merch': {
       id: '/_authenticated/admin/merch'
       path: '/merch'
@@ -1380,6 +1400,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminManagedSitesRoute: typeof AuthenticatedAdminManagedSitesRoute
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
   AuthenticatedAdminMerchRoute: typeof AuthenticatedAdminMerchRoute
+  AuthenticatedAdminMerchSettingsRoute: typeof AuthenticatedAdminMerchSettingsRoute
   AuthenticatedAdminPostsRoute: typeof AuthenticatedAdminPostsRouteWithChildren
   AuthenticatedAdminRedditRoute: typeof AuthenticatedAdminRedditRouteWithChildren
   AuthenticatedAdminRedditAutomationRoute: typeof AuthenticatedAdminRedditAutomationRoute
@@ -1401,6 +1422,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminManagedSitesRoute: AuthenticatedAdminManagedSitesRoute,
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
   AuthenticatedAdminMerchRoute: AuthenticatedAdminMerchRoute,
+  AuthenticatedAdminMerchSettingsRoute: AuthenticatedAdminMerchSettingsRoute,
   AuthenticatedAdminPostsRoute: AuthenticatedAdminPostsRouteWithChildren,
   AuthenticatedAdminRedditRoute: AuthenticatedAdminRedditRouteWithChildren,
   AuthenticatedAdminRedditAutomationRoute:
