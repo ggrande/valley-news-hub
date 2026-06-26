@@ -16,6 +16,8 @@ export type ManagedSiteRow = {
   last_deployed_at: string | null;
   notes: string | null;
   created_at: string;
+  onboarding_completed_at: string | null;
+  directory_opt_in: boolean;
   current_release?: { version: string; channel: string } | null;
   pending_release?: { version: string; channel: string; notes: string | null; is_security: boolean; is_breaking: boolean } | null;
 };
