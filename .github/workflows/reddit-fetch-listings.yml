@@ -1,0 +1,50 @@
+name: Fetch Reddit listings
+
+# Triggered by Lovable Cloud via repository_dispatch.
+# Loads the WKNA49 session cookies, scrapes a subreddit listing through a
+# real browser context (bypassing the IP-block on reddit.com .json), and POSTs
+# the result back. Cookies are also refreshed on every run.
+
+on:
+  repository_dispatch:
+    types: [reddit-fetch-listings]
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: "Listing job UUID"
+        required: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null
+          npm install playwright@1.48.0
+          npx playwright install --with-deps chromium
+
+      - name: Fetch listings
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          REDDIT_WORKER_WEBHOOK_SECRET: ${{ secrets.REDDIT_WORKER_WEBHOOK_SECRET }}
+          JOB_ID: ${{ github.event.client_payload.job_id || github.event.inputs.job_id }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node .github/scripts/reddit-fetch-listings.mjs
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reddit-listing-shots
+          path: /tmp/reddit-listing-shots/
+          if-no-files-found: ignore
+          retention-days: 7

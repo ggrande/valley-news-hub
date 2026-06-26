@@ -71,6 +71,8 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicNetworkIngestReleaseRouteImport } from './routes/api/public/network/ingest-release'
 import { Route as ApiPublicNetworkCheckUpdateRouteImport } from './routes/api/public/network/check-update'
 import { Route as ApiPublicHooksRetryMerchRouteImport } from './routes/api/public/hooks/retry-merch'
+import { Route as ApiPublicHooksRedditListingJobRouteImport } from './routes/api/public/hooks/reddit-listing-job'
+import { Route as ApiPublicHooksRedditListingCallbackRouteImport } from './routes/api/public/hooks/reddit-listing-callback'
 import { Route as ApiPublicHooksRedditCommentJobRouteImport } from './routes/api/public/hooks/reddit-comment-job'
 import { Route as ApiPublicHooksRedditCommentCallbackRouteImport } from './routes/api/public/hooks/reddit-comment-callback'
 import { Route as ApiPublicHooksProcessPendingRouteImport } from './routes/api/public/hooks/process-pending'
@@ -410,6 +412,18 @@ const ApiPublicHooksRetryMerchRoute =
     path: '/api/public/hooks/retry-merch',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRedditListingJobRoute =
+  ApiPublicHooksRedditListingJobRouteImport.update({
+    id: '/api/public/hooks/reddit-listing-job',
+    path: '/api/public/hooks/reddit-listing-job',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksRedditListingCallbackRoute =
+  ApiPublicHooksRedditListingCallbackRouteImport.update({
+    id: '/api/public/hooks/reddit-listing-callback',
+    path: '/api/public/hooks/reddit-listing-callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRedditCommentJobRoute =
   ApiPublicHooksRedditCommentJobRouteImport.update({
     id: '/api/public/hooks/reddit-comment-job',
@@ -524,6 +538,8 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/hooks/reddit-listing-callback': typeof ApiPublicHooksRedditListingCallbackRoute
+  '/api/public/hooks/reddit-listing-job': typeof ApiPublicHooksRedditListingJobRoute
   '/api/public/hooks/retry-merch': typeof ApiPublicHooksRetryMerchRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
@@ -594,6 +610,8 @@ export interface FileRoutesByTo {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/hooks/reddit-listing-callback': typeof ApiPublicHooksRedditListingCallbackRoute
+  '/api/public/hooks/reddit-listing-job': typeof ApiPublicHooksRedditListingJobRoute
   '/api/public/hooks/retry-merch': typeof ApiPublicHooksRetryMerchRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
@@ -667,6 +685,8 @@ export interface FileRoutesById {
   '/api/public/hooks/process-pending': typeof ApiPublicHooksProcessPendingRoute
   '/api/public/hooks/reddit-comment-callback': typeof ApiPublicHooksRedditCommentCallbackRoute
   '/api/public/hooks/reddit-comment-job': typeof ApiPublicHooksRedditCommentJobRoute
+  '/api/public/hooks/reddit-listing-callback': typeof ApiPublicHooksRedditListingCallbackRoute
+  '/api/public/hooks/reddit-listing-job': typeof ApiPublicHooksRedditListingJobRoute
   '/api/public/hooks/retry-merch': typeof ApiPublicHooksRetryMerchRoute
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
@@ -740,6 +760,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/hooks/reddit-listing-callback'
+    | '/api/public/hooks/reddit-listing-job'
     | '/api/public/hooks/retry-merch'
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
@@ -810,6 +832,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/hooks/reddit-listing-callback'
+    | '/api/public/hooks/reddit-listing-job'
     | '/api/public/hooks/retry-merch'
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
@@ -882,6 +906,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-pending'
     | '/api/public/hooks/reddit-comment-callback'
     | '/api/public/hooks/reddit-comment-job'
+    | '/api/public/hooks/reddit-listing-callback'
+    | '/api/public/hooks/reddit-listing-job'
     | '/api/public/hooks/retry-merch'
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
@@ -926,6 +952,8 @@ export interface RootRouteChildren {
   ApiPublicHooksProcessPendingRoute: typeof ApiPublicHooksProcessPendingRoute
   ApiPublicHooksRedditCommentCallbackRoute: typeof ApiPublicHooksRedditCommentCallbackRoute
   ApiPublicHooksRedditCommentJobRoute: typeof ApiPublicHooksRedditCommentJobRoute
+  ApiPublicHooksRedditListingCallbackRoute: typeof ApiPublicHooksRedditListingCallbackRoute
+  ApiPublicHooksRedditListingJobRoute: typeof ApiPublicHooksRedditListingJobRoute
   ApiPublicHooksRetryMerchRoute: typeof ApiPublicHooksRetryMerchRoute
   ApiPublicNetworkCheckUpdateRoute: typeof ApiPublicNetworkCheckUpdateRoute
   ApiPublicNetworkIngestReleaseRoute: typeof ApiPublicNetworkIngestReleaseRoute
@@ -1369,6 +1397,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRetryMerchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/reddit-listing-job': {
+      id: '/api/public/hooks/reddit-listing-job'
+      path: '/api/public/hooks/reddit-listing-job'
+      fullPath: '/api/public/hooks/reddit-listing-job'
+      preLoaderRoute: typeof ApiPublicHooksRedditListingJobRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/reddit-listing-callback': {
+      id: '/api/public/hooks/reddit-listing-callback'
+      path: '/api/public/hooks/reddit-listing-callback'
+      fullPath: '/api/public/hooks/reddit-listing-callback'
+      preLoaderRoute: typeof ApiPublicHooksRedditListingCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/reddit-comment-job': {
       id: '/api/public/hooks/reddit-comment-job'
       path: '/api/public/hooks/reddit-comment-job'
@@ -1597,6 +1639,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksRedditCommentCallbackRoute:
     ApiPublicHooksRedditCommentCallbackRoute,
   ApiPublicHooksRedditCommentJobRoute: ApiPublicHooksRedditCommentJobRoute,
+  ApiPublicHooksRedditListingCallbackRoute:
+    ApiPublicHooksRedditListingCallbackRoute,
+  ApiPublicHooksRedditListingJobRoute: ApiPublicHooksRedditListingJobRoute,
   ApiPublicHooksRetryMerchRoute: ApiPublicHooksRetryMerchRoute,
   ApiPublicNetworkCheckUpdateRoute: ApiPublicNetworkCheckUpdateRoute,
   ApiPublicNetworkIngestReleaseRoute: ApiPublicNetworkIngestReleaseRoute,

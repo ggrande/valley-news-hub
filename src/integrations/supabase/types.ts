@@ -1476,6 +1476,54 @@ export type Database = {
           },
         ]
       }
+      reddit_listing_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          github_run_url: string | null
+          id: string
+          imported_count: number | null
+          limit_per_sub: number
+          posts_count: number | null
+          sort: string
+          status: string
+          subreddit: string
+          top_window: string | null
+          triggered_by: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          github_run_url?: string | null
+          id?: string
+          imported_count?: number | null
+          limit_per_sub?: number
+          posts_count?: number | null
+          sort?: string
+          status?: string
+          subreddit: string
+          top_window?: string | null
+          triggered_by?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          github_run_url?: string | null
+          id?: string
+          imported_count?: number | null
+          limit_per_sub?: number
+          posts_count?: number | null
+          sort?: string
+          status?: string
+          subreddit?: string
+          top_window?: string | null
+          triggered_by?: string
+        }
+        Relationships: []
+      }
       site_content: {
         Row: {
           created_at: string
