@@ -37,6 +37,7 @@ import { Route as WeatherClosingsRouteImport } from './routes/weather.closings'
 import { Route as StoriesSlugRouteImport } from './routes/stories.$slug'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
+import { Route as NetworkStationsRouteImport } from './routes/network.stations'
 import { Route as NetworkDocsRouteImport } from './routes/network.docs'
 import { Route as NetworkChangelogRouteImport } from './routes/network.changelog'
 import { Route as MerchIdRouteImport } from './routes/merch.$id'
@@ -220,6 +221,11 @@ const NewsSlugRoute = NewsSlugRouteImport.update({
   id: '/news/$slug',
   path: '/news/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const NetworkStationsRoute = NetworkStationsRouteImport.update({
+  id: '/stations',
+  path: '/stations',
+  getParentRoute: () => NetworkRoute,
 } as any)
 const NetworkDocsRoute = NetworkDocsRouteImport.update({
   id: '/docs',
@@ -502,6 +508,7 @@ export interface FileRoutesByFullPath {
   '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
   '/network/docs': typeof NetworkDocsRoute
+  '/network/stations': typeof NetworkStationsRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/stories/$slug': typeof StoriesSlugRoute
@@ -574,6 +581,7 @@ export interface FileRoutesByTo {
   '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
   '/network/docs': typeof NetworkDocsRoute
+  '/network/stations': typeof NetworkStationsRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/stories/$slug': typeof StoriesSlugRoute
@@ -649,6 +657,7 @@ export interface FileRoutesById {
   '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
   '/network/docs': typeof NetworkDocsRoute
+  '/network/stations': typeof NetworkStationsRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/stories/$slug': typeof StoriesSlugRoute
@@ -724,6 +733,7 @@ export interface FileRouteTypes {
     | '/merch/$id'
     | '/network/changelog'
     | '/network/docs'
+    | '/network/stations'
     | '/news/$slug'
     | '/news/local'
     | '/stories/$slug'
@@ -796,6 +806,7 @@ export interface FileRouteTypes {
     | '/merch/$id'
     | '/network/changelog'
     | '/network/docs'
+    | '/network/stations'
     | '/news/$slug'
     | '/news/local'
     | '/stories/$slug'
@@ -870,6 +881,7 @@ export interface FileRouteTypes {
     | '/merch/$id'
     | '/network/changelog'
     | '/network/docs'
+    | '/network/stations'
     | '/news/$slug'
     | '/news/local'
     | '/stories/$slug'
@@ -1158,6 +1170,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/news/$slug'
       preLoaderRoute: typeof NewsSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/network/stations': {
+      id: '/network/stations'
+      path: '/stations'
+      fullPath: '/network/stations'
+      preLoaderRoute: typeof NetworkStationsRouteImport
+      parentRoute: typeof NetworkRoute
     }
     '/network/docs': {
       id: '/network/docs'
@@ -1580,11 +1599,13 @@ const AuthenticatedRouteRouteWithChildren =
 interface NetworkRouteChildren {
   NetworkChangelogRoute: typeof NetworkChangelogRoute
   NetworkDocsRoute: typeof NetworkDocsRoute
+  NetworkStationsRoute: typeof NetworkStationsRoute
 }
 
 const NetworkRouteChildren: NetworkRouteChildren = {
   NetworkChangelogRoute: NetworkChangelogRoute,
   NetworkDocsRoute: NetworkDocsRoute,
+  NetworkStationsRoute: NetworkStationsRoute,
 }
 
 const NetworkRouteWithChildren =
