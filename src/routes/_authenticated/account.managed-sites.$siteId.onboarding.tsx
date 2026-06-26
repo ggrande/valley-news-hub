@@ -768,6 +768,7 @@ function ProvisioningPanel({
 
   const isReady = s?.state === "ready";
   const isFailed = s?.state === "failed";
+  const [isRetrying, setIsRetrying] = useState(false);
 
   return (
     <div className="sticky top-4 rounded-xl border bg-card p-5 shadow-sm">
