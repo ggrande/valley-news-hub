@@ -331,6 +331,8 @@ const AUTOMATION_KEYS = [
     { value: "all", label: "All time" },
   ] },
   { key: "automation_min_score", label: "Minimum upvote score (skip below)", type: "number", default: 0 },
+  { key: "automation_moderation_hold_hours", label: "Moderation hold (hours before a post is eligible — set to 0 for high-volume subreddits)", type: "number", default: 3 },
+
   { key: "automation_auto_generate", label: "Auto-generate article drafts from imports", type: "bool", default: false },
   { key: "automation_generate_limit", label: "Max drafts to generate per run", type: "number", default: 20 },
   { key: "automation_auto_filler_image", label: "Auto-generate AI hero image when none was provided (only for drafts that pass moderation)", type: "bool", default: false },
@@ -407,6 +409,8 @@ function AutomationPanel() {
         if (typeof r?.published === "number") parts.push(`published ${r.published}`);
         if (typeof r?.filler_images === "number") parts.push(`${r.filler_images} filler images`);
         if (typeof r?.skipped_existing === "number") parts.push(`${r.skipped_existing} already known`);
+        if (typeof r?.skipped_moderation_hold === "number" && r.skipped_moderation_hold > 0) parts.push(`${r.skipped_moderation_hold} waiting for moderation hold`);
+        if (typeof r?.skipped_low_score === "number" && r.skipped_low_score > 0) parts.push(`${r.skipped_low_score} below min score`);
         if (r?.errors?.length) parts.push(`${r.errors.length} errors`);
         setRunMsg(`Done — ${parts.join(", ") || "no changes"}.`);
         if (r?.errors?.length) {

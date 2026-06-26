@@ -25,9 +25,10 @@ async function loadSettings(admin: any): Promise<SettingsMap> {
 // return 403 from worker/edge environments).
 const ARCTIC_BASE = "https://arctic-shift.photon-reddit.com/api";
 const UA = "WKNA49NewsBot/1.0 (intake; +https://wkna49.com)";
-const MODERATION_HOLD_SEC = 3 * 60 * 60;
+const DEFAULT_MODERATION_HOLD_HOURS = 3;
 // Browser-like UA needed for Reddit's JSON endpoints — the "bot" UA above is 403'd.
 const BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -332,8 +333,11 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
         const autoFillerImage = settings.automation_auto_filler_image === true;
         const autoPublish = settings.automation_auto_publish === true;
         const generateLimit = Math.max(1, Math.min(50, Number(settings.automation_generate_limit ?? 20)));
+        const holdHours = Math.max(0, Number(settings.automation_moderation_hold_hours ?? DEFAULT_MODERATION_HOLD_HOURS));
+        const moderationHoldSec = Math.floor(holdHours * 3600);
 
-        const summary: any = { imported: 0, skipped_existing: 0, skipped_low_score: 0, generated: 0, published: 0, filler_images: 0, errors: [] as string[] };
+        const summary: any = { imported: 0, skipped_existing: 0, skipped_low_score: 0, skipped_moderation_hold: 0, generated: 0, published: 0, filler_images: 0, errors: [] as string[] };
+
 
         // 1. Auto-import recent posts from configured subreddits
         for (const sub of subs) {
@@ -364,9 +368,13 @@ export const Route = createFileRoute("/api/public/hooks/process-pending")({
           const nowSec = Math.floor(Date.now() / 1000);
           for (const p of posts) {
             if (knownIds.has(p.id)) { summary.skipped_existing++; continue; }
-            // Wait at least 3 hours after creation so subreddit moderators
-            // have time to remove rule-breaking content before we import it.
-            if (typeof p.created_utc === "number" && nowSec - p.created_utc < MODERATION_HOLD_SEC) continue;
+            // Wait `holdHours` after creation so subreddit moderators have time
+            // to remove rule-breaking content before we import it. Set to 0 to disable.
+            if (moderationHoldSec > 0 && typeof p.created_utc === "number" && nowSec - p.created_utc < moderationHoldSec) {
+              summary.skipped_moderation_hold++;
+              continue;
+            }
+
             const body = (p.selftext ?? "").trim().toLowerCase();
             const title = (p.title ?? "").trim().toLowerCase();
             if (body === "[removed]" || body === "[deleted]" || title === "[removed]" || title === "[deleted]") continue;
