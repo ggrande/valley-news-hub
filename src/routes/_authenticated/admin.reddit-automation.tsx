@@ -119,7 +119,12 @@ function Page() {
   const refreshQueue = useMutation({
     mutationFn: () => refreshNotificationQueue({ data: { windowHours } }),
     onSuccess: (r: any) => {
-      toast.success(`Refreshed ${r?.refreshed ?? 0} upvote count${r?.refreshed === 1 ? "" : "s"} (scanned ${r?.scanned ?? 0})`);
+      const parts = [
+        `${r?.backfilled ?? 0} backfilled`,
+        `${r?.refreshed ?? 0} upvote${r?.refreshed === 1 ? "" : "s"} refreshed`,
+      ];
+      toast.success(parts.join(" · "));
+
       qc.invalidateQueries({ queryKey: ["reddit-notifications"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Refresh failed"),
