@@ -279,6 +279,72 @@ export const setRedditSessionCookies = createServerFn({ method: "POST" })
     return { ok: true, count: cookies.length, names: cookies.map((c) => c.name) };
   });
 
+// Refresh the notification queue: re-fetch latest upvote counts for the reddit
+// posts behind recent notifications. The queue itself is already joined live
+// with posts + reddit_imports, so calling this then re-querying gives an
+// up-to-the-minute view of upvotes + post status.
+export const refreshNotificationQueue = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { windowHours?: number | null }) => input)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Find imports linked to notifications in the chosen window
+    let q = supabaseAdmin
+      .from("reddit_comment_notifications")
+      .select("reddit_import_id, created_at, reddit_imports!inner(id, reddit_post_id)")
+      .not("reddit_import_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (data.windowHours && data.windowHours > 0) {
+      const cutoff = new Date(Date.now() - data.windowHours * 3600_000).toISOString();
+      q = q.gte("created_at", cutoff);
+    }
+    const { data: rows, error } = await q;
+    if (error) throw error;
+
+    const byPostId = new Map<string, string>();
+    for (const r of (rows ?? []) as any[]) {
+      const pid = r.reddit_imports?.reddit_post_id;
+      const iid = r.reddit_imports?.id;
+      if (pid && iid && !byPostId.has(pid)) byPostId.set(pid, iid);
+    }
+    const ids = [...byPostId.keys()];
+    if (!ids.length) return { ok: true, refreshed: 0, scanned: 0 };
+
+    const BROWSER_UA =
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+    const scores = new Map<string, number>();
+    for (let i = 0; i < ids.length; i += 100) {
+      const slice = ids.slice(i, i + 100);
+      const fullnames = slice.map((id) => `t3_${id}`).join(",");
+      const url = `https://api.reddit.com/api/info.json?id=${fullnames}&raw_json=1`;
+      try {
+        const res = await fetch(url, { headers: { "User-Agent": BROWSER_UA, Accept: "application/json" } });
+        if (!res.ok) continue;
+        const json: any = await res.json().catch(() => null);
+        for (const c of json?.data?.children ?? []) {
+          const d = c?.data;
+          if (d?.id && typeof d.score === "number") scores.set(d.id, d.score);
+        }
+      } catch { /* skip batch */ }
+      await new Promise((r) => setTimeout(r, 250));
+    }
+
+    let refreshed = 0;
+    for (const [postId, score] of scores) {
+      const rowId = byPostId.get(postId);
+      if (!rowId) continue;
+      const { error: upErr } = await supabaseAdmin
+        .from("reddit_imports")
+        .update({ current_score: score } as never)
+        .eq("id", rowId);
+      if (!upErr) refreshed++;
+    }
+    return { ok: true, refreshed, scanned: ids.length };
+  });
+
 // Diagnostic: query GitHub Actions for this repo and return recent workflow runs
 // so an admin can see whether dispatches are actually starting workflows.
 export const debugGitHubStatus = createServerFn({ method: "GET" })
