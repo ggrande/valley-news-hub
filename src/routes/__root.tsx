@@ -139,6 +139,18 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // Client-only tenant subdomain redirect. SSR will render the master page once
+  // and the client mount redirects to the station admin if needed.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const host = window.location.hostname.toLowerCase();
+    const isTenant = host.endsWith(".wkna49.com") && host !== "www.wkna49.com" && host !== "wkna49.com";
+    if (!isTenant) return;
+    const p = window.location.pathname;
+    if (p === "/admin" || p.startsWith("/admin/") || p === "/account" || p.startsWith("/account/")) {
+      window.location.replace("/station/admin");
+    }
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <NetworkUpdateBanner />
