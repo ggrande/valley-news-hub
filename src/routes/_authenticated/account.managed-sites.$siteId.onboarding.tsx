@@ -782,44 +782,10 @@ function ProvisioningPanel({
         )}
 
         {s?.hasRefreshToken && !s?.project && !isReady && (
-          <div className="space-y-2">
-            <Field label="Supabase organization">
-              <select
-                value={chosenOrg}
-                onChange={(e) => setChosenOrg(e.target.value)}
-                className="w-full rounded border px-2 py-1.5 text-xs"
-              >
-                <option value="">— pick one —</option>
-                {orgs.data?.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Region">
-              <select
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="w-full rounded border px-2 py-1.5 text-xs"
-              >
-                <option value="us-east-1">US East (Virginia)</option>
-                <option value="us-west-1">US West (California)</option>
-                <option value="eu-west-1">EU West (Ireland)</option>
-                <option value="eu-central-1">EU Central (Frankfurt)</option>
-                <option value="ap-southeast-1">Asia (Singapore)</option>
-                <option value="ap-southeast-2">Asia (Sydney)</option>
-              </select>
-            </Field>
-            <button
-              type="button"
-              onClick={startProvision}
-              disabled={!chosenOrg}
-              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-            >
-              Create project
-            </button>
-          </div>
+          <p className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+            Pick your Supabase organization and region on the left, then hit{" "}
+            <strong>Start provisioning &amp; continue</strong>.
+          </p>
         )}
 
         {isReady && (
