@@ -22,6 +22,9 @@ import {
   listConnectedOrganizations,
   provisionTenantProject,
   finalizeTenantProvisioning,
+  listProvisionAttempts,
+  resetProvisioningForRetry,
+  type ProvisionAttempt,
 } from "@/lib/supabase-provisioning.functions";
 
 export const Route = createFileRoute("/_authenticated/account/managed-sites/$siteId/onboarding")({
@@ -625,6 +628,19 @@ function OnboardingPage() {
             sessionCode={shortSessionCode(siteId)}
             answersComplete={answersComplete}
             onOpenNewsroom={() => navigate({ to: "/account/managed-sites" })}
+            onRetry={async () => {
+              if (!chosenOrg) {
+                setStep(0);
+                toast.error("Pick a Supabase organization on step 1 before retrying.");
+                return;
+              }
+              try {
+                await provisionMut.mutateAsync();
+              } catch {
+                /* toast already shown */
+              }
+            }}
+            retryDisabled={provisionMut.isPending}
           />
         </div>
       </div>
@@ -641,15 +657,21 @@ function ProvisioningPanel({
   sessionCode,
   answersComplete,
   onOpenNewsroom,
+  onRetry,
+  retryDisabled,
 }: {
   siteId: string;
   sessionCode: string;
   answersComplete: boolean;
   onOpenNewsroom: () => void;
+  onRetry: () => void | Promise<void>;
+  retryDisabled?: boolean;
 }) {
   const fetchStatus = useServerFn(getProvisioningStatus);
   const initiate = useServerFn(initiateSupabaseConnect);
   const finalize = useServerFn(finalizeTenantProvisioning);
+  const fetchAttempts = useServerFn(listProvisionAttempts);
+  const resetForRetry = useServerFn(resetProvisioningForRetry);
 
   const status = useQuery({
     queryKey: ["provisioning-status", siteId],
@@ -657,6 +679,15 @@ function ProvisioningPanel({
     refetchInterval: (q) => {
       const s = q.state.data?.state;
       return s === "provisioning" || s === "migrating" || s === "linking" ? 4000 : false;
+    },
+  });
+
+  const attempts = useQuery({
+    queryKey: ["provision-attempts", siteId],
+    queryFn: () => fetchAttempts({ data: { siteId } }),
+    refetchInterval: (q) => {
+      const s = status.data?.state;
+      return s === "provisioning" || s === "migrating" || s === "linking" ? 6000 : false;
     },
   });
 
@@ -831,21 +862,92 @@ function ProvisioningPanel({
         )}
 
         {isFailed && (
-          <button
-            type="button"
-            onClick={() => status.refetch()}
-            className="w-full rounded-md border px-4 py-2 text-sm font-semibold"
-          >
-            Retry status check
-          </button>
+          <div className="space-y-2">
+            <button
+              type="button"
+              disabled={retryDisabled}
+              onClick={async () => {
+                try {
+                  await resetForRetry({ data: { siteId } });
+                  await onRetry();
+                  status.refetch();
+                  attempts.refetch();
+                } catch (e) {
+                  toast.error((e as Error).message);
+                }
+              }}
+              className="w-full rounded-md bg-[color:var(--breaking)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {retryDisabled ? "Retrying…" : "Retry provisioning"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                status.refetch();
+                attempts.refetch();
+              }}
+              className="w-full rounded-md border px-4 py-2 text-xs font-semibold"
+            >
+              Refresh status
+            </button>
+          </div>
         )}
       </div>
+
+      <AttemptsList query={attempts} />
 
       <p className="mt-4 border-t pt-3 text-[10px] leading-relaxed text-muted-foreground">
         Safe to refresh — we'll resume right where you left off. If something goes wrong, share
         session code <span className="font-mono">{sessionCode}</span> with support.
       </p>
     </div>
+  );
+}
+
+function AttemptsList({
+  query,
+}: {
+  query: ReturnType<typeof useQuery<ProvisionAttempt[]>>;
+}) {
+  const rows = query.data ?? [];
+  if (!rows.length) return null;
+  const badge = (status: ProvisionAttempt["status"]) => {
+    const map: Record<ProvisionAttempt["status"], string> = {
+      succeeded: "bg-[color:var(--broadcast)]/15 text-[color:var(--broadcast)]",
+      reclaimed: "bg-amber-500/15 text-amber-600",
+      failed: "bg-[color:var(--breaking)]/15 text-[color:var(--breaking)]",
+      pending: "bg-muted text-muted-foreground",
+      abandoned: "bg-muted text-muted-foreground line-through",
+    };
+    return (
+      <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${map[status]}`}>
+        {status}
+      </span>
+    );
+  };
+  return (
+    <details className="mt-4 rounded-md border bg-muted/30 p-2 text-xs">
+      <summary className="cursor-pointer font-semibold text-muted-foreground">
+        Setup attempts ({rows.length})
+      </summary>
+      <ul className="mt-2 space-y-2">
+        {rows.map((a) => (
+          <li key={a.id} className="rounded border bg-background p-2">
+            <div className="flex items-center justify-between gap-2">
+              <code className="truncate font-mono text-[10px]">{a.attempted_project_name}</code>
+              {badge(a.status)}
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
+              <span>{new Date(a.started_at).toLocaleString()}</span>
+              <code className="font-mono">{a.session_code}</code>
+            </div>
+            {a.error && (
+              <p className="mt-1 text-[10px] text-[color:var(--breaking)]">{a.error}</p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
