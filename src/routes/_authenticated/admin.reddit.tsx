@@ -404,6 +404,21 @@ function AutomationPanel() {
   };
 
   const enabled = vals.automation_enabled === true;
+  const useSessionCookies = vals.automation_use_session_cookies === true;
+
+  const sessionStatus = useQuery({
+    queryKey: ["reddit-session-status"],
+    queryFn: async () => getSessionStatus(),
+    refetchInterval: 15000,
+    enabled: useSessionCookies,
+  });
+  const jobs = useQuery({
+    queryKey: ["reddit-listing-jobs"],
+    queryFn: async () => listJobs({ data: { limit: 8 } }),
+    refetchInterval: 5000,
+    enabled: useSessionCookies,
+  });
+  const s = sessionStatus.data;
 
   const triggerNow = async () => {
     setRunBusy(true); setRunErr(null); setRunMsg("Running automation…");
