@@ -124,6 +124,18 @@ export function ShareBar({ url, title, summary = "", className = "", label = "Sh
       >
         <Share2 className="size-4" />
       </button>
+      {storyUrl && (
+        <a
+          href={storyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="View as Web Story"
+          title="View as Web Story"
+          className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-card text-primary transition hover:bg-primary hover:text-primary-foreground"
+        >
+          <Globe className="size-4" />
+        </a>
+      )}
     </div>
   );
 }
