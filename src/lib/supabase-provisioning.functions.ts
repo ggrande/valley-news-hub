@@ -183,9 +183,8 @@ export const provisionTenantProject = createServerFn({ method: "POST" })
       })
       .eq("id", data.siteId);
 
-    // Supabase project names must be unique per organization. If the chosen name
-    // already exists (e.g. retry after a previous failed attempt), append a short
-    // random suffix and retry up to 2 times.
+    // Supabase project names must be unique per organization. Build a list of
+    // candidate names: the canonical one first, then random-suffixed retries.
     const baseName = (data.projectName || `${site.display_name} (${site.subdomain})`).slice(0, 44);
     const attemptNames = [
       baseName.slice(0, 50),
@@ -195,7 +194,24 @@ export const provisionTenantProject = createServerFn({ method: "POST" })
 
     let project: import("@/lib/supabase-oauth.server").SbProject | null = null;
     let lastErr: Error | null = null;
+
     for (const name of attemptNames) {
+      // Log the attempt up front so we always have a record (even if the call
+      // crashes hard partway through). Each attempt has its own session code.
+      const sessionCode = makeSessionCode();
+      const { data: attemptRow } = await (supabaseAdmin as any)
+        .from("tenant_provision_attempts")
+        .insert({
+          site_id: data.siteId,
+          session_code: sessionCode,
+          attempted_project_name: name,
+          supabase_org_id: org.id,
+          status: "pending",
+        })
+        .select("id")
+        .single();
+      const attemptId = attemptRow?.id as string | undefined;
+
       try {
         project = await sbo.createProject(accessToken, {
           name,
@@ -204,11 +220,83 @@ export const provisionTenantProject = createServerFn({ method: "POST" })
           db_pass: dbPass,
           plan: "free",
         });
+        await (supabaseAdmin as any)
+          .from("tenant_provision_attempts")
+          .update({
+            status: "succeeded",
+            supabase_project_ref: project.id,
+            finished_at: new Date().toISOString(),
+          })
+          .eq("id", attemptId);
         lastErr = null;
         break;
       } catch (e) {
         lastErr = e as Error;
-        if (!/already exists/i.test(lastErr.message)) break;
+        const isDup = /already exists/i.test(lastErr.message);
+
+        // Reclaim path: name already exists. If we ourselves created it during
+        // a previous failed run for THIS site, adopt it instead of leaving an
+        // orphan in the user's Supabase org.
+        if (isDup) {
+          try {
+            const projects = await sbo.listProjects(accessToken);
+            const existing = projects.find(
+              (p) => p.organization_id === org.id && p.name === name,
+            );
+            if (existing) {
+              // Anti-abuse: if a DIFFERENT site of ours already claims this
+              // ref, refuse to hand the same project to two stations.
+              const { data: claimedBy } = await (supabaseAdmin as any)
+                .from("managed_sites")
+                .select("id")
+                .eq("supabase_project_ref", existing.id)
+                .neq("id", data.siteId)
+                .maybeSingle();
+              if (claimedBy) {
+                await (supabaseAdmin as any)
+                  .from("tenant_provision_attempts")
+                  .update({
+                    status: "failed",
+                    error: `Project "${name}" already claimed by another station.`,
+                    finished_at: new Date().toISOString(),
+                  })
+                  .eq("id", attemptId);
+                lastErr = new Error(
+                  `Project "${name}" already exists in your Supabase org and is linked to another station. Pick a different name or remove the orphan in your Supabase dashboard.`,
+                );
+                break;
+              }
+
+              // Reclaim: mark attempt + bind project to this site.
+              await (supabaseAdmin as any)
+                .from("tenant_provision_attempts")
+                .update({
+                  status: "reclaimed",
+                  supabase_project_ref: existing.id,
+                  error: "Project already existed in org — reclaimed.",
+                  finished_at: new Date().toISOString(),
+                })
+                .eq("id", attemptId);
+              project = existing;
+              lastErr = null;
+              break;
+            }
+          } catch (lookupErr) {
+            // Lookup itself failed — fall through to log + retry next name.
+            console.error("listProjects during reclaim failed:", lookupErr);
+          }
+        }
+
+        await (supabaseAdmin as any)
+          .from("tenant_provision_attempts")
+          .update({
+            status: "failed",
+            error: lastErr.message.slice(0, 1000),
+            finished_at: new Date().toISOString(),
+          })
+          .eq("id", attemptId);
+
+        if (!isDup) break; // unrelated error → stop, don't burn more name slots
       }
     }
     if (!project) {
@@ -234,6 +322,87 @@ export const provisionTenantProject = createServerFn({ method: "POST" })
         "Project creation kicked off. It usually takes 1–2 minutes to become healthy; we'll finalize migrations automatically once it is.",
     };
   });
+
+// ---------- 4b. LIST ATTEMPTS ----------
+
+export type ProvisionAttempt = {
+  id: string;
+  session_code: string;
+  attempted_project_name: string;
+  supabase_org_id: string;
+  supabase_project_ref: string | null;
+  status: "pending" | "succeeded" | "failed" | "reclaimed" | "abandoned";
+  error: string | null;
+  started_at: string;
+  finished_at: string | null;
+};
+
+export const listProvisionAttempts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { siteId: string }) => d)
+  .handler(async ({ data, context }): Promise<ProvisionAttempt[]> => {
+    const { data: rows, error } = await (context.supabase as any)
+      .from("tenant_provision_attempts")
+      .select(
+        "id, session_code, attempted_project_name, supabase_org_id, supabase_project_ref, status, error, started_at, finished_at",
+      )
+      .eq("site_id", data.siteId)
+      .order("started_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as ProvisionAttempt[];
+  });
+
+// ---------- 4c. RESET FOR RETRY ----------
+//
+// After a failed run, the wizard can call this to put the site back into a
+// state where `provisionTenantProject` will run again. We mark every still-
+// pending attempt as "abandoned" first so the history stays honest.
+
+export const resetProvisioningForRetry = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { siteId: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: site, error } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .select("id, owner_user_id, provision_state, supabase_project_ref, supabase_refresh_token_enc")
+      .eq("id", data.siteId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!site || site.owner_user_id !== context.userId)
+      throw new Error("Site not found or access denied");
+    if (site.supabase_project_ref)
+      throw new Error("This station already has a Supabase project — nothing to retry.");
+    if (site.provision_state === "provisioning" || site.provision_state === "migrating")
+      throw new Error("Provisioning is already in progress.");
+
+    await (supabaseAdmin as any)
+      .from("tenant_provision_attempts")
+      .update({ status: "abandoned", finished_at: new Date().toISOString() })
+      .eq("site_id", data.siteId)
+      .eq("status", "pending");
+
+    await (supabaseAdmin as any)
+      .from("managed_sites")
+      .update({
+        provision_state: site.supabase_refresh_token_enc ? "linking" : "awaiting_oauth",
+        provision_error: null,
+      })
+      .eq("id", data.siteId);
+
+    return { ok: true };
+  });
+
+// ---------- session code helper ----------
+
+function makeSessionCode(): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const block = (n: number) =>
+    Array.from(randomBytes(n))
+      .map((b) => alphabet[b % alphabet.length])
+      .join("");
+  return `WKNA-${block(4)}-${block(4)}`;
+}
 
 // ---------- 5. FINALIZE (polls + runs migrations + stores keys) ----------
 
