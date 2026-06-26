@@ -25,9 +25,10 @@ async function loadSettings(admin: any): Promise<SettingsMap> {
 // return 403 from worker/edge environments).
 const ARCTIC_BASE = "https://arctic-shift.photon-reddit.com/api";
 const UA = "WKNA49NewsBot/1.0 (intake; +https://wkna49.com)";
-const MODERATION_HOLD_SEC = 3 * 60 * 60;
+const DEFAULT_MODERATION_HOLD_HOURS = 3;
 // Browser-like UA needed for Reddit's JSON endpoints — the "bot" UA above is 403'd.
 const BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
