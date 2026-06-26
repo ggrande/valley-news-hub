@@ -203,6 +203,7 @@ function Page() {
           <p className="mt-2 text-muted-foreground">Also accepted: a raw <code>Cookie:</code> header string copied from DevTools → Network.</p>
         </details>
         <textarea
+          id="reddit-cookie-input"
           className="mt-3 h-40 w-full rounded-md border p-3 font-mono text-xs"
           placeholder='[{"name":"reddit_session","value":"...","domain":".reddit.com",...}, ...]'
           value={cookieRaw}
@@ -210,12 +211,36 @@ function Page() {
         />
         <div className="mt-2 flex justify-end">
           <button
+            id="reddit-cookie-save"
             onClick={() => pasteCookies.mutate()}
             disabled={pasteCookies.isPending || !cookieRaw.trim()}
             className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           >
             {pasteCookies.isPending ? "Saving…" : "Save cookies"}
           </button>
+        </div>
+
+        <div className="mt-4 rounded-md border border-dashed bg-amber-50 p-3 text-xs">
+          <div className="font-semibold text-amber-900">⚡ One-click bookmarklet</div>
+          <p className="mt-1 text-amber-900">
+            After copying cookies from Cookie-Editor (Export → JSON), come back to this page and click the bookmarklet — it pastes from your clipboard and submits automatically.
+          </p>
+          <p className="mt-2 text-amber-900">
+            <strong>Install:</strong> drag this link to your bookmarks bar →{" "}
+            <a
+              className="inline-block rounded bg-primary px-3 py-1 font-semibold text-primary-foreground no-underline"
+              href={`javascript:(async()=>{try{if(!/admin\\/reddit-automation/.test(location.pathname)){if(/reddit\\.com$/.test(location.hostname)){const u=document.querySelector('[data-testid=\"user-drawer-button\"],a[href^=\"/user/\"]');alert(u?'✓ Logged into Reddit as '+(u.textContent||'').trim()+'.\\n\\nNow:\\n1) Open Cookie-Editor → Export → JSON\\n2) Go to the WKNA admin page\\n3) Click this bookmarklet again':'⚠ Not logged into reddit.com. Log in as u/WKNA49 first.');return;}alert('Open this on the WKNA admin → Reddit Automation page (or on reddit.com to check login).');return;}const t=(await navigator.clipboard.readText()||'').trim();if(!t){alert('Clipboard is empty. Copy cookies from Cookie-Editor first.');return;}const ta=document.getElementById('reddit-cookie-input');if(!ta){alert('Cookie textarea not found.');return;}const setter=Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype,'value').set;setter.call(ta,t);ta.dispatchEvent(new Event('input',{bubbles:true}));await new Promise(r=>setTimeout(r,150));const btn=document.getElementById('reddit-cookie-save');if(!btn){alert('Save button not found.');return;}btn.click();}catch(e){alert('Bookmarklet error: '+(e&&e.message||e));}})();`}
+              onClick={(e) => { e.preventDefault(); toast.info("Drag this button to your bookmarks bar — clicking it here just runs it."); }}
+            >
+              📎 WKNA Paste Reddit Cookies
+            </a>
+          </p>
+          <p className="mt-2 text-amber-900">
+            Run it on <code>reddit.com</code> to verify you're logged in as <code>u/WKNA49</code>, or on this admin page to paste &amp; save in one click.
+          </p>
+          <p className="mt-1 text-amber-800">
+            Note: a pure reddit.com bookmarklet can't read the <code>reddit_session</code> cookie directly — it's <code>httpOnly</code>. Cookie-Editor (extension) is the only way to export it, which is why this bookmarklet handles the paste/submit step instead.
+          </p>
         </div>
       </section>
 
