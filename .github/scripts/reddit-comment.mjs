@@ -260,8 +260,30 @@ async function main() {
   let result = { status: "failed", log_excerpt: "unknown" };
 
   try {
+    const hasCookies = Array.isArray(job.session_cookies) && job.session_cookies.length > 0;
     let loggedInAs = await getLoggedInUser(context);
     console.log("[session-check] /api/me.json →", loggedInAs ? `logged in as ${loggedInAs}` : "anonymous");
+
+    // Reddit frequently blocks GitHub Actions IPs from hitting api/me.json
+    // (returns HTML/403), so the JSON probe returns null even when the pasted
+    // cookies are valid. When cookies were supplied, verify via a real page
+    // navigation, and if that's also inconclusive, trust the cookies rather
+    // than falling back to headless login (which Reddit blocks too).
+    if (!loggedInAs && hasCookies) {
+      try {
+        await page.goto("https://www.reddit.com/", { waitUntil: "domcontentloaded", timeout: 20000 });
+        await shot(page, "00-cookies-loaded");
+        const html = await page.content().catch(() => "");
+        const m = html.match(/"username"\s*:\s*"([^"]+)"/) || html.match(/\/user\/([A-Za-z0-9_-]{3,20})\//);
+        if (m) loggedInAs = m[1];
+      } catch (e) {
+        console.warn("[session-check] browser probe failed:", e?.message);
+      }
+      if (!loggedInAs) {
+        console.log("[session-check] api probe blocked; proceeding with pasted cookies on trust");
+        loggedInAs = "(cookies)";
+      }
+    }
 
     if (!loggedInAs) {
       if (!job.reddit_username || !job.reddit_password) {
@@ -275,7 +297,7 @@ async function main() {
     const refreshedCookies = await context.cookies();
 
     if (job.action === "capture-session") {
-      result = { status: "succeeded", session_status: "active", refreshed_cookies: refreshedCookies, log_excerpt: "Session captured" };
+      result = { status: "succeeded", session_status: "active", refreshed_cookies: refreshedCookies, log_excerpt: `Session captured (${loggedInAs})` };
     } else {
       const notif = job.notification;
       if (!notif) throw new Error("Job missing notification payload");
