@@ -35,6 +35,7 @@ import { Route as NewsIndexRouteImport } from './routes/news.index'
 import { Route as MerchIndexRouteImport } from './routes/merch.index'
 import { Route as WeatherClosingsRouteImport } from './routes/weather.closings'
 import { Route as StoriesSlugRouteImport } from './routes/stories.$slug'
+import { Route as StationVerifyRouteImport } from './routes/station.verify'
 import { Route as StationAdminRouteImport } from './routes/station.admin'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
@@ -213,6 +214,11 @@ const WeatherClosingsRoute = WeatherClosingsRouteImport.update({
 const StoriesSlugRoute = StoriesSlugRouteImport.update({
   id: '/stories/$slug',
   path: '/stories/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StationVerifyRoute = StationVerifyRouteImport.update({
+  id: '/station/verify',
+  path: '/station/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StationAdminRoute = StationAdminRouteImport.update({
@@ -532,6 +538,7 @@ export interface FileRoutesByFullPath {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/station/admin': typeof StationAdminRoute
+  '/station/verify': typeof StationVerifyRoute
   '/stories/$slug': typeof StoriesSlugRoute
   '/weather/closings': typeof WeatherClosingsRoute
   '/merch/': typeof MerchIndexRoute
@@ -608,6 +615,7 @@ export interface FileRoutesByTo {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/station/admin': typeof StationAdminRoute
+  '/station/verify': typeof StationVerifyRoute
   '/stories/$slug': typeof StoriesSlugRoute
   '/weather/closings': typeof WeatherClosingsRoute
   '/merch': typeof MerchIndexRoute
@@ -687,6 +695,7 @@ export interface FileRoutesById {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/station/admin': typeof StationAdminRoute
+  '/station/verify': typeof StationVerifyRoute
   '/stories/$slug': typeof StoriesSlugRoute
   '/weather/closings': typeof WeatherClosingsRoute
   '/merch/': typeof MerchIndexRoute
@@ -766,6 +775,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/station/admin'
+    | '/station/verify'
     | '/stories/$slug'
     | '/weather/closings'
     | '/merch/'
@@ -842,6 +852,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/station/admin'
+    | '/station/verify'
     | '/stories/$slug'
     | '/weather/closings'
     | '/merch'
@@ -920,6 +931,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/station/admin'
+    | '/station/verify'
     | '/stories/$slug'
     | '/weather/closings'
     | '/merch/'
@@ -995,6 +1007,7 @@ export interface RootRouteChildren {
   NewsSlugRoute: typeof NewsSlugRoute
   NewsLocalRoute: typeof NewsLocalRoute
   StationAdminRoute: typeof StationAdminRoute
+  StationVerifyRoute: typeof StationVerifyRoute
   StoriesSlugRoute: typeof StoriesSlugRoute
   MerchIndexRoute: typeof MerchIndexRoute
   NewsIndexRoute: typeof NewsIndexRoute
@@ -1195,6 +1208,13 @@ declare module '@tanstack/react-router' {
       path: '/stories/$slug'
       fullPath: '/stories/$slug'
       preLoaderRoute: typeof StoriesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/station/verify': {
+      id: '/station/verify'
+      path: '/station/verify'
+      fullPath: '/station/verify'
+      preLoaderRoute: typeof StationVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/station/admin': {
@@ -1717,6 +1737,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewsSlugRoute: NewsSlugRoute,
   NewsLocalRoute: NewsLocalRoute,
   StationAdminRoute: StationAdminRoute,
+  StationVerifyRoute: StationVerifyRoute,
   StoriesSlugRoute: StoriesSlugRoute,
   MerchIndexRoute: MerchIndexRoute,
   NewsIndexRoute: NewsIndexRoute,
