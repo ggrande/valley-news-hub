@@ -95,7 +95,7 @@ export const getProvisioningStatus = createServerFn({ method: "GET" })
     const { data: row, error } = await (context.supabase as any)
       .from("managed_sites")
       .select(
-        "id, provision_state, provision_error, supabase_org_id, supabase_org_name, supabase_project_ref, supabase_project_url, provision_started_at, provisioned_at, supabase_refresh_token_enc",
+        "id, subdomain, custom_domain, provision_state, provision_error, supabase_org_id, supabase_org_name, supabase_project_ref, supabase_project_url, provision_started_at, provisioned_at, supabase_refresh_token_enc",
       )
       .eq("id", data.siteId)
       .maybeSingle();
@@ -103,6 +103,8 @@ export const getProvisioningStatus = createServerFn({ method: "GET" })
     if (!row) throw new Error("Site not found");
     return {
       siteId: row.id,
+      subdomain: row.subdomain ?? null,
+      customDomain: row.custom_domain ?? null,
       state: row.provision_state,
       error: row.provision_error,
       org: row.supabase_org_id ? { id: row.supabase_org_id, name: row.supabase_org_name } : null,
@@ -114,6 +116,7 @@ export const getProvisioningStatus = createServerFn({ method: "GET" })
       hasRefreshToken: !!row.supabase_refresh_token_enc,
     };
   });
+
 
 // ---------- 3. LIST ORGS ----------
 
