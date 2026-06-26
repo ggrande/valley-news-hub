@@ -150,6 +150,21 @@ export const provisionTenantProject = createServerFn({ method: "POST" })
     if (site.supabase_project_ref)
       throw new Error("This station already has a Supabase project provisioned");
 
+    // Guard against concurrent / duplicate clicks
+    const { data: stateRow } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .select("provision_state")
+      .eq("id", data.siteId)
+      .maybeSingle();
+    if (
+      stateRow &&
+      (stateRow.provision_state === "provisioning" ||
+        stateRow.provision_state === "migrating" ||
+        stateRow.provision_state === "ready")
+    ) {
+      throw new Error("Provisioning is already in progress for this station.");
+    }
+
     const orgs = await sbo.listOrganizations(accessToken);
     const org = orgs.find((o) => o.id === data.organizationId);
     if (!org) throw new Error("Organization not found in your Supabase account");
@@ -168,18 +183,37 @@ export const provisionTenantProject = createServerFn({ method: "POST" })
       })
       .eq("id", data.siteId);
 
-    let project: import("@/lib/supabase-oauth.server").SbProject;
-    try {
-      project = await sbo.createProject(accessToken, {
-        name: data.projectName || `${site.display_name} (${site.subdomain})`.slice(0, 50),
-        organization_id: org.id,
-        region,
-        db_pass: dbPass,
-        plan: "free",
-      });
-    } catch (e) {
-      await markFailed(data.siteId, (e as Error).message);
-      throw e;
+    // Supabase project names must be unique per organization. If the chosen name
+    // already exists (e.g. retry after a previous failed attempt), append a short
+    // random suffix and retry up to 2 times.
+    const baseName = (data.projectName || `${site.display_name} (${site.subdomain})`).slice(0, 44);
+    const attemptNames = [
+      baseName.slice(0, 50),
+      `${baseName.slice(0, 43)}-${randomBytes(3).toString("hex")}`.slice(0, 50),
+      `${baseName.slice(0, 38)}-${randomBytes(5).toString("hex")}`.slice(0, 50),
+    ];
+
+    let project: import("@/lib/supabase-oauth.server").SbProject | null = null;
+    let lastErr: Error | null = null;
+    for (const name of attemptNames) {
+      try {
+        project = await sbo.createProject(accessToken, {
+          name,
+          organization_id: org.id,
+          region,
+          db_pass: dbPass,
+          plan: "free",
+        });
+        lastErr = null;
+        break;
+      } catch (e) {
+        lastErr = e as Error;
+        if (!/already exists/i.test(lastErr.message)) break;
+      }
+    }
+    if (!project) {
+      await markFailed(data.siteId, (lastErr ?? new Error("Project creation failed")).message);
+      throw lastErr ?? new Error("Project creation failed");
     }
 
     const dbPassEnc = encryptSecret(dbPass);

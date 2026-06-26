@@ -35,13 +35,14 @@ export const Route = createFileRoute("/_authenticated/account/managed-sites/$sit
 });
 
 // ---------- Onboarding "question" steps (left side) ----------
-type Step = 0 | 1 | 2 | 3;
+type Step = 0 | 1 | 2 | 3 | 4;
 
 const STEPS: { key: Step; label: string; blurb: string }[] = [
-  { key: 0, label: "Identity", blurb: "Name your affiliate station" },
-  { key: 1, label: "Branding", blurb: "Logo & tagline for the directory" },
-  { key: 2, label: "Domain", blurb: "Connect a custom domain (optional)" },
-  { key: 3, label: "Review", blurb: "Review and finish" },
+  { key: 0, label: "Project", blurb: "Choose your Supabase org & region" },
+  { key: 1, label: "Identity", blurb: "Name your affiliate station" },
+  { key: 2, label: "Branding", blurb: "Logo & tagline for the directory" },
+  { key: 3, label: "Domain", blurb: "Connect a custom domain (optional)" },
+  { key: 4, label: "Review", blurb: "Review and finish" },
 ];
 
 // ---------- Maxis-style flavor messages (right side) ----------
@@ -135,6 +136,32 @@ function OnboardingPage() {
   const [form, setForm] = useState<Partial<ManagedSiteDirectoryProfile>>({});
   const [answersComplete, setAnswersComplete] = useState(false);
 
+  // Lifted Supabase provisioning controls (so step 0 can drive them)
+  const listOrgs = useServerFn(listConnectedOrganizations);
+  const provision = useServerFn(provisionTenantProject);
+  const [chosenOrg, setChosenOrg] = useState<string>("");
+  const [region, setRegion] = useState("us-east-1");
+
+  const orgs = useQuery({
+    queryKey: ["sb-orgs", siteId],
+    queryFn: () => listOrgs({ data: { siteId } }),
+    enabled: !!status.data?.hasRefreshToken && !status.data?.project,
+  });
+
+  const provisionMut = useMutation({
+    mutationFn: () => provision({ data: { siteId, organizationId: chosenOrg, region } }),
+    onSuccess: (r) => {
+      toast.success(r.message);
+      qc.invalidateQueries({ queryKey: ["provisioning-status", siteId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  // If a project is already kicked off (refresh / returning user), auto-advance past step 0.
+  useEffect(() => {
+    if (step === 0 && status.data?.project) setStep(1);
+  }, [status.data?.project, step]);
+
   useEffect(() => {
     if (profile && Object.keys(form).length === 0) setForm(profile);
   }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -152,13 +179,27 @@ function OnboardingPage() {
     if (!profile) return;
     const payload: Parameters<typeof saveProfile>[0]["data"] = { siteId };
     if (step === 0) {
+      // Project step: kick off provisioning (or skip if already started) before advancing.
+      if (!status.data?.project) {
+        if (!chosenOrg) {
+          toast.error("Pick a Supabase organization");
+          return;
+        }
+        try {
+          await provisionMut.mutateAsync();
+        } catch {
+          return; // toast already shown
+        }
+      }
+    }
+    if (step === 1) {
       if (!form.display_name?.trim()) {
         toast.error("Please enter a station name");
         return;
       }
       payload.display_name = form.display_name;
     }
-    if (step === 1) {
+    if (step === 2) {
       payload.directory_tagline = form.directory_tagline ?? null;
       payload.directory_city = form.directory_city ?? null;
       payload.directory_region = form.directory_region ?? null;
@@ -166,7 +207,7 @@ function OnboardingPage() {
       payload.directory_website_url = form.directory_website_url ?? null;
       payload.directory_opt_in = !!form.directory_opt_in;
     }
-    if (step === 2) {
+    if (step === 3) {
       payload.custom_domain = form.custom_domain ?? null;
     }
     if (next === "finish") {
@@ -340,7 +381,7 @@ function OnboardingPage() {
               </span>
             </div>
 
-            <ol className="mt-4 grid grid-cols-4 gap-2">
+            <ol className="mt-4 grid grid-cols-5 gap-2">
               {STEPS.map((s) => (
                 <li
                   key={s.key}
@@ -361,6 +402,53 @@ function OnboardingPage() {
             <div className="mt-6">
               {step === 0 && (
                 <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Pick which Supabase organization should own your newsroom database and where
+                    it should live. We'll start provisioning in the background as soon as you
+                    continue.
+                  </p>
+                  <Field label="Supabase organization">
+                    <select
+                      value={chosenOrg}
+                      onChange={(e) => setChosenOrg(e.target.value)}
+                      disabled={!!status.data?.project}
+                      className="w-full rounded border px-3 py-2 text-sm"
+                    >
+                      <option value="">
+                        {orgs.isLoading ? "Loading organizations…" : "— pick one —"}
+                      </option>
+                      {orgs.data?.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Region" hint="Pick the closest region to your readers.">
+                    <select
+                      value={region}
+                      onChange={(e) => setRegion(e.target.value)}
+                      disabled={!!status.data?.project}
+                      className="w-full rounded border px-3 py-2 text-sm"
+                    >
+                      <option value="us-east-1">US East (Virginia)</option>
+                      <option value="us-west-1">US West (California)</option>
+                      <option value="eu-west-1">EU West (Ireland)</option>
+                      <option value="eu-central-1">EU Central (Frankfurt)</option>
+                      <option value="ap-southeast-1">Asia (Singapore)</option>
+                      <option value="ap-southeast-2">Asia (Sydney)</option>
+                    </select>
+                  </Field>
+                  {status.data?.project && (
+                    <p className="rounded-md border border-[color:var(--broadcast)]/40 bg-[color:var(--broadcast)]/10 p-3 text-xs text-[color:var(--broadcast)]">
+                      ✓ Project already started — continuing won't create another.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {step === 1 && (
+                <div className="space-y-4">
                   <Field label="Station name" hint="Shown to readers and in the directory.">
                     <input
                       value={form.display_name ?? ""}
@@ -377,7 +465,7 @@ function OnboardingPage() {
                 </div>
               )}
 
-              {step === 1 && (
+              {step === 2 && (
                 <div className="space-y-4">
                   <Field label="Tagline" hint="One sentence about what your station covers.">
                     <input
@@ -434,7 +522,7 @@ function OnboardingPage() {
                 </div>
               )}
 
-              {step === 2 && (
+              {step === 3 && (
                 <div className="space-y-4">
                   <Field
                     label="Custom domain"
@@ -458,7 +546,7 @@ function OnboardingPage() {
                 </div>
               )}
 
-              {step === 3 && (
+              {step === 4 && (
                 <div className="space-y-3 text-sm">
                   <Row label="Station name" value={form.display_name} />
                   <Row label="Tagline" value={form.directory_tagline} />
@@ -487,19 +575,29 @@ function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setStep(Math.max(0, step - 1) as Step)}
-                disabled={saveMut.isPending || step === 0}
+                disabled={saveMut.isPending || provisionMut.isPending || step === 0}
                 className="h-10 rounded-md border px-4 text-sm font-semibold disabled:opacity-40"
               >
                 ← Back
               </button>
-              {step < 3 ? (
+              {step < 4 ? (
                 <button
                   type="button"
                   onClick={() => saveStep((step + 1) as Step)}
-                  disabled={saveMut.isPending}
+                  disabled={
+                    saveMut.isPending ||
+                    provisionMut.isPending ||
+                    (step === 0 && !status.data?.project && !chosenOrg)
+                  }
                   className="h-10 rounded-md bg-primary px-6 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                 >
-                  {saveMut.isPending ? "Saving…" : "Continue"}
+                  {provisionMut.isPending
+                    ? "Starting provisioning…"
+                    : saveMut.isPending
+                      ? "Saving…"
+                      : step === 0 && !status.data?.project
+                        ? "Start provisioning & continue →"
+                        : "Continue"}
                 </button>
               ) : (
                 <button
@@ -518,6 +616,7 @@ function OnboardingPage() {
             </div>
           </div>
         </div>
+
 
         {/* RIGHT — Provisioning progress */}
         <div className="lg:col-span-3">
@@ -550,8 +649,6 @@ function ProvisioningPanel({
 }) {
   const fetchStatus = useServerFn(getProvisioningStatus);
   const initiate = useServerFn(initiateSupabaseConnect);
-  const listOrgs = useServerFn(listConnectedOrganizations);
-  const provision = useServerFn(provisionTenantProject);
   const finalize = useServerFn(finalizeTenantProvisioning);
 
   const status = useQuery({
@@ -561,15 +658,6 @@ function ProvisioningPanel({
       const s = q.state.data?.state;
       return s === "provisioning" || s === "migrating" || s === "linking" ? 4000 : false;
     },
-  });
-
-  const [chosenOrg, setChosenOrg] = useState<string>("");
-  const [region, setRegion] = useState("us-east-1");
-
-  const orgs = useQuery({
-    queryKey: ["sb-orgs", siteId],
-    queryFn: () => listOrgs({ data: { siteId } }),
-    enabled: !!status.data?.hasRefreshToken && !status.data?.project,
   });
 
   // Auto-finalize when project is in provisioning/migrating state
@@ -646,16 +734,6 @@ function ProvisioningPanel({
     }
   };
 
-  const startProvision = async () => {
-    if (!chosenOrg) return toast.error("Pick a Supabase organization");
-    try {
-      const r = await provision({ data: { siteId, organizationId: chosenOrg, region } });
-      toast.success(r.message);
-      status.refetch();
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  };
 
   const isReady = s?.state === "ready";
   const isFailed = s?.state === "failed";
@@ -704,44 +782,10 @@ function ProvisioningPanel({
         )}
 
         {s?.hasRefreshToken && !s?.project && !isReady && (
-          <div className="space-y-2">
-            <Field label="Supabase organization">
-              <select
-                value={chosenOrg}
-                onChange={(e) => setChosenOrg(e.target.value)}
-                className="w-full rounded border px-2 py-1.5 text-xs"
-              >
-                <option value="">— pick one —</option>
-                {orgs.data?.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Region">
-              <select
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="w-full rounded border px-2 py-1.5 text-xs"
-              >
-                <option value="us-east-1">US East (Virginia)</option>
-                <option value="us-west-1">US West (California)</option>
-                <option value="eu-west-1">EU West (Ireland)</option>
-                <option value="eu-central-1">EU Central (Frankfurt)</option>
-                <option value="ap-southeast-1">Asia (Singapore)</option>
-                <option value="ap-southeast-2">Asia (Sydney)</option>
-              </select>
-            </Field>
-            <button
-              type="button"
-              onClick={startProvision}
-              disabled={!chosenOrg}
-              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-            >
-              Create project
-            </button>
-          </div>
+          <p className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+            Pick your Supabase organization and region on the left, then hit{" "}
+            <strong>Start provisioning &amp; continue</strong>.
+          </p>
         )}
 
         {isReady && (
