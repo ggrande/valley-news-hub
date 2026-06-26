@@ -13,7 +13,7 @@ import { createNetworkBillingPortalSession } from "@/lib/network-payments.functi
 import { getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/_authenticated/account/managed-sites")({
-  head: () => ({ meta: [{ title: "My Managed Sites — WKNA 49 Network" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "My Affiliate Stations — WKNA 49 Affiliate Network" }, { name: "robots", content: "noindex" }] }),
   component: Page,
 });
 
