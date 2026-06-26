@@ -617,11 +617,30 @@ export type Database = {
           owner_email: string
           owner_user_id: string | null
           pending_release_id: string | null
+          provision_error: string | null
+          provision_started_at: string | null
+          provision_state: string
+          provisioned_at: string | null
           purchase_id: string | null
           status: string
           stripe_subscription_id: string | null
           subdomain: string
           subscription_status: string
+          supabase_access_token_enc: string | null
+          supabase_access_token_expires_at: string | null
+          supabase_access_token_iv: string | null
+          supabase_anon_key_enc: string | null
+          supabase_anon_key_iv: string | null
+          supabase_db_password_enc: string | null
+          supabase_db_password_iv: string | null
+          supabase_org_id: string | null
+          supabase_org_name: string | null
+          supabase_project_ref: string | null
+          supabase_project_url: string | null
+          supabase_refresh_token_enc: string | null
+          supabase_refresh_token_iv: string | null
+          supabase_service_key_enc: string | null
+          supabase_service_key_iv: string | null
           updated_at: string
         }
         Insert: {
@@ -643,11 +662,30 @@ export type Database = {
           owner_email: string
           owner_user_id?: string | null
           pending_release_id?: string | null
+          provision_error?: string | null
+          provision_started_at?: string | null
+          provision_state?: string
+          provisioned_at?: string | null
           purchase_id?: string | null
           status?: string
           stripe_subscription_id?: string | null
           subdomain: string
           subscription_status?: string
+          supabase_access_token_enc?: string | null
+          supabase_access_token_expires_at?: string | null
+          supabase_access_token_iv?: string | null
+          supabase_anon_key_enc?: string | null
+          supabase_anon_key_iv?: string | null
+          supabase_db_password_enc?: string | null
+          supabase_db_password_iv?: string | null
+          supabase_org_id?: string | null
+          supabase_org_name?: string | null
+          supabase_project_ref?: string | null
+          supabase_project_url?: string | null
+          supabase_refresh_token_enc?: string | null
+          supabase_refresh_token_iv?: string | null
+          supabase_service_key_enc?: string | null
+          supabase_service_key_iv?: string | null
           updated_at?: string
         }
         Update: {
@@ -669,11 +707,30 @@ export type Database = {
           owner_email?: string
           owner_user_id?: string | null
           pending_release_id?: string | null
+          provision_error?: string | null
+          provision_started_at?: string | null
+          provision_state?: string
+          provisioned_at?: string | null
           purchase_id?: string | null
           status?: string
           stripe_subscription_id?: string | null
           subdomain?: string
           subscription_status?: string
+          supabase_access_token_enc?: string | null
+          supabase_access_token_expires_at?: string | null
+          supabase_access_token_iv?: string | null
+          supabase_anon_key_enc?: string | null
+          supabase_anon_key_iv?: string | null
+          supabase_db_password_enc?: string | null
+          supabase_db_password_iv?: string | null
+          supabase_org_id?: string | null
+          supabase_org_name?: string | null
+          supabase_project_ref?: string | null
+          supabase_project_url?: string | null
+          supabase_refresh_token_enc?: string | null
+          supabase_refresh_token_iv?: string | null
+          supabase_service_key_enc?: string | null
+          supabase_service_key_iv?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1639,6 +1696,44 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      supabase_oauth_states: {
+        Row: {
+          code_verifier: string
+          created_at: string
+          expires_at: string
+          redirect_after: string | null
+          site_id: string | null
+          state: string
+          user_id: string
+        }
+        Insert: {
+          code_verifier: string
+          created_at?: string
+          expires_at?: string
+          redirect_after?: string | null
+          site_id?: string | null
+          state: string
+          user_id: string
+        }
+        Update: {
+          code_verifier?: string
+          created_at?: string
+          expires_at?: string
+          redirect_after?: string | null
+          site_id?: string | null
+          state?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supabase_oauth_states_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "managed_sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tags: {
         Row: {
