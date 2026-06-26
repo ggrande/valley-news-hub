@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Facebook, Linkedin, Link2, Mail, Share2, Check } from "lucide-react";
+import { Facebook, Linkedin, Link2, Mail, Share2, Check, Globe } from "lucide-react";
 
 type Props = {
   url: string;
@@ -7,6 +7,7 @@ type Props = {
   summary?: string;
   className?: string;
   label?: string;
+  storyUrl?: string;
 };
 
 // X / Twitter glyph (Lucide doesn't ship the post-rebrand mark).
@@ -26,7 +27,7 @@ function RedditIcon({ className }: { className?: string }) {
   );
 }
 
-export function ShareBar({ url, title, summary = "", className = "", label = "Share this story" }: Props) {
+export function ShareBar({ url, title, summary = "", className = "", label = "Share this story", storyUrl }: Props) {
   const [copied, setCopied] = useState(false);
   const enc = encodeURIComponent;
   const shareUrl = url;
@@ -123,6 +124,18 @@ export function ShareBar({ url, title, summary = "", className = "", label = "Sh
       >
         <Share2 className="size-4" />
       </button>
+      {storyUrl && (
+        <a
+          href={storyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="View as Web Story"
+          title="View as Web Story"
+          className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-card text-primary transition hover:bg-primary hover:text-primary-foreground"
+        >
+          <Globe className="size-4" />
+        </a>
+      )}
     </div>
   );
 }
