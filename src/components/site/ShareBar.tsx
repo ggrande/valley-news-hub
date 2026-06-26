@@ -27,7 +27,7 @@ function RedditIcon({ className }: { className?: string }) {
   );
 }
 
-export function ShareBar({ url, title, summary = "", className = "", label = "Share this story" }: Props) {
+export function ShareBar({ url, title, summary = "", className = "", label = "Share this story", storyUrl }: Props) {
   const [copied, setCopied] = useState(false);
   const enc = encodeURIComponent;
   const shareUrl = url;
