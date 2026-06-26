@@ -33,6 +33,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NewsIndexRouteImport } from './routes/news.index'
 import { Route as MerchIndexRouteImport } from './routes/merch.index'
+import { Route as WebStoriesSlugRouteImport } from './routes/web-stories.$slug'
 import { Route as WeatherClosingsRouteImport } from './routes/weather.closings'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
@@ -195,6 +196,11 @@ const NewsIndexRoute = NewsIndexRouteImport.update({
 const MerchIndexRoute = MerchIndexRouteImport.update({
   id: '/merch/',
   path: '/merch/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebStoriesSlugRoute = WebStoriesSlugRouteImport.update({
+  id: '/web-stories/$slug',
+  path: '/web-stories/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WeatherClosingsRoute = WeatherClosingsRouteImport.update({
@@ -479,6 +485,7 @@ export interface FileRoutesByFullPath {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
+  '/web-stories/$slug': typeof WebStoriesSlugRoute
   '/merch/': typeof MerchIndexRoute
   '/news/': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
@@ -547,6 +554,7 @@ export interface FileRoutesByTo {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
+  '/web-stories/$slug': typeof WebStoriesSlugRoute
   '/merch': typeof MerchIndexRoute
   '/news': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
@@ -618,6 +626,7 @@ export interface FileRoutesById {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
+  '/web-stories/$slug': typeof WebStoriesSlugRoute
   '/merch/': typeof MerchIndexRoute
   '/news/': typeof NewsIndexRoute
   '/_authenticated/account/licenses': typeof AuthenticatedAccountLicensesRoute
@@ -689,6 +698,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
+    | '/web-stories/$slug'
     | '/merch/'
     | '/news/'
     | '/account/licenses'
@@ -757,6 +767,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
+    | '/web-stories/$slug'
     | '/merch'
     | '/news'
     | '/account/licenses'
@@ -827,6 +838,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
+    | '/web-stories/$slug'
     | '/merch/'
     | '/news/'
     | '/_authenticated/account/licenses'
@@ -894,6 +906,7 @@ export interface RootRouteChildren {
   MerchIdRoute: typeof MerchIdRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NewsLocalRoute: typeof NewsLocalRoute
+  WebStoriesSlugRoute: typeof WebStoriesSlugRoute
   MerchIndexRoute: typeof MerchIndexRoute
   NewsIndexRoute: typeof NewsIndexRoute
   ApiPublicHooksBackfillCommentsRoute: typeof ApiPublicHooksBackfillCommentsRoute
@@ -1075,6 +1088,13 @@ declare module '@tanstack/react-router' {
       path: '/merch'
       fullPath: '/merch/'
       preLoaderRoute: typeof MerchIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/web-stories/$slug': {
+      id: '/web-stories/$slug'
+      path: '/web-stories/$slug'
+      fullPath: '/web-stories/$slug'
+      preLoaderRoute: typeof WebStoriesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/weather/closings': {
@@ -1548,6 +1568,7 @@ const rootRouteChildren: RootRouteChildren = {
   MerchIdRoute: MerchIdRoute,
   NewsSlugRoute: NewsSlugRoute,
   NewsLocalRoute: NewsLocalRoute,
+  WebStoriesSlugRoute: WebStoriesSlugRoute,
   MerchIndexRoute: MerchIndexRoute,
   NewsIndexRoute: NewsIndexRoute,
   ApiPublicHooksBackfillCommentsRoute: ApiPublicHooksBackfillCommentsRoute,
