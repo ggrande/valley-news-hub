@@ -177,6 +177,16 @@ async function ensurePagesEnabled(owner: string, repo: string) {
   if (pagesEnsured) return;
   const got = await gh(`/repos/${owner}/${repo}/pages`);
   if (got.status === 200) {
+    const j: any = await got.json().catch(() => ({}));
+    const src = j?.source ?? {};
+    if (src.branch !== STORIES_BRANCH || (src.path && src.path !== "/")) {
+      // Repoint Pages at gh-pages root.
+      await gh(`/repos/${owner}/${repo}/pages`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: { branch: STORIES_BRANCH, path: "/" } }),
+      });
+    }
     pagesEnsured = true;
     return;
   }
@@ -193,6 +203,7 @@ async function ensurePagesEnabled(owner: string, repo: string) {
   }
   const txt = await res.text().catch(() => "");
   console.warn("[web-stories] ensurePagesEnabled non-fatal:", res.status, txt.slice(0, 200));
+
 }
 
 let branchEnsured = false;
