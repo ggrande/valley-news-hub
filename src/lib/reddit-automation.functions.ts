@@ -289,8 +289,79 @@ export const refreshNotificationQueue = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { renderTemplate, normalizeThreadUrl } = await import("@/lib/reddit-automation.server");
 
-    // Find imports linked to notifications in the chosen window
+    // ---- Step 1: BACKFILL — every published reddit-sourced post should have
+    // a notification row. Insert missing ones as `awaiting_approval` so admins
+    // see the full history in the queue.
+    const { data: settings } = await supabaseAdmin
+      .from("reddit_automation_settings")
+      .select("*")
+      .eq("id", true)
+      .maybeSingle();
+
+    let postsQ = supabaseAdmin
+      .from("posts")
+      .select("id, title, slug, dek, source_url, original_permalink, source_subreddit, reddit_import_id, published_at, created_at")
+      .eq("status", "published")
+      .not("reddit_import_id", "is", null)
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .limit(1000);
+    if (data.windowHours && data.windowHours > 0) {
+      const cutoff = new Date(Date.now() - data.windowHours * 3600_000).toISOString();
+      postsQ = postsQ.gte("published_at", cutoff);
+    }
+    const { data: publishedPosts, error: postsErr } = await postsQ;
+    if (postsErr) throw postsErr;
+
+    let backfilled = 0;
+    if (publishedPosts && publishedPosts.length) {
+      const postIds = publishedPosts.map((p: any) => p.id);
+      const { data: existingRows } = await supabaseAdmin
+        .from("reddit_comment_notifications")
+        .select("post_id")
+        .in("post_id", postIds);
+      const existing = new Set((existingRows ?? []).map((r: any) => r.post_id));
+      const tpl = (settings as any)?.template_markdown ?? "";
+
+      const inserts: any[] = [];
+      for (const p of publishedPosts as any[]) {
+        if (existing.has(p.id)) continue;
+        const threadInput: string | null = p.original_permalink || p.source_url;
+        const { url: threadUrl, threadId, subreddit } = normalizeThreadUrl(threadInput);
+        if (!threadUrl || !threadId) continue;
+        const articleUrl = `https://wkna49.com/news/${p.slug}`;
+        const rendered = tpl
+          ? renderTemplate(tpl, {
+              article_title: p.title,
+              article_url: articleUrl,
+              article_dek: p.dek ?? "",
+              subreddit: subreddit ?? p.source_subreddit ?? "",
+              reddit_thread_url: threadUrl,
+            })
+          : `Discussion: [${p.title}](${articleUrl})`;
+        inserts.push({
+          post_id: p.id,
+          reddit_import_id: p.reddit_import_id ?? null,
+          thread_url: threadUrl,
+          thread_id: threadId,
+          subreddit: subreddit ?? p.source_subreddit ?? null,
+          rendered_comment: rendered,
+          mode_at_enqueue: (settings as any)?.mode ?? "approval",
+          status: "awaiting_approval",
+        });
+      }
+      // Insert in chunks to stay under request size limits
+      for (let i = 0; i < inserts.length; i += 200) {
+        const chunk = inserts.slice(i, i + 200);
+        const { error: insErr } = await supabaseAdmin
+          .from("reddit_comment_notifications")
+          .insert(chunk as never);
+        if (!insErr) backfilled += chunk.length;
+      }
+    }
+
+    // ---- Step 2: REFRESH upvotes for notifications in the chosen window
     let q = supabaseAdmin
       .from("reddit_comment_notifications")
       .select("reddit_import_id, created_at, reddit_imports!inner(id, reddit_post_id)")
@@ -311,7 +382,7 @@ export const refreshNotificationQueue = createServerFn({ method: "POST" })
       if (pid && iid && !byPostId.has(pid)) byPostId.set(pid, iid);
     }
     const ids = [...byPostId.keys()];
-    if (!ids.length) return { ok: true, refreshed: 0, scanned: 0 };
+    if (!ids.length) return { ok: true, refreshed: 0, scanned: 0, backfilled };
 
     const BROWSER_UA =
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
@@ -342,7 +413,7 @@ export const refreshNotificationQueue = createServerFn({ method: "POST" })
         .eq("id", rowId);
       if (!upErr) refreshed++;
     }
-    return { ok: true, refreshed, scanned: ids.length };
+    return { ok: true, refreshed, scanned: ids.length, backfilled };
   });
 
 // Diagnostic: query GitHub Actions for this repo and return recent workflow runs
