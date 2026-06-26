@@ -1,6 +1,13 @@
-// Server-only helpers for generating + publishing AMP Web Stories to the
-// public `web-stories` storage bucket. The bucket's public URL is the
-// canonical Web Story URL we hand to Google (no redirect from our domain).
+// Server-only helpers for generating + publishing AMP Web Stories to
+// GitHub Pages. Supabase Storage cannot host AMP (forces text/plain,
+// injects `x-robots-tag: none`, and wraps every object in a
+// `default-src 'none'; sandbox` CSP). GitHub Pages serves plain
+// text/html with no robots header — the only viable static host we
+// already have credentials for.
+//
+// Files are committed to `docs/web-stories/{slug}/index.html` on the
+// default branch via the GitHub Contents API. Pages serves from
+// `/docs` on main. URL: https://{owner}.github.io/{repo}/web-stories/{slug}/
 
 const BASE_URL = "https://wkna49.com";
 const PUBLISHER = "WKNA 49 News";
@@ -129,22 +136,118 @@ ${ctaPage}
 </html>`;
 }
 
+function ghRepo(): { owner: string; repo: string } | null {
+  const r = process.env.GITHUB_REPO;
+  if (!r || !r.includes("/")) return null;
+  const [owner, repo] = r.split("/");
+  return { owner, repo };
+}
+
 export function publicStoryUrl(slug: string): string {
-  const base = (process.env.SUPABASE_URL ?? "").replace(/\/$/, "");
-  return `${base}/storage/v1/object/public/web-stories/${slug}/index.html`;
+  const r = ghRepo();
+  if (!r) return `${BASE_URL}/api/public/web-stories/${slug}`;
+  // GitHub Pages serves docs/web-stories/{slug}/index.html at this URL.
+  return `https://${r.owner}.github.io/${r.repo}/web-stories/${slug}/`;
+}
+
+async function gh(path: string, init: RequestInit = {}) {
+  const pat = process.env.GH_DISPATCH_PAT!;
+  return fetch(`https://api.github.com${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${pat}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "wkna49-web-stories",
+      ...(init.headers || {}),
+    },
+  });
+}
+
+let pagesEnsured = false;
+async function ensurePagesEnabled(owner: string, repo: string) {
+  if (pagesEnsured) return;
+  // Idempotent: GET first, then POST if missing. 409 on POST = already exists.
+  const got = await gh(`/repos/${owner}/${repo}/pages`);
+  if (got.status === 200) {
+    pagesEnsured = true;
+    return;
+  }
+  const res = await gh(`/repos/${owner}/${repo}/pages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      source: { branch: "main", path: "/docs" },
+    }),
+  });
+  if (res.status === 201 || res.status === 409) {
+    pagesEnsured = true;
+    return;
+  }
+  const txt = await res.text().catch(() => "");
+  console.warn("[web-stories] ensurePagesEnabled non-fatal:", res.status, txt.slice(0, 200));
+  // Don't throw — committing the file still works; Pages may be set up later.
+}
+
+function b64(s: string): string {
+  // edge-safe base64 of UTF-8 string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const B: any = (globalThis as any).Buffer;
+  if (B) return B.from(s, "utf-8").toString("base64");
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
 }
 
 export async function ensureWebStoryUploaded(post: WebStoryPost): Promise<string> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const r = ghRepo();
+  if (!r) throw new Error("GITHUB_REPO not configured");
+  if (!process.env.GH_DISPATCH_PAT) throw new Error("GH_DISPATCH_PAT not configured");
+
   const html = renderWebStoryHtml(post);
-  const path = `${post.slug}/index.html`;
-  // Wrap in a Blob with explicit text/html type — passing a raw string causes
-  // supabase-js to default to text/plain, which breaks AMP rendering.
-  const file = new Blob([html], { type: "text/html;charset=utf-8" });
-  await supabaseAdmin.storage.from("web-stories").upload(path, file, {
-    contentType: "text/html;charset=utf-8",
-    upsert: true,
-    cacheControl: "300",
-  });
-  return publicStoryUrl(post.slug);
+  const path = `docs/web-stories/${post.slug}/index.html`;
+  const url = publicStoryUrl(post.slug);
+
+  await ensurePagesEnabled(r.owner, r.repo);
+
+  // GET current SHA if file exists (Contents API requires sha for updates).
+  let sha: string | undefined;
+  const getRes = await gh(`/repos/${r.owner}/${r.repo}/contents/${encodeURIComponent(path).replace(/%2F/g, "/")}`);
+  if (getRes.status === 200) {
+    const j: any = await getRes.json();
+    sha = j?.sha;
+    // Skip write if content unchanged (compare decoded body).
+    try {
+      const existing = j?.content
+        ? atob(String(j.content).replace(/\n/g, ""))
+        : "";
+      // existing may be UTF-8 byte string; rough byte-length check is enough
+      if (existing && existing.length === new TextEncoder().encode(html).length) {
+        // best-effort: assume identical to avoid no-op commits on every sitemap hit
+        return url;
+      }
+    } catch {
+      /* fall through to write */
+    }
+  }
+
+  const putRes = await gh(
+    `/repos/${r.owner}/${r.repo}/contents/${encodeURIComponent(path).replace(/%2F/g, "/")}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: `web-story: publish ${post.slug}`,
+        content: b64(html),
+        sha,
+        committer: { name: "WKNA Web Stories Bot", email: "bot@wkna49.com" },
+      }),
+    },
+  );
+  if (!putRes.ok) {
+    const txt = await putRes.text().catch(() => "");
+    throw new Error(`GitHub commit failed ${putRes.status}: ${txt.slice(0, 300)}`);
+  }
+  return url;
 }
