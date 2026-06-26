@@ -2,22 +2,37 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 
 // Retry merch_orders rows in `submit_failed` status by resubmitting to Printful.
-// Auth: x-cron-secret header. Optional ?id=<order uuid> to retry a single row.
+// Auth: either x-cron-secret header OR a signed-in admin (Bearer token).
+// Optional ?id=<order uuid> to retry a single row.
 export const Route = createFileRoute("/api/public/hooks/retry-merch")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const secret = request.headers.get("x-cron-secret");
-        if (!secret || secret !== process.env.CRON_SECRET) {
-          return new Response("Unauthorized", { status: 401 });
-        }
-        const url = new URL(request.url);
-        const onlyId = url.searchParams.get("id");
+        const auth = request.headers.get("authorization") || request.headers.get("Authorization");
+        let authorized = !!secret && secret === process.env.CRON_SECRET;
 
         const admin = createClient(
           process.env.SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
         );
+
+        if (!authorized && auth?.startsWith("Bearer ")) {
+          const token = auth.slice(7);
+          const { data: userRes } = await admin.auth.getUser(token);
+          const uid = userRes?.user?.id;
+          if (uid) {
+            const { data: isAdmin } = await admin.rpc("has_role", {
+              _user_id: uid,
+              _role: "admin",
+            });
+            if (isAdmin) authorized = true;
+          }
+        }
+        if (!authorized) return new Response("Unauthorized", { status: 401 });
+
+        const url = new URL(request.url);
+        const onlyId = url.searchParams.get("id");
 
         let q = admin.from("merch_orders").select("*").eq("status", "submit_failed");
         if (onlyId) q = q.eq("id", onlyId);
