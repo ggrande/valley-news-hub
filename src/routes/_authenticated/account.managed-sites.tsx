@@ -60,9 +60,9 @@ function Page() {
         <p className="mt-8 text-sm text-muted-foreground">Loading…</p>
       ) : sites.length === 0 ? (
         <div className="mt-8 rounded-lg border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">You don't have any managed sites yet.</p>
+          <p className="text-sm text-muted-foreground">You're not running an Affiliate Station yet.</p>
           <a href="/network" className="mt-3 inline-block text-sm font-semibold text-primary underline">
-            Start a Managed Mirror subscription →
+            Become a Managed Affiliate Station →
           </a>
         </div>
       ) : (
