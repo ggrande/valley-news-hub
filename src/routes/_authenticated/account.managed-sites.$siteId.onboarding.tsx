@@ -166,6 +166,14 @@ function OnboardingPage() {
     if (step === 0 && status.data?.project) setStep(1);
   }, [status.data?.project, step]);
 
+  // Default the org dropdown to the first org returned (usually "Personal").
+  useEffect(() => {
+    if (!chosenOrg && orgs.data && orgs.data.length > 0) {
+      setChosenOrg(orgs.data[0].id);
+    }
+  }, [orgs.data, chosenOrg]);
+
+
   useEffect(() => {
     if (profile && Object.keys(form).length === 0) setForm(profile);
   }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -421,11 +429,12 @@ function OnboardingPage() {
                       <option value="">
                         {orgs.isLoading ? "Loading organizations…" : "— pick one —"}
                       </option>
-                      {orgs.data?.map((o) => (
+                      {orgs.data?.map((o, i) => (
                         <option key={o.id} value={o.id}>
-                          {o.name}
+                          {o.name}{i === 0 ? " (default)" : ""}
                         </option>
                       ))}
+
                     </select>
                   </Field>
                   <Field label="Region" hint="Pick the closest region to your readers.">
@@ -628,7 +637,11 @@ function OnboardingPage() {
             siteId={siteId}
             sessionCode={shortSessionCode(siteId)}
             answersComplete={answersComplete}
-            onOpenNewsroom={() => navigate({ to: "/account/managed-sites" })}
+            onOpenNewsroom={() => {
+              const host = status.data?.customDomain || `${status.data?.subdomain}.wkna49.com`;
+              window.open(`https://${host}/admin`, "_blank", "noopener");
+            }}
+
             onRetry={async () => {
               if (!chosenOrg) {
                 setStep(0);
