@@ -126,6 +126,23 @@ function SiteCard({ site }: { site: ManagedSiteRow }) {
           <strong>Setting up your site.</strong> Our team is provisioning your hosting. You'll get an email when it's live (usually within 1 business day).
         </div>
       )}
+      {!site.onboarding_completed_at && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border-2 border-[color:var(--breaking)] bg-[color:var(--breaking)]/5 p-4 text-sm">
+          <div>
+            <strong className="text-primary">Finish setting up your Affiliate Station.</strong>{" "}
+            <span className="text-muted-foreground">
+              Take 2 minutes to add your branding and (optionally) list in the public directory.
+            </span>
+          </div>
+          <Link
+            to="/account/managed-sites/$siteId/onboarding"
+            params={{ siteId: site.id }}
+            className="h-9 inline-flex items-center rounded-md bg-[color:var(--breaking)] px-4 text-sm font-bold text-white"
+          >
+            Start onboarding →
+          </Link>
+        </div>
+      )}
 
       <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
         <div>Current version: <span className="font-mono text-foreground">{site.current_release?.version ?? "—"}</span></div>
