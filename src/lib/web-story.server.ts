@@ -12,6 +12,9 @@
 const BASE_URL = "https://wkna49.com";
 const PUBLISHER = "WKNA 49 News";
 const PUBLISHER_LOGO = "https://wkna49.com/logo.png";
+// Custom subdomain CNAME'd to {owner}.github.io. AMP is served from here so
+// the canonical URL stays on-brand and Google sees a clean text/html response.
+const STORIES_HOST = "stories.wkna49.com";
 
 export type WebStoryPost = {
   slug: string;
