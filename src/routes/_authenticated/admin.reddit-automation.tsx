@@ -407,7 +407,10 @@ function Page() {
             <tbody>
               {(notifsQ.data ?? []).map((n: any) => (
                 <tr key={n.id} className="border-b align-top">
-                  <td className="py-2 pr-3 text-xs text-muted-foreground">{new Date(n.created_at).toLocaleString()}</td>
+                  <td className="py-2 pr-3 text-xs text-muted-foreground" title={`Enqueued ${new Date(n.created_at).toLocaleString()}`}>
+                    {n.reddit_posted_at ? new Date(n.reddit_posted_at).toLocaleString() : <span className="italic opacity-60">unknown</span>}
+                  </td>
+
                   <td className="py-2 pr-3">
                     {n.posts?.slug ? (
                       <Link to="/news/$slug" params={{ slug: n.posts.slug }} className="font-medium hover:underline">{n.posts?.title ?? "(post)"}</Link>
