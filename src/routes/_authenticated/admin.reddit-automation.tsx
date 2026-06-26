@@ -52,7 +52,6 @@ function Page() {
   const eff = {
     mode: mode || s.mode || "off",
     enabled: enabled ?? s.enabled ?? false,
-    username: username || s.reddit_username || "",
     template: template || s.template_markdown || "",
     perHour: perHour === "" ? (s.rate_per_hour ?? 4) : Number(perHour),
     perDay: perDay === "" ? (s.rate_per_day ?? 20) : Number(perDay),
@@ -64,8 +63,6 @@ function Page() {
         data: {
           mode: eff.mode as any,
           enabled: eff.enabled,
-          reddit_username: eff.username,
-          reddit_password: password || undefined,
           template_markdown: eff.template,
           rate_per_hour: eff.perHour,
           rate_per_day: eff.perDay,
@@ -73,7 +70,6 @@ function Page() {
       }),
     onSuccess: () => {
       toast.success("Settings saved");
-      setPassword("");
       qc.invalidateQueries({ queryKey: ["reddit-automation-settings"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
