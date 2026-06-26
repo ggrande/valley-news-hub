@@ -324,7 +324,13 @@ function OnboardingPage() {
       <div className="mt-6 grid gap-4 lg:grid-cols-10">
         {/* LEFT — Onboarding questions */}
         <div className="lg:col-span-7">
-          <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <div
+            aria-disabled={!hasConnected}
+            className={`rounded-xl border bg-card p-6 shadow-sm ${
+              hasConnected ? "" : "pointer-events-none select-none opacity-50"
+            }`}
+          >
+
             <div className="flex items-center justify-between">
               <h2 className="font-display text-xl font-bold text-primary">
                 {STEPS[step].blurb}
