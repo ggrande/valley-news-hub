@@ -102,19 +102,28 @@ async function fetchPostComments(postId: string): Promise<any[]> {
 export type ImportSummary = {
   imported: number;
   skipped_existing: number;
+  skipped_low_score: number;
+  skipped_moderation_hold: number;
   errors: string[];
+};
+
+export type ImportOptions = {
+  /** Skip posts whose score is below this threshold. */
+  minScore?: number;
+  /** Skip posts younger than this many seconds (moderation hold). */
+  moderationHoldSec?: number;
 };
 
 /**
  * Insert Reddit posts into reddit_imports (with dedupe, media, comments).
  * Accepts the flat post shape returned by reddit's .json endpoint (data.children[].data)
  * or Arctic Shift archive rows — they share field names (id, title, selftext, etc.).
- *
- * Filtering (min score, moderation hold, etc.) is the caller's responsibility;
- * this helper only deduplicates against the reddit_imports table.
  */
-export async function importRedditPosts(admin: any, posts: any[]): Promise<ImportSummary> {
-  const summary: ImportSummary = { imported: 0, skipped_existing: 0, errors: [] };
+export async function importRedditPosts(admin: any, posts: any[], options: ImportOptions = {}): Promise<ImportSummary> {
+  const summary: ImportSummary = { imported: 0, skipped_existing: 0, skipped_low_score: 0, skipped_moderation_hold: 0, errors: [] };
+  const minScore = Math.max(0, options.minScore ?? 0);
+  const moderationHoldSec = Math.max(0, options.moderationHoldSec ?? 0);
+  const nowSec = Math.floor(Date.now() / 1000);
   if (!posts.length) return summary;
 
   const ids = posts.map((p) => p?.id).filter(Boolean) as string[];
