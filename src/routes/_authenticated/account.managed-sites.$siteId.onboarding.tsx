@@ -899,7 +899,42 @@ function ProvisioningPanel({
             </button>
             <button
               type="button"
-              disabled={isRetrying}
+              disabled={isRetrying || isPurging}
+              onClick={async () => {
+                if (isPurging) return;
+                const ok = window.confirm(
+                  "Full reset will DELETE any orphan Supabase projects from previous failed attempts on this station, then start the wizard over.\n\nProjects already claimed by another station are left alone. Continue?",
+                );
+                if (!ok) return;
+                setIsPurging(true);
+                setPct(0);
+                try {
+                  const res = await purgeReset({ data: { siteId } });
+                  toast.success(
+                    `Reset complete. Deleted ${res.deleted.length} orphan project${
+                      res.deleted.length === 1 ? "" : "s"
+                    }${res.skipped.length ? `, skipped ${res.skipped.length}` : ""}.`,
+                  );
+                  await Promise.all([status.refetch(), attempts.refetch()]);
+                } catch (e) {
+                  toast.error((e as Error).message);
+                } finally {
+                  setIsPurging(false);
+                }
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-[color:var(--breaking)]/40 bg-[color:var(--breaking)]/5 px-4 py-2 text-sm font-semibold text-[color:var(--breaking)] disabled:opacity-50"
+            >
+              {isPurging && (
+                <span
+                  aria-hidden
+                  className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-[color:var(--breaking)]/30 border-t-[color:var(--breaking)]"
+                />
+              )}
+              {isPurging ? "Purging orphans…" : "Full reset (delete orphans & start over)"}
+            </button>
+            <button
+              type="button"
+              disabled={isRetrying || isPurging}
               onClick={() => {
                 status.refetch();
                 attempts.refetch();
