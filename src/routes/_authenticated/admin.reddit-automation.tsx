@@ -116,6 +116,15 @@ function Page() {
     onError: (e: any) => toast.error(e?.message ?? "Retry failed"),
   });
 
+  const refreshQueue = useMutation({
+    mutationFn: () => refreshNotificationQueue({ data: { windowHours } }),
+    onSuccess: (r: any) => {
+      toast.success(`Refreshed ${r?.refreshed ?? 0} upvote count${r?.refreshed === 1 ? "" : "s"} (scanned ${r?.scanned ?? 0})`);
+      qc.invalidateQueries({ queryKey: ["reddit-notifications"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Refresh failed"),
+  });
+
   const sessionBadge = (() => {
     switch (s.session_status) {
       case "active": return <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">Active</span>;
