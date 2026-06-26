@@ -6,6 +6,7 @@ import { ArticleImage } from "@/components/site/ArticleImage";
 import { SupportButton } from "@/components/site/SupportButton";
 import { ShareBar } from "@/components/site/ShareBar";
 import { formatDate } from "@/lib/news-data";
+import { ShoppingBag } from "lucide-react";
 import { dbPostToArticle, fetchCommentsForPost, fetchPostBySlug, fetchPublishedPosts, fetchSetting } from "@/lib/posts-queries";
 
 export const Route = createFileRoute("/news/$slug")({
@@ -141,7 +142,12 @@ function ArticlePage() {
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--breaking)]">Support local journalism</p>
             <h3 className="mt-1 font-display text-xl font-black text-primary">Like this story? Chip in.</h3>
             <p className="mt-1.5 text-sm text-muted-foreground">WKNA 49 News is reader-supported. Buy us a coffee or send crypto to keep Kanawha Valley reporting going.</p>
-            <div className="mt-3 flex justify-center"><SupportButton variant="inline" /></div>
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <SupportButton variant="inline" />
+              <Link to="/merch" className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-semibold text-primary hover:bg-accent">
+                <ShoppingBag className="size-4" /> View Our Merch
+              </Link>
+            </div>
           </aside>
           <p className="mt-8 border-t pt-5 text-sm italic text-muted-foreground">
             Have a news tip? <Link to="/submit-news-tip" className="text-[color:var(--broadcast)] underline">Send it to the WKNA 49 newsroom.</Link>
