@@ -637,7 +637,11 @@ function OnboardingPage() {
             siteId={siteId}
             sessionCode={shortSessionCode(siteId)}
             answersComplete={answersComplete}
-            onOpenNewsroom={() => navigate({ to: "/account/managed-sites" })}
+            onOpenNewsroom={() => {
+              const host = status.data?.customDomain || `${status.data?.subdomain}.wkna49.com`;
+              window.open(`https://${host}/admin`, "_blank", "noopener");
+            }}
+
             onRetry={async () => {
               if (!chosenOrg) {
                 setStep(0);
