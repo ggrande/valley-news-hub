@@ -119,7 +119,7 @@ export const createMerchCheckoutSession = createServerFn({ method: "POST" })
             product_data: {
               name: data.productName,
               ...(data.image && { images: [data.image] }),
-              tax_code: "txcd_30011000", // general apparel/physical goods fallback
+              // tax_code requires automatic_tax to be enabled.
             },
           },
         }],
@@ -136,7 +136,9 @@ export const createMerchCheckoutSession = createServerFn({ method: "POST" })
           },
         }],
         shipping_address_collection: { allowed_countries: ["US", "CA"] },
-        automatic_tax: { enabled: true },
+        // automatic_tax disabled — requires a head office address set on the
+        // Stripe account. Re-enable once tax settings are configured in Stripe.
+        // automatic_tax: { enabled: true },
         phone_number_collection: { enabled: true },
         ...(data.customerEmail && { customer_email: data.customerEmail }),
         payment_intent_data: { description: data.productName },
