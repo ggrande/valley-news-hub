@@ -149,8 +149,9 @@ function ghRepo(): { owner: string; repo: string } | null {
 export function publicStoryUrl(slug: string): string {
   const r = ghRepo();
   if (!r) return `${BASE_URL}/api/public/web-stories/${slug}`;
-  // GitHub Pages serves docs/web-stories/{slug}/index.html at this URL.
-  return `https://${r.owner}.github.io/${r.repo}/web-stories/${slug}/`;
+  // Custom domain CNAME'd at the registrar (Porkbun) to {owner}.github.io.
+  // Pages serves docs/web-stories/{slug}/index.html.
+  return `https://${STORIES_HOST}/web-stories/${slug}/`;
 }
 
 async function gh(path: string, init: RequestInit = {}) {
