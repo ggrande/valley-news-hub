@@ -33,7 +33,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NewsIndexRouteImport } from './routes/news.index'
 import { Route as MerchIndexRouteImport } from './routes/merch.index'
-import { Route as WebStoriesSlugRouteImport } from './routes/web-stories.$slug'
 import { Route as WeatherClosingsRouteImport } from './routes/weather.closings'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
@@ -66,6 +65,7 @@ import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAccountOrdersRouteImport } from './routes/_authenticated/account.orders'
 import { Route as AuthenticatedAccountManagedSitesRouteImport } from './routes/_authenticated/account.managed-sites'
 import { Route as AuthenticatedAccountLicensesRouteImport } from './routes/_authenticated/account.licenses'
+import { Route as ApiPublicWebStoriesSlugRouteImport } from './routes/api/public/web-stories.$slug'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicNetworkIngestReleaseRouteImport } from './routes/api/public/network/ingest-release'
 import { Route as ApiPublicNetworkCheckUpdateRouteImport } from './routes/api/public/network/check-update'
@@ -196,11 +196,6 @@ const NewsIndexRoute = NewsIndexRouteImport.update({
 const MerchIndexRoute = MerchIndexRouteImport.update({
   id: '/merch/',
   path: '/merch/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WebStoriesSlugRoute = WebStoriesSlugRouteImport.update({
-  id: '/web-stories/$slug',
-  path: '/web-stories/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WeatherClosingsRoute = WeatherClosingsRouteImport.update({
@@ -380,6 +375,11 @@ const AuthenticatedAccountLicensesRoute =
     path: '/account/licenses',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicWebStoriesSlugRoute = ApiPublicWebStoriesSlugRouteImport.update({
+  id: '/api/public/web-stories/$slug',
+  path: '/api/public/web-stories/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -485,7 +485,6 @@ export interface FileRoutesByFullPath {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
-  '/web-stories/$slug': typeof WebStoriesSlugRoute
   '/merch/': typeof MerchIndexRoute
   '/news/': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
@@ -522,6 +521,7 @@ export interface FileRoutesByFullPath {
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -554,7 +554,6 @@ export interface FileRoutesByTo {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
-  '/web-stories/$slug': typeof WebStoriesSlugRoute
   '/merch': typeof MerchIndexRoute
   '/news': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
@@ -591,6 +590,7 @@ export interface FileRoutesByTo {
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -626,7 +626,6 @@ export interface FileRoutesById {
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/weather/closings': typeof WeatherClosingsRoute
-  '/web-stories/$slug': typeof WebStoriesSlugRoute
   '/merch/': typeof MerchIndexRoute
   '/news/': typeof NewsIndexRoute
   '/_authenticated/account/licenses': typeof AuthenticatedAccountLicensesRoute
@@ -663,6 +662,7 @@ export interface FileRoutesById {
   '/api/public/network/check-update': typeof ApiPublicNetworkCheckUpdateRoute
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -698,7 +698,6 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
-    | '/web-stories/$slug'
     | '/merch/'
     | '/news/'
     | '/account/licenses'
@@ -735,6 +734,7 @@ export interface FileRouteTypes {
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
+    | '/api/public/web-stories/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -767,7 +767,6 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
-    | '/web-stories/$slug'
     | '/merch'
     | '/news'
     | '/account/licenses'
@@ -804,6 +803,7 @@ export interface FileRouteTypes {
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
+    | '/api/public/web-stories/$slug'
   id:
     | '__root__'
     | '/'
@@ -838,7 +838,6 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/news/local'
     | '/weather/closings'
-    | '/web-stories/$slug'
     | '/merch/'
     | '/news/'
     | '/_authenticated/account/licenses'
@@ -875,6 +874,7 @@ export interface FileRouteTypes {
     | '/api/public/network/check-update'
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
+    | '/api/public/web-stories/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -906,7 +906,6 @@ export interface RootRouteChildren {
   MerchIdRoute: typeof MerchIdRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NewsLocalRoute: typeof NewsLocalRoute
-  WebStoriesSlugRoute: typeof WebStoriesSlugRoute
   MerchIndexRoute: typeof MerchIndexRoute
   NewsIndexRoute: typeof NewsIndexRoute
   ApiPublicHooksBackfillCommentsRoute: typeof ApiPublicHooksBackfillCommentsRoute
@@ -918,6 +917,7 @@ export interface RootRouteChildren {
   ApiPublicNetworkCheckUpdateRoute: typeof ApiPublicNetworkCheckUpdateRoute
   ApiPublicNetworkIngestReleaseRoute: typeof ApiPublicNetworkIngestReleaseRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicWebStoriesSlugRoute: typeof ApiPublicWebStoriesSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1088,13 +1088,6 @@ declare module '@tanstack/react-router' {
       path: '/merch'
       fullPath: '/merch/'
       preLoaderRoute: typeof MerchIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/web-stories/$slug': {
-      id: '/web-stories/$slug'
-      path: '/web-stories/$slug'
-      fullPath: '/web-stories/$slug'
-      preLoaderRoute: typeof WebStoriesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/weather/closings': {
@@ -1320,6 +1313,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/account/licenses'
       preLoaderRoute: typeof AuthenticatedAccountLicensesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/web-stories/$slug': {
+      id: '/api/public/web-stories/$slug'
+      path: '/api/public/web-stories/$slug'
+      fullPath: '/api/public/web-stories/$slug'
+      preLoaderRoute: typeof ApiPublicWebStoriesSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
@@ -1568,7 +1568,6 @@ const rootRouteChildren: RootRouteChildren = {
   MerchIdRoute: MerchIdRoute,
   NewsSlugRoute: NewsSlugRoute,
   NewsLocalRoute: NewsLocalRoute,
-  WebStoriesSlugRoute: WebStoriesSlugRoute,
   MerchIndexRoute: MerchIndexRoute,
   NewsIndexRoute: NewsIndexRoute,
   ApiPublicHooksBackfillCommentsRoute: ApiPublicHooksBackfillCommentsRoute,
@@ -1581,6 +1580,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicNetworkCheckUpdateRoute: ApiPublicNetworkCheckUpdateRoute,
   ApiPublicNetworkIngestReleaseRoute: ApiPublicNetworkIngestReleaseRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicWebStoriesSlugRoute: ApiPublicWebStoriesSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

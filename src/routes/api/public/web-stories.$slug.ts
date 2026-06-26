@@ -7,7 +7,7 @@ const PUBLISHER_LOGO = "https://wkna49.com/logo.png";
 
 // Google Web Stories (AMP). Served as raw AMP HTML at /web-stories/:slug
 // Spec: https://developers.google.com/search/docs/appearance/web-stories
-export const Route = createFileRoute("/web-stories/$slug")({
+export const Route = createFileRoute("/api/public/web-stories/$slug")({
   server: {
     handlers: {
       GET: async ({ params }) => {
