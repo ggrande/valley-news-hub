@@ -39,6 +39,7 @@ export const Route = createFileRoute("/network/changelog")({
     meta: [
       { title: "Changelog — WKNA-49 Network Platform" },
       { name: "description", content: "Every release of the WKNA-49 news platform, with notes and download links." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(releasesQuery),
