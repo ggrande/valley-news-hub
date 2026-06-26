@@ -6,6 +6,7 @@ import { ArticleImage } from "@/components/site/ArticleImage";
 import { SupportButton } from "@/components/site/SupportButton";
 import { ShareBar } from "@/components/site/ShareBar";
 import { formatDate } from "@/lib/news-data";
+import { ShoppingBag } from "lucide-react";
 import { dbPostToArticle, fetchCommentsForPost, fetchPostBySlug, fetchPublishedPosts, fetchSetting } from "@/lib/posts-queries";
 
 export const Route = createFileRoute("/news/$slug")({
