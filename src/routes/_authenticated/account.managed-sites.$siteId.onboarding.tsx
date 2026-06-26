@@ -136,6 +136,32 @@ function OnboardingPage() {
   const [form, setForm] = useState<Partial<ManagedSiteDirectoryProfile>>({});
   const [answersComplete, setAnswersComplete] = useState(false);
 
+  // Lifted Supabase provisioning controls (so step 0 can drive them)
+  const listOrgs = useServerFn(listConnectedOrganizations);
+  const provision = useServerFn(provisionTenantProject);
+  const [chosenOrg, setChosenOrg] = useState<string>("");
+  const [region, setRegion] = useState("us-east-1");
+
+  const orgs = useQuery({
+    queryKey: ["sb-orgs", siteId],
+    queryFn: () => listOrgs({ data: { siteId } }),
+    enabled: !!status.data?.hasRefreshToken && !status.data?.project,
+  });
+
+  const provisionMut = useMutation({
+    mutationFn: () => provision({ data: { siteId, organizationId: chosenOrg, region } }),
+    onSuccess: (r) => {
+      toast.success(r.message);
+      qc.invalidateQueries({ queryKey: ["provisioning-status", siteId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  // If a project is already kicked off (refresh / returning user), auto-advance past step 0.
+  useEffect(() => {
+    if (step === 0 && status.data?.project) setStep(1);
+  }, [status.data?.project, step]);
+
   useEffect(() => {
     if (profile && Object.keys(form).length === 0) setForm(profile);
   }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -153,13 +179,27 @@ function OnboardingPage() {
     if (!profile) return;
     const payload: Parameters<typeof saveProfile>[0]["data"] = { siteId };
     if (step === 0) {
+      // Project step: kick off provisioning (or skip if already started) before advancing.
+      if (!status.data?.project) {
+        if (!chosenOrg) {
+          toast.error("Pick a Supabase organization");
+          return;
+        }
+        try {
+          await provisionMut.mutateAsync();
+        } catch {
+          return; // toast already shown
+        }
+      }
+    }
+    if (step === 1) {
       if (!form.display_name?.trim()) {
         toast.error("Please enter a station name");
         return;
       }
       payload.display_name = form.display_name;
     }
-    if (step === 1) {
+    if (step === 2) {
       payload.directory_tagline = form.directory_tagline ?? null;
       payload.directory_city = form.directory_city ?? null;
       payload.directory_region = form.directory_region ?? null;
@@ -167,7 +207,7 @@ function OnboardingPage() {
       payload.directory_website_url = form.directory_website_url ?? null;
       payload.directory_opt_in = !!form.directory_opt_in;
     }
-    if (step === 2) {
+    if (step === 3) {
       payload.custom_domain = form.custom_domain ?? null;
     }
     if (next === "finish") {
