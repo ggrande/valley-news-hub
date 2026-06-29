@@ -209,6 +209,12 @@ export const getStationBranding = createServerFn({ method: "POST" })
   .inputValidator((d: { siteId: string }) => d)
   .handler(async ({ data }) => {
     const { site } = await requireSession(data.siteId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: extra } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .select("zip_code, latitude, longitude, contact_email, contact_phone, directory_city, directory_region")
+      .eq("id", site.id)
+      .maybeSingle();
     return {
       displayName: site.display_name,
       tagline: site.directory_tagline ?? "",
@@ -216,8 +222,36 @@ export const getStationBranding = createServerFn({ method: "POST" })
       websiteUrl: site.directory_website_url ?? "",
       subdomain: site.subdomain,
       customDomain: site.custom_domain,
+      zipCode: (extra?.zip_code ?? "") as string,
+      contactEmail: (extra?.contact_email ?? "") as string,
+      contactPhone: (extra?.contact_phone ?? "") as string,
+      city: (extra?.directory_city ?? "") as string,
+      region: (extra?.directory_region ?? "") as string,
+      latitude: extra?.latitude ?? null,
+      longitude: extra?.longitude ?? null,
     };
   });
+
+// Resolve a US zip code via Zippopotam (free, no key).
+async function resolveZip(zip: string): Promise<{ city: string; region: string; lat: number; lon: number } | null> {
+  const z = (zip || "").trim();
+  if (!/^\d{5}$/.test(z)) return null;
+  try {
+    const r = await fetch(`https://api.zippopotam.us/us/${z}`);
+    if (!r.ok) return null;
+    const j: any = await r.json();
+    const place = j?.places?.[0];
+    if (!place) return null;
+    return {
+      city: String(place["place name"] ?? ""),
+      region: String(place["state abbreviation"] ?? ""),
+      lat: parseFloat(place.latitude),
+      lon: parseFloat(place.longitude),
+    };
+  } catch {
+    return null;
+  }
+}
 
 export const updateStationBranding = createServerFn({ method: "POST" })
   .inputValidator((d: {
@@ -226,22 +260,42 @@ export const updateStationBranding = createServerFn({ method: "POST" })
     tagline?: string;
     logoUrl?: string;
     websiteUrl?: string;
+    zipCode?: string;
+    contactEmail?: string;
+    contactPhone?: string;
   }) => d)
   .handler(async ({ data }) => {
     const { site } = await requireSession(data.siteId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const update: Record<string, any> = {
+      display_name: data.displayName.trim().slice(0, 120),
+      directory_tagline: (data.tagline ?? "").slice(0, 240) || null,
+      directory_logo_url: (data.logoUrl ?? "").slice(0, 500) || null,
+      directory_website_url: (data.websiteUrl ?? "").slice(0, 500) || null,
+      contact_email: (data.contactEmail ?? "").trim().slice(0, 200) || null,
+      contact_phone: (data.contactPhone ?? "").trim().slice(0, 40) || null,
+    };
+    const zip = (data.zipCode ?? "").trim();
+    if (zip) {
+      update.zip_code = zip.slice(0, 10);
+      const geo = await resolveZip(zip);
+      if (geo) {
+        update.latitude = geo.lat;
+        update.longitude = geo.lon;
+        update.directory_city = geo.city;
+        update.directory_region = geo.region;
+      }
+    } else {
+      update.zip_code = null;
+    }
     const { error } = await (supabaseAdmin as any)
       .from("managed_sites")
-      .update({
-        display_name: data.displayName.trim().slice(0, 120),
-        directory_tagline: (data.tagline ?? "").slice(0, 240) || null,
-        directory_logo_url: (data.logoUrl ?? "").slice(0, 500) || null,
-        directory_website_url: (data.websiteUrl ?? "").slice(0, 500) || null,
-      })
+      .update(update)
       .eq("id", site.id);
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true, resolved: !!update.latitude };
   });
+
 
 // ---------- BILLING (Stripe) ----------
 async function findPurchase(siteId: string) {

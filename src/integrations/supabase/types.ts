@@ -720,6 +720,8 @@ export type Database = {
       managed_sites: {
         Row: {
           auto_apply_security: boolean
+          contact_email: string | null
+          contact_phone: string | null
           created_at: string
           current_release_id: string | null
           custom_domain: string | null
@@ -732,6 +734,8 @@ export type Database = {
           display_name: string
           id: string
           last_deployed_at: string | null
+          latitude: number | null
+          longitude: number | null
           network_sync_enabled: boolean
           notes: string | null
           onboarding_completed_at: string | null
@@ -763,9 +767,12 @@ export type Database = {
           supabase_service_key_enc: string | null
           supabase_service_key_iv: string | null
           updated_at: string
+          zip_code: string | null
         }
         Insert: {
           auto_apply_security?: boolean
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           current_release_id?: string | null
           custom_domain?: string | null
@@ -778,6 +785,8 @@ export type Database = {
           display_name?: string
           id?: string
           last_deployed_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           network_sync_enabled?: boolean
           notes?: string | null
           onboarding_completed_at?: string | null
@@ -809,9 +818,12 @@ export type Database = {
           supabase_service_key_enc?: string | null
           supabase_service_key_iv?: string | null
           updated_at?: string
+          zip_code?: string | null
         }
         Update: {
           auto_apply_security?: boolean
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
           current_release_id?: string | null
           custom_domain?: string | null
@@ -824,6 +836,8 @@ export type Database = {
           display_name?: string
           id?: string
           last_deployed_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           network_sync_enabled?: boolean
           notes?: string | null
           onboarding_completed_at?: string | null
@@ -855,6 +869,7 @@ export type Database = {
           supabase_service_key_enc?: string | null
           supabase_service_key_iv?: string | null
           updated_at?: string
+          zip_code?: string | null
         }
         Relationships: [
           {

@@ -76,7 +76,7 @@ export const getTenantBySlug = createServerFn({ method: "GET" })
     const { data: row } = await (supabaseAdmin as any)
       .from("managed_sites")
       .select(
-        "id, display_name, subdomain, custom_domain, status, network_sync_enabled, directory_logo_url, directory_tagline, directory_city, directory_region, directory_website_url"
+        "id, display_name, subdomain, custom_domain, status, network_sync_enabled, directory_logo_url, directory_tagline, directory_city, directory_region, directory_website_url, zip_code, latitude, longitude, contact_email, contact_phone"
       )
       .eq("subdomain", slug)
       .maybeSingle();
@@ -93,6 +93,11 @@ export const getTenantBySlug = createServerFn({ method: "GET" })
       city: row.directory_city ?? null,
       region: row.directory_region ?? null,
       websiteUrl: row.directory_website_url ?? null,
+      zipCode: (row.zip_code ?? null) as string | null,
+      latitude: (row.latitude ?? null) as number | null,
+      longitude: (row.longitude ?? null) as number | null,
+      contactEmail: (row.contact_email ?? null) as string | null,
+      contactPhone: (row.contact_phone ?? null) as string | null,
     };
   });
 

@@ -50,7 +50,13 @@ import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as NetworkSiteSlugIndexRouteImport } from './routes/network_.$siteSlug.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as NetworkSiteSlugWeatherRouteImport } from './routes/network_.$siteSlug.weather'
+import { Route as NetworkSiteSlugWatchLiveRouteImport } from './routes/network_.$siteSlug.watch-live'
+import { Route as NetworkSiteSlugSportsRouteImport } from './routes/network_.$siteSlug.sports'
+import { Route as NetworkSiteSlugShowsRouteImport } from './routes/network_.$siteSlug.shows'
+import { Route as NetworkSiteSlugContactRouteImport } from './routes/network_.$siteSlug.contact'
 import { Route as NetworkSiteSlugAdminRouteImport } from './routes/network_.$siteSlug.admin'
+import { Route as NetworkSiteSlugAboutRouteImport } from './routes/network_.$siteSlug.about'
 import { Route as AuthenticatedAdminVerdictRouteImport } from './routes/_authenticated/admin.verdict'
 import { Route as AuthenticatedAdminSubmissionsRouteImport } from './routes/_authenticated/admin.submissions'
 import { Route as AuthenticatedAdminSiteContentRouteImport } from './routes/_authenticated/admin.site-content'
@@ -301,9 +307,40 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const NetworkSiteSlugWeatherRoute = NetworkSiteSlugWeatherRouteImport.update({
+  id: '/weather',
+  path: '/weather',
+  getParentRoute: () => NetworkSiteSlugRoute,
+} as any)
+const NetworkSiteSlugWatchLiveRoute =
+  NetworkSiteSlugWatchLiveRouteImport.update({
+    id: '/watch-live',
+    path: '/watch-live',
+    getParentRoute: () => NetworkSiteSlugRoute,
+  } as any)
+const NetworkSiteSlugSportsRoute = NetworkSiteSlugSportsRouteImport.update({
+  id: '/sports',
+  path: '/sports',
+  getParentRoute: () => NetworkSiteSlugRoute,
+} as any)
+const NetworkSiteSlugShowsRoute = NetworkSiteSlugShowsRouteImport.update({
+  id: '/shows',
+  path: '/shows',
+  getParentRoute: () => NetworkSiteSlugRoute,
+} as any)
+const NetworkSiteSlugContactRoute = NetworkSiteSlugContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => NetworkSiteSlugRoute,
+} as any)
 const NetworkSiteSlugAdminRoute = NetworkSiteSlugAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => NetworkSiteSlugRoute,
+} as any)
+const NetworkSiteSlugAboutRoute = NetworkSiteSlugAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => NetworkSiteSlugRoute,
 } as any)
 const AuthenticatedAdminVerdictRoute =
@@ -629,7 +666,13 @@ export interface FileRoutesByFullPath {
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin/verdict': typeof AuthenticatedAdminVerdictRoute
+  '/network/$siteSlug/about': typeof NetworkSiteSlugAboutRoute
   '/network/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
+  '/network/$siteSlug/contact': typeof NetworkSiteSlugContactRoute
+  '/network/$siteSlug/shows': typeof NetworkSiteSlugShowsRoute
+  '/network/$siteSlug/sports': typeof NetworkSiteSlugSportsRoute
+  '/network/$siteSlug/watch-live': typeof NetworkSiteSlugWatchLiveRoute
+  '/network/$siteSlug/weather': typeof NetworkSiteSlugWeatherRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/network/$siteSlug/': typeof NetworkSiteSlugIndexRoute
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
@@ -715,7 +758,13 @@ export interface FileRoutesByTo {
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin/verdict': typeof AuthenticatedAdminVerdictRoute
+  '/network/$siteSlug/about': typeof NetworkSiteSlugAboutRoute
   '/network/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
+  '/network/$siteSlug/contact': typeof NetworkSiteSlugContactRoute
+  '/network/$siteSlug/shows': typeof NetworkSiteSlugShowsRoute
+  '/network/$siteSlug/sports': typeof NetworkSiteSlugSportsRoute
+  '/network/$siteSlug/watch-live': typeof NetworkSiteSlugWatchLiveRoute
+  '/network/$siteSlug/weather': typeof NetworkSiteSlugWeatherRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/network/$siteSlug': typeof NetworkSiteSlugIndexRoute
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
@@ -805,7 +854,13 @@ export interface FileRoutesById {
   '/_authenticated/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/_authenticated/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/_authenticated/admin/verdict': typeof AuthenticatedAdminVerdictRoute
+  '/network_/$siteSlug/about': typeof NetworkSiteSlugAboutRoute
   '/network_/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
+  '/network_/$siteSlug/contact': typeof NetworkSiteSlugContactRoute
+  '/network_/$siteSlug/shows': typeof NetworkSiteSlugShowsRoute
+  '/network_/$siteSlug/sports': typeof NetworkSiteSlugSportsRoute
+  '/network_/$siteSlug/watch-live': typeof NetworkSiteSlugWatchLiveRoute
+  '/network_/$siteSlug/weather': typeof NetworkSiteSlugWeatherRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/network_/$siteSlug/': typeof NetworkSiteSlugIndexRoute
   '/_authenticated/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
@@ -895,7 +950,13 @@ export interface FileRouteTypes {
     | '/admin/site-content'
     | '/admin/submissions'
     | '/admin/verdict'
+    | '/network/$siteSlug/about'
     | '/network/$siteSlug/admin'
+    | '/network/$siteSlug/contact'
+    | '/network/$siteSlug/shows'
+    | '/network/$siteSlug/sports'
+    | '/network/$siteSlug/watch-live'
+    | '/network/$siteSlug/weather'
     | '/admin/'
     | '/network/$siteSlug/'
     | '/admin/import/$batchId'
@@ -981,7 +1042,13 @@ export interface FileRouteTypes {
     | '/admin/site-content'
     | '/admin/submissions'
     | '/admin/verdict'
+    | '/network/$siteSlug/about'
     | '/network/$siteSlug/admin'
+    | '/network/$siteSlug/contact'
+    | '/network/$siteSlug/shows'
+    | '/network/$siteSlug/sports'
+    | '/network/$siteSlug/watch-live'
+    | '/network/$siteSlug/weather'
     | '/admin'
     | '/network/$siteSlug'
     | '/admin/import/$batchId'
@@ -1070,7 +1137,13 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/site-content'
     | '/_authenticated/admin/submissions'
     | '/_authenticated/admin/verdict'
+    | '/network_/$siteSlug/about'
     | '/network_/$siteSlug/admin'
+    | '/network_/$siteSlug/contact'
+    | '/network_/$siteSlug/shows'
+    | '/network_/$siteSlug/sports'
+    | '/network_/$siteSlug/watch-live'
+    | '/network_/$siteSlug/weather'
     | '/_authenticated/admin/'
     | '/network_/$siteSlug/'
     | '/_authenticated/admin/import/$batchId'
@@ -1442,11 +1515,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/network_/$siteSlug/weather': {
+      id: '/network_/$siteSlug/weather'
+      path: '/weather'
+      fullPath: '/network/$siteSlug/weather'
+      preLoaderRoute: typeof NetworkSiteSlugWeatherRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
+    }
+    '/network_/$siteSlug/watch-live': {
+      id: '/network_/$siteSlug/watch-live'
+      path: '/watch-live'
+      fullPath: '/network/$siteSlug/watch-live'
+      preLoaderRoute: typeof NetworkSiteSlugWatchLiveRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
+    }
+    '/network_/$siteSlug/sports': {
+      id: '/network_/$siteSlug/sports'
+      path: '/sports'
+      fullPath: '/network/$siteSlug/sports'
+      preLoaderRoute: typeof NetworkSiteSlugSportsRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
+    }
+    '/network_/$siteSlug/shows': {
+      id: '/network_/$siteSlug/shows'
+      path: '/shows'
+      fullPath: '/network/$siteSlug/shows'
+      preLoaderRoute: typeof NetworkSiteSlugShowsRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
+    }
+    '/network_/$siteSlug/contact': {
+      id: '/network_/$siteSlug/contact'
+      path: '/contact'
+      fullPath: '/network/$siteSlug/contact'
+      preLoaderRoute: typeof NetworkSiteSlugContactRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
+    }
     '/network_/$siteSlug/admin': {
       id: '/network_/$siteSlug/admin'
       path: '/admin'
       fullPath: '/network/$siteSlug/admin'
       preLoaderRoute: typeof NetworkSiteSlugAdminRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
+    }
+    '/network_/$siteSlug/about': {
+      id: '/network_/$siteSlug/about'
+      path: '/about'
+      fullPath: '/network/$siteSlug/about'
+      preLoaderRoute: typeof NetworkSiteSlugAboutRouteImport
       parentRoute: typeof NetworkSiteSlugRoute
     }
     '/_authenticated/admin/verdict': {
@@ -1907,14 +2022,26 @@ const WeatherRouteWithChildren =
   WeatherRoute._addFileChildren(WeatherRouteChildren)
 
 interface NetworkSiteSlugRouteChildren {
+  NetworkSiteSlugAboutRoute: typeof NetworkSiteSlugAboutRoute
   NetworkSiteSlugAdminRoute: typeof NetworkSiteSlugAdminRoute
+  NetworkSiteSlugContactRoute: typeof NetworkSiteSlugContactRoute
+  NetworkSiteSlugShowsRoute: typeof NetworkSiteSlugShowsRoute
+  NetworkSiteSlugSportsRoute: typeof NetworkSiteSlugSportsRoute
+  NetworkSiteSlugWatchLiveRoute: typeof NetworkSiteSlugWatchLiveRoute
+  NetworkSiteSlugWeatherRoute: typeof NetworkSiteSlugWeatherRoute
   NetworkSiteSlugIndexRoute: typeof NetworkSiteSlugIndexRoute
   NetworkSiteSlugNewsSlugRoute: typeof NetworkSiteSlugNewsSlugRoute
   NetworkSiteSlugNewsIndexRoute: typeof NetworkSiteSlugNewsIndexRoute
 }
 
 const NetworkSiteSlugRouteChildren: NetworkSiteSlugRouteChildren = {
+  NetworkSiteSlugAboutRoute: NetworkSiteSlugAboutRoute,
   NetworkSiteSlugAdminRoute: NetworkSiteSlugAdminRoute,
+  NetworkSiteSlugContactRoute: NetworkSiteSlugContactRoute,
+  NetworkSiteSlugShowsRoute: NetworkSiteSlugShowsRoute,
+  NetworkSiteSlugSportsRoute: NetworkSiteSlugSportsRoute,
+  NetworkSiteSlugWatchLiveRoute: NetworkSiteSlugWatchLiveRoute,
+  NetworkSiteSlugWeatherRoute: NetworkSiteSlugWeatherRoute,
   NetworkSiteSlugIndexRoute: NetworkSiteSlugIndexRoute,
   NetworkSiteSlugNewsSlugRoute: NetworkSiteSlugNewsSlugRoute,
   NetworkSiteSlugNewsIndexRoute: NetworkSiteSlugNewsIndexRoute,

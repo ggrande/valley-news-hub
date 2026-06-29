@@ -2,6 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Layout } from "@/components/site/Layout";
+import { TenantNav } from "@/components/site/TenantNav";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { getTenantFeed, type FeedItem } from "@/lib/network-feed.functions";
 import type { Article } from "@/lib/news-data";
@@ -51,6 +52,7 @@ function TenantHome() {
 
   return (
     <Layout>
+      <TenantNav tenant={tenantData ?? tenant} active="home" />
       <section className="border-b bg-[color:var(--ivory)]">
         <div className="mx-auto max-w-7xl px-4 py-8">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--broadcast)]">
