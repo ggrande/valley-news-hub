@@ -39,6 +39,7 @@ import { Route as StationVerifyRouteImport } from './routes/station.verify'
 import { Route as StationAdminRouteImport } from './routes/station.admin'
 import { Route as NewsLocalRouteImport } from './routes/news.local'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
+import { Route as NetworkSiteSlugRouteImport } from './routes/network_.$siteSlug'
 import { Route as NetworkStationsRouteImport } from './routes/network.stations'
 import { Route as NetworkDocsRouteImport } from './routes/network.docs'
 import { Route as NetworkChangelogRouteImport } from './routes/network.changelog'
@@ -47,7 +48,9 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as CheckoutMerchReturnRouteImport } from './routes/checkout.merch-return'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as NetworkSiteSlugIndexRouteImport } from './routes/network_.$siteSlug.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as NetworkSiteSlugAdminRouteImport } from './routes/network_.$siteSlug.admin'
 import { Route as AuthenticatedAdminVerdictRouteImport } from './routes/_authenticated/admin.verdict'
 import { Route as AuthenticatedAdminSubmissionsRouteImport } from './routes/_authenticated/admin.submissions'
 import { Route as AuthenticatedAdminSiteContentRouteImport } from './routes/_authenticated/admin.site-content'
@@ -69,7 +72,9 @@ import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
 import { Route as AuthenticatedAccountOrdersRouteImport } from './routes/_authenticated/account.orders'
 import { Route as AuthenticatedAccountLicensesRouteImport } from './routes/_authenticated/account.licenses'
+import { Route as NetworkSiteSlugNewsIndexRouteImport } from './routes/network_.$siteSlug.news.index'
 import { Route as AuthenticatedAccountManagedSitesIndexRouteImport } from './routes/_authenticated/account.managed-sites.index'
+import { Route as NetworkSiteSlugNewsSlugRouteImport } from './routes/network_.$siteSlug.news.$slug'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -241,6 +246,11 @@ const NewsSlugRoute = NewsSlugRouteImport.update({
   path: '/news/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NetworkSiteSlugRoute = NetworkSiteSlugRouteImport.update({
+  id: '/network_/$siteSlug',
+  path: '/network/$siteSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NetworkStationsRoute = NetworkStationsRouteImport.update({
   id: '/stations',
   path: '/stations',
@@ -281,10 +291,20 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const NetworkSiteSlugIndexRoute = NetworkSiteSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => NetworkSiteSlugRoute,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const NetworkSiteSlugAdminRoute = NetworkSiteSlugAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => NetworkSiteSlugRoute,
 } as any)
 const AuthenticatedAdminVerdictRoute =
   AuthenticatedAdminVerdictRouteImport.update({
@@ -408,12 +428,23 @@ const AuthenticatedAccountLicensesRoute =
     path: '/account/licenses',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const NetworkSiteSlugNewsIndexRoute =
+  NetworkSiteSlugNewsIndexRouteImport.update({
+    id: '/news/',
+    path: '/news/',
+    getParentRoute: () => NetworkSiteSlugRoute,
+  } as any)
 const AuthenticatedAccountManagedSitesIndexRoute =
   AuthenticatedAccountManagedSitesIndexRouteImport.update({
     id: '/account/managed-sites/',
     path: '/account/managed-sites/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const NetworkSiteSlugNewsSlugRoute = NetworkSiteSlugNewsSlugRouteImport.update({
+  id: '/news/$slug',
+  path: '/news/$slug',
+  getParentRoute: () => NetworkSiteSlugRoute,
+} as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -568,6 +599,7 @@ export interface FileRoutesByFullPath {
   '/network/changelog': typeof NetworkChangelogRoute
   '/network/docs': typeof NetworkDocsRoute
   '/network/stations': typeof NetworkStationsRoute
+  '/network/$siteSlug': typeof NetworkSiteSlugRouteWithChildren
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/station/admin': typeof StationAdminRoute
@@ -597,7 +629,9 @@ export interface FileRoutesByFullPath {
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin/verdict': typeof AuthenticatedAdminVerdictRoute
+  '/network/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/network/$siteSlug/': typeof NetworkSiteSlugIndexRoute
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
@@ -617,7 +651,9 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/network/$siteSlug/news/$slug': typeof NetworkSiteSlugNewsSlugRoute
   '/account/managed-sites/': typeof AuthenticatedAccountManagedSitesIndexRoute
+  '/network/$siteSlug/news/': typeof NetworkSiteSlugNewsIndexRoute
   '/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
   '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
@@ -679,7 +715,9 @@ export interface FileRoutesByTo {
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin/verdict': typeof AuthenticatedAdminVerdictRoute
+  '/network/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/network/$siteSlug': typeof NetworkSiteSlugIndexRoute
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
@@ -699,7 +737,9 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/network/$siteSlug/news/$slug': typeof NetworkSiteSlugNewsSlugRoute
   '/account/managed-sites': typeof AuthenticatedAccountManagedSitesIndexRoute
+  '/network/$siteSlug/news': typeof NetworkSiteSlugNewsIndexRoute
   '/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
   '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
@@ -735,6 +775,7 @@ export interface FileRoutesById {
   '/network/changelog': typeof NetworkChangelogRoute
   '/network/docs': typeof NetworkDocsRoute
   '/network/stations': typeof NetworkStationsRoute
+  '/network_/$siteSlug': typeof NetworkSiteSlugRouteWithChildren
   '/news/$slug': typeof NewsSlugRoute
   '/news/local': typeof NewsLocalRoute
   '/station/admin': typeof StationAdminRoute
@@ -764,7 +805,9 @@ export interface FileRoutesById {
   '/_authenticated/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/_authenticated/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/_authenticated/admin/verdict': typeof AuthenticatedAdminVerdictRoute
+  '/network_/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/network_/$siteSlug/': typeof NetworkSiteSlugIndexRoute
   '/_authenticated/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
   '/_authenticated/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/_authenticated/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
@@ -784,7 +827,9 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/network_/$siteSlug/news/$slug': typeof NetworkSiteSlugNewsSlugRoute
   '/_authenticated/account/managed-sites/': typeof AuthenticatedAccountManagedSitesIndexRoute
+  '/network_/$siteSlug/news/': typeof NetworkSiteSlugNewsIndexRoute
   '/_authenticated/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
   '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
@@ -820,6 +865,7 @@ export interface FileRouteTypes {
     | '/network/changelog'
     | '/network/docs'
     | '/network/stations'
+    | '/network/$siteSlug'
     | '/news/$slug'
     | '/news/local'
     | '/station/admin'
@@ -849,7 +895,9 @@ export interface FileRouteTypes {
     | '/admin/site-content'
     | '/admin/submissions'
     | '/admin/verdict'
+    | '/network/$siteSlug/admin'
     | '/admin/'
+    | '/network/$siteSlug/'
     | '/admin/import/$batchId'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
@@ -869,7 +917,9 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/network/$siteSlug/news/$slug'
     | '/account/managed-sites/'
+    | '/network/$siteSlug/news/'
     | '/account/managed-sites/$siteId/onboarding'
     | '/api/public/integrations/supabase/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -931,7 +981,9 @@ export interface FileRouteTypes {
     | '/admin/site-content'
     | '/admin/submissions'
     | '/admin/verdict'
+    | '/network/$siteSlug/admin'
     | '/admin'
+    | '/network/$siteSlug'
     | '/admin/import/$batchId'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
@@ -951,7 +1003,9 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/network/$siteSlug/news/$slug'
     | '/account/managed-sites'
+    | '/network/$siteSlug/news'
     | '/account/managed-sites/$siteId/onboarding'
     | '/api/public/integrations/supabase/callback'
   id:
@@ -986,6 +1040,7 @@ export interface FileRouteTypes {
     | '/network/changelog'
     | '/network/docs'
     | '/network/stations'
+    | '/network_/$siteSlug'
     | '/news/$slug'
     | '/news/local'
     | '/station/admin'
@@ -1015,7 +1070,9 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/site-content'
     | '/_authenticated/admin/submissions'
     | '/_authenticated/admin/verdict'
+    | '/network_/$siteSlug/admin'
     | '/_authenticated/admin/'
+    | '/network_/$siteSlug/'
     | '/_authenticated/admin/import/$batchId'
     | '/_authenticated/admin/posts/$id'
     | '/_authenticated/admin/reddit/$id'
@@ -1035,7 +1092,9 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/network_/$siteSlug/news/$slug'
     | '/_authenticated/account/managed-sites/'
+    | '/network_/$siteSlug/news/'
     | '/_authenticated/account/managed-sites/$siteId/onboarding'
     | '/api/public/integrations/supabase/callback'
   fileRoutesById: FileRoutesById
@@ -1067,6 +1126,7 @@ export interface RootRouteChildren {
   CheckoutMerchReturnRoute: typeof CheckoutMerchReturnRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   MerchIdRoute: typeof MerchIdRoute
+  NetworkSiteSlugRoute: typeof NetworkSiteSlugRouteWithChildren
   NewsSlugRoute: typeof NewsSlugRoute
   NewsLocalRoute: typeof NewsLocalRoute
   StationAdminRoute: typeof StationAdminRoute
@@ -1305,6 +1365,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/network_/$siteSlug': {
+      id: '/network_/$siteSlug'
+      path: '/network/$siteSlug'
+      fullPath: '/network/$siteSlug'
+      preLoaderRoute: typeof NetworkSiteSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/network/stations': {
       id: '/network/stations'
       path: '/stations'
@@ -1361,12 +1428,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/network_/$siteSlug/': {
+      id: '/network_/$siteSlug/'
+      path: '/'
+      fullPath: '/network/$siteSlug/'
+      preLoaderRoute: typeof NetworkSiteSlugIndexRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/network_/$siteSlug/admin': {
+      id: '/network_/$siteSlug/admin'
+      path: '/admin'
+      fullPath: '/network/$siteSlug/admin'
+      preLoaderRoute: typeof NetworkSiteSlugAdminRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
     }
     '/_authenticated/admin/verdict': {
       id: '/_authenticated/admin/verdict'
@@ -1515,12 +1596,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountLicensesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/network_/$siteSlug/news/': {
+      id: '/network_/$siteSlug/news/'
+      path: '/news'
+      fullPath: '/network/$siteSlug/news/'
+      preLoaderRoute: typeof NetworkSiteSlugNewsIndexRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
+    }
     '/_authenticated/account/managed-sites/': {
       id: '/_authenticated/account/managed-sites/'
       path: '/account/managed-sites'
       fullPath: '/account/managed-sites/'
       preLoaderRoute: typeof AuthenticatedAccountManagedSitesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/network_/$siteSlug/news/$slug': {
+      id: '/network_/$siteSlug/news/$slug'
+      path: '/news/$slug'
+      fullPath: '/network/$siteSlug/news/$slug'
+      preLoaderRoute: typeof NetworkSiteSlugNewsSlugRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -1811,6 +1906,24 @@ const WeatherRouteChildren: WeatherRouteChildren = {
 const WeatherRouteWithChildren =
   WeatherRoute._addFileChildren(WeatherRouteChildren)
 
+interface NetworkSiteSlugRouteChildren {
+  NetworkSiteSlugAdminRoute: typeof NetworkSiteSlugAdminRoute
+  NetworkSiteSlugIndexRoute: typeof NetworkSiteSlugIndexRoute
+  NetworkSiteSlugNewsSlugRoute: typeof NetworkSiteSlugNewsSlugRoute
+  NetworkSiteSlugNewsIndexRoute: typeof NetworkSiteSlugNewsIndexRoute
+}
+
+const NetworkSiteSlugRouteChildren: NetworkSiteSlugRouteChildren = {
+  NetworkSiteSlugAdminRoute: NetworkSiteSlugAdminRoute,
+  NetworkSiteSlugIndexRoute: NetworkSiteSlugIndexRoute,
+  NetworkSiteSlugNewsSlugRoute: NetworkSiteSlugNewsSlugRoute,
+  NetworkSiteSlugNewsIndexRoute: NetworkSiteSlugNewsIndexRoute,
+}
+
+const NetworkSiteSlugRouteWithChildren = NetworkSiteSlugRoute._addFileChildren(
+  NetworkSiteSlugRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1838,6 +1951,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutMerchReturnRoute: CheckoutMerchReturnRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   MerchIdRoute: MerchIdRoute,
+  NetworkSiteSlugRoute: NetworkSiteSlugRouteWithChildren,
   NewsSlugRoute: NewsSlugRoute,
   NewsLocalRoute: NewsLocalRoute,
   StationAdminRoute: StationAdminRoute,

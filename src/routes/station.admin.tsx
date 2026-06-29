@@ -8,6 +8,13 @@ import {
   signOutStation,
   getHostContext,
 } from "@/lib/tenant-auth.functions";
+import {
+  setTenantNetworkSync,
+  hideNetworkPost,
+  unhideNetworkPost,
+  listNetworkPostsForAdmin,
+  getTenantBySlug,
+} from "@/lib/network-feed.functions";
 
 export const Route = createFileRoute("/station/admin")({
   head: () => ({ meta: [{ title: "Station Admin" }, { name: "robots", content: "noindex" }] }),
@@ -135,8 +142,11 @@ function Dashboard({ session }: { session: any }) {
           <div className="mt-6 rounded-lg border bg-card p-5">
             <h2 className="font-semibold text-primary">Newsroom</h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              Connected to Supabase project <span className="font-mono">{active.supabase_project_ref || "—"}</span>.
-              Posts, comments and media live in your own database. Master account handles billing &amp; identity.
+              Your station lives at{" "}
+              <a href={`https://network.wkna49.com/${active.subdomain}`} className="font-mono text-primary underline">
+                network.wkna49.com/{active.subdomain}
+              </a>
+              . By default it mirrors the WKNA 49 master newsroom &mdash; toggle that off below or hide individual stories.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               <DashTile title="Posts" hint="Drafts, scheduled and published articles" disabled />
@@ -144,29 +154,116 @@ function Dashboard({ session }: { session: any }) {
               <DashTile title="Branding" hint="Logo, colors, alert bar" disabled />
               <DashTile title="Billing" hint="Update card, invoices" />
             </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">
-              Tenant CMS panels coming next — this page proves auth + host routing work.
-            </p>
           </div>
+
+          <NetworkSyncPanel site={active} />
+          <NetworkPostsPanel site={active} />
         </>
       ) : (
         <div className="mt-6 space-y-3">
           {(session.sites ?? []).length === 0 && (
             <p className="text-sm text-muted-foreground">No stations are linked to this email.</p>
           )}
-          {(session.sites ?? []).map((s: any) => {
-            const host = s.custom_domain || `${s.subdomain}.wkna49.com`;
-            return (
-              <a key={s.id} href={`https://${host}/station/admin`}
-                 className="block rounded-lg border bg-card p-4 hover:border-primary">
-                <div className="font-semibold text-primary">{s.display_name}</div>
-                <div className="font-mono text-xs text-muted-foreground">{host}</div>
-              </a>
-            );
-          })}
+          {(session.sites ?? []).map((s: any) => (
+            <a key={s.id} href={`/network/${s.subdomain}/admin`}
+               className="block rounded-lg border bg-card p-4 hover:border-primary">
+              <div className="font-semibold text-primary">{s.display_name}</div>
+              <div className="font-mono text-xs text-muted-foreground">network.wkna49.com/{s.subdomain}</div>
+            </a>
+          ))}
         </div>
       )}
     </Shell>
+  );
+}
+
+function NetworkSyncPanel({ site }: { site: any }) {
+  const qc = useQueryClient();
+  const setSyncFn = useServerFn(setTenantNetworkSync);
+  const tenantFn = useServerFn(getTenantBySlug);
+  const q = useQuery({
+    queryKey: ["tenant-slug", site.subdomain],
+    queryFn: () => tenantFn({ data: { slug: site.subdomain } }),
+  });
+  const enabled = q.data?.networkSyncEnabled ?? true;
+  const mut = useMutation({
+    mutationFn: (next: boolean) => setSyncFn({ data: { siteId: site.id, enabled: next } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tenant-slug", site.subdomain] }),
+    onError: (e: Error) => alert(e.message),
+  });
+  return (
+    <div className="mt-4 rounded-lg border bg-card p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-semibold text-primary">Network sync</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            When on, your homepage and news feed include published stories from the WKNA 49 master newsroom. Turn off
+            to show only your own content.
+          </p>
+        </div>
+        <button
+          onClick={() => mut.mutate(!enabled)}
+          disabled={mut.isPending}
+          className={`h-9 shrink-0 rounded-md px-3 text-xs font-semibold ${
+            enabled ? "bg-primary text-primary-foreground" : "border"
+          }`}
+        >
+          {mut.isPending ? "Saving…" : enabled ? "On" : "Off"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function NetworkPostsPanel({ site }: { site: any }) {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listNetworkPostsForAdmin);
+  const hideFn = useServerFn(hideNetworkPost);
+  const unhideFn = useServerFn(unhideNetworkPost);
+
+  const q = useQuery({
+    queryKey: ["network-posts-admin", site.id],
+    queryFn: () => listFn({ data: { siteId: site.id, limit: 50 } }),
+  });
+
+  const toggle = useMutation({
+    mutationFn: (p: { postId: string; hidden: boolean }) =>
+      p.hidden
+        ? unhideFn({ data: { siteId: site.id, postId: p.postId } })
+        : hideFn({ data: { siteId: site.id, postId: p.postId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["network-posts-admin", site.id] }),
+    onError: (e: Error) => alert(e.message),
+  });
+
+  return (
+    <div className="mt-4 rounded-lg border bg-card p-5">
+      <h2 className="font-semibold text-primary">Network posts</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Hide individual master stories from your station. Hidden posts stay live on WKNA 49 and other stations.
+      </p>
+      {q.isLoading && <p className="mt-3 text-xs text-muted-foreground">Loading…</p>}
+      <ul className="mt-3 divide-y">
+        {(q.data?.posts ?? []).map((p: any) => (
+          <li key={p.id} className="flex items-center gap-3 py-2">
+            <div className="min-w-0 flex-1">
+              <div className={`truncate text-sm ${p.hidden ? "text-muted-foreground line-through" : "text-primary"}`}>
+                {p.title}
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                {p.category ?? "News"} · {(p.published_at ?? "").slice(0, 10)}
+              </div>
+            </div>
+            <button
+              onClick={() => toggle.mutate({ postId: p.id, hidden: p.hidden })}
+              disabled={toggle.isPending}
+              className="h-8 shrink-0 rounded-md border px-2 text-[11px] font-semibold"
+            >
+              {p.hidden ? "Unhide" : "Hide"}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

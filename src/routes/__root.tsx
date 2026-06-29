@@ -142,15 +142,18 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   // Client-only tenant subdomain redirect. SSR will render the master page once
   // and the client mount redirects to the station admin if needed.
+  // Back-compat: old `{slug}.wkna49.com/*` URLs now redirect to the
+  // path-based tenant route `network.wkna49.com/{slug}/*`. Custom domains are
+  // untouched.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const host = window.location.hostname.toLowerCase();
-    const isTenant = host.endsWith(".wkna49.com") && host !== "www.wkna49.com" && host !== "wkna49.com";
-    if (!isTenant) return;
-    const p = window.location.pathname;
-    if (p === "/admin" || p.startsWith("/admin/") || p === "/account" || p.startsWith("/account/")) {
-      window.location.replace("/station/admin");
-    }
+    if (!host.endsWith(".wkna49.com")) return;
+    if (host === "www.wkna49.com" || host === "wkna49.com" || host === "network.wkna49.com") return;
+    const slug = host.replace(/\.wkna49\.com$/, "");
+    if (!slug || slug.includes(".")) return; // skip nested subdomains
+    const rest = window.location.pathname + window.location.search + window.location.hash;
+    window.location.replace(`https://network.wkna49.com/${slug}${rest === "/" ? "" : rest}`);
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
