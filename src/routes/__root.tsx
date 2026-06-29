@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Layout } from "../components/site/Layout";
 import { NetworkUpdateBanner } from "../components/NetworkUpdateBanner";
+import { useTenant } from "../lib/use-tenant";
 
 function NotFoundComponent() {
   return (
@@ -153,8 +154,21 @@ function RootComponent() {
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
+      <TenantTitle />
       <NetworkUpdateBanner />
       <Outlet />
     </QueryClientProvider>
   );
+}
+
+// Lightweight tenant-aware <title> override so subdomains read as the
+// affiliate's station name in the browser tab and on share previews crawled
+// client-side. SSR still serves the master metadata for SEO of the root site.
+function TenantTitle() {
+  const { tenant } = useTenant();
+  useEffect(() => {
+    if (typeof document === "undefined" || !tenant) return;
+    document.title = `${tenant.displayName} — Affiliate Station of WKNA 49`;
+  }, [tenant]);
+  return null;
 }
