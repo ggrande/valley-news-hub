@@ -176,7 +176,7 @@ function SiteCard({ site }: { site: ManagedSiteRow }) {
         <div>
           <h2 className="font-display text-xl font-bold text-primary">{site.display_name}</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            <span className="font-mono">{site.subdomain}.wkna49.com</span>
+            <span className="font-mono">wkna49.com/network/{site.subdomain}</span>
             {site.custom_domain && <> · custom: <span className="font-mono">{site.custom_domain}</span></>}
           </p>
         </div>
