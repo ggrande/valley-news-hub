@@ -548,13 +548,71 @@ function OnboardingPage() {
                       placeholder="news.example.com"
                     />
                   </Field>
-                  <div className="rounded-md bg-muted/40 p-4 text-xs text-muted-foreground">
-                    <p className="font-semibold text-foreground">DNS setup</p>
-                    <p className="mt-1">
-                      Once you save, point a CNAME from your domain to{" "}
-                      <span className="font-mono">{profile.subdomain}.wkna49.com</span>. Our team
-                      will provision SSL automatically.
+
+                  <div className="rounded-md border bg-muted/40 p-4 text-xs">
+                    <p className="text-sm font-semibold text-foreground">
+                      Manual DNS setup (recommended)
                     </p>
+                    <p className="mt-1 text-muted-foreground">
+                      At your domain registrar (Porkbun, Namecheap, GoDaddy, Cloudflare, etc.) add
+                      the following records. SSL is provisioned automatically once DNS resolves.
+                    </p>
+                    <div className="mt-3 overflow-hidden rounded border">
+                      <table className="w-full text-left font-mono text-[11px]">
+                        <thead className="bg-muted/60 text-muted-foreground">
+                          <tr>
+                            <th className="px-2 py-1">Type</th>
+                            <th className="px-2 py-1">Host / Name</th>
+                            <th className="px-2 py-1">Value</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-t">
+                            <td className="px-2 py-1">CNAME</td>
+                            <td className="px-2 py-1">
+                              {form.custom_domain
+                                ? form.custom_domain.split(".")[0] || "@"
+                                : "@ (or your subdomain)"}
+                            </td>
+                            <td className="px-2 py-1">{profile.subdomain}.wkna49.com</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="px-2 py-1">TXT</td>
+                            <td className="px-2 py-1">_wkna-verify</td>
+                            <td className="px-2 py-1">station={profile.subdomain}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="mt-2 text-muted-foreground">
+                      DNS propagation can take up to a few hours. You can finish onboarding now and
+                      add or change the domain anytime from your station settings.
+                    </p>
+                  </div>
+
+                  <div className="rounded-md border border-dashed bg-background/40 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">
+                          One-click setup with Entri
+                          <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                            Coming soon
+                          </span>
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Sign in to your registrar and we'll configure DNS automatically — no
+                          copy-pasting records. Also unlocks buying a new domain right from this
+                          step.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        disabled
+                        className="h-9 shrink-0 cursor-not-allowed rounded-md border px-3 text-xs font-semibold opacity-50"
+                      >
+                        Connect with Entri
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
