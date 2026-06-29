@@ -16,18 +16,21 @@ import { NetworkUpdateBanner } from "../components/NetworkUpdateBanner";
 import { useTenant } from "../lib/use-tenant";
 
 function NotFoundComponent() {
-  // On network.wkna49.com, rewrite bare `/{slug}/...` URLs to the actual
-  // path-based tenant route `/network/{slug}/...` so shared links work
-  // without forcing the `/network/` prefix in the URL bar.
+  // On the legacy `network.wkna49.com` subdomain (Lovable hosting force-redirects
+  // it to the primary domain), rewrite bare `/{slug}/...` URLs to the canonical
+  // `wkna49.com/network/{slug}/...` path so shared links still resolve.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const host = window.location.hostname.toLowerCase();
     if (host !== "network.wkna49.com") return;
     const path = window.location.pathname;
-    if (!path || path === "/") return;
-    if (path.startsWith("/network/") || path.startsWith("/network_/") || path.startsWith("/api/") || path.startsWith("/_") || path.startsWith("/station/")) return;
+    if (!path || path === "/") { window.location.replace("https://wkna49.com/network"); return; }
+    if (path.startsWith("/network/") || path.startsWith("/api/") || path.startsWith("/_") || path.startsWith("/station/")) {
+      window.location.replace(`https://wkna49.com${path}${window.location.search}${window.location.hash}`);
+      return;
+    }
     const rest = path + window.location.search + window.location.hash;
-    window.location.replace(`/network${rest}`);
+    window.location.replace(`https://wkna49.com/network${rest}`);
   }, []);
   return (
     <Layout>
