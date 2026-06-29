@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Layout, PageHeader } from "@/components/site/Layout";
+import { TenantNav } from "@/components/site/TenantNav";
+import { useTenantSite } from "@/lib/use-tenant-site";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { getTenantFeed, type FeedItem } from "@/lib/network-feed.functions";
 import type { Article } from "@/lib/news-data";
