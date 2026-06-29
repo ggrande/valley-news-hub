@@ -70,6 +70,7 @@ import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAccountOrdersRouteImport } from './routes/_authenticated/account.orders'
 import { Route as AuthenticatedAccountLicensesRouteImport } from './routes/_authenticated/account.licenses'
 import { Route as AuthenticatedAccountManagedSitesIndexRouteImport } from './routes/_authenticated/account.managed-sites.index'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicWebStoriesSlugRouteImport } from './routes/api/public/web-stories.$slug'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicNetworkIngestReleaseRouteImport } from './routes/api/public/network/ingest-release'
@@ -411,6 +412,12 @@ const AuthenticatedAccountManagedSitesIndexRoute =
     path: '/account/managed-sites/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWebStoriesSlugRoute = ApiPublicWebStoriesSlugRouteImport.update({
   id: '/api/public/web-stories/$slug',
   path: '/api/public/web-stories/$slug',
@@ -595,6 +602,7 @@ export interface FileRoutesByFullPath {
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/account/managed-sites/': typeof AuthenticatedAccountManagedSitesIndexRoute
   '/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
   '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
@@ -674,6 +682,7 @@ export interface FileRoutesByTo {
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/account/managed-sites': typeof AuthenticatedAccountManagedSitesIndexRoute
   '/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
   '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
@@ -756,6 +765,7 @@ export interface FileRoutesById {
   '/api/public/network/ingest-release': typeof ApiPublicNetworkIngestReleaseRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/web-stories/$slug': typeof ApiPublicWebStoriesSlugRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/_authenticated/account/managed-sites/': typeof AuthenticatedAccountManagedSitesIndexRoute
   '/_authenticated/account/managed-sites/$siteId/onboarding': typeof AuthenticatedAccountManagedSitesSiteIdOnboardingRoute
   '/api/public/integrations/supabase/callback': typeof ApiPublicIntegrationsSupabaseCallbackRoute
@@ -838,6 +848,7 @@ export interface FileRouteTypes {
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
     | '/api/public/web-stories/$slug'
+    | '/lovable/email/queue/process'
     | '/account/managed-sites/'
     | '/account/managed-sites/$siteId/onboarding'
     | '/api/public/integrations/supabase/callback'
@@ -917,6 +928,7 @@ export interface FileRouteTypes {
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
     | '/api/public/web-stories/$slug'
+    | '/lovable/email/queue/process'
     | '/account/managed-sites'
     | '/account/managed-sites/$siteId/onboarding'
     | '/api/public/integrations/supabase/callback'
@@ -998,6 +1010,7 @@ export interface FileRouteTypes {
     | '/api/public/network/ingest-release'
     | '/api/public/payments/webhook'
     | '/api/public/web-stories/$slug'
+    | '/lovable/email/queue/process'
     | '/_authenticated/account/managed-sites/'
     | '/_authenticated/account/managed-sites/$siteId/onboarding'
     | '/api/public/integrations/supabase/callback'
@@ -1050,6 +1063,7 @@ export interface RootRouteChildren {
   ApiPublicNetworkIngestReleaseRoute: typeof ApiPublicNetworkIngestReleaseRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWebStoriesSlugRoute: typeof ApiPublicWebStoriesSlugRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   ApiPublicIntegrationsSupabaseCallbackRoute: typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
 
@@ -1482,6 +1496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountManagedSitesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/web-stories/$slug': {
       id: '/api/public/web-stories/$slug'
       path: '/api/public/web-stories/$slug'
@@ -1799,6 +1820,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicNetworkIngestReleaseRoute: ApiPublicNetworkIngestReleaseRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWebStoriesSlugRoute: ApiPublicWebStoriesSlugRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   ApiPublicIntegrationsSupabaseCallbackRoute:
     ApiPublicIntegrationsSupabaseCallbackRoute,
 }
