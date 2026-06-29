@@ -431,25 +431,35 @@ function BrandingTab({ site }: { site: any }) {
   const [tagline, setTagline] = useState("");
   const [logo, setLogo] = useState("");
   const [website, setWebsite] = useState("");
+  const [zip, setZip] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [loaded, setLoaded] = useState(false);
   if (q.data && !loaded) {
     setName(q.data.displayName); setTagline(q.data.tagline);
-    setLogo(q.data.logoUrl); setWebsite(q.data.websiteUrl); setLoaded(true);
+    setLogo(q.data.logoUrl); setWebsite(q.data.websiteUrl);
+    setZip((q.data as any).zipCode ?? "");
+    setEmail((q.data as any).contactEmail ?? "");
+    setPhone((q.data as any).contactPhone ?? "");
+    setLoaded(true);
   }
   const save = useMutation({
     mutationFn: () => saveFn({ data: {
       siteId: site.id, displayName: name, tagline, logoUrl: logo, websiteUrl: website,
+      zipCode: zip, contactEmail: email, contactPhone: phone,
     } }),
-    onSuccess: () => {
+    onSuccess: (r: any) => {
       qc.invalidateQueries({ queryKey: ["station-branding", site.id] });
       qc.invalidateQueries({ queryKey: ["station-session"] });
-      alert("Saved");
+      alert(zip && !r?.resolved ? "Saved (zip not recognized — weather will use a fallback)" : "Saved");
     },
     onError: (e: Error) => alert(e.message),
   });
+  const city = (q.data as any)?.city as string | undefined;
+  const region = (q.data as any)?.region as string | undefined;
   return (
     <div className="max-w-xl space-y-3 rounded-lg border bg-card p-4">
-      <h2 className="font-semibold text-primary">Branding</h2>
+      <h2 className="font-semibold text-primary">Branding & Location</h2>
       <Field label="Station name">
         <input value={name} onChange={(e) => setName(e.target.value)}
                className="w-full rounded-md border px-3 py-2 text-sm" />
@@ -458,6 +468,24 @@ function BrandingTab({ site }: { site: any }) {
         <input value={tagline} onChange={(e) => setTagline(e.target.value)}
                className="w-full rounded-md border px-3 py-2 text-sm" />
       </Field>
+      <Field label="ZIP code (powers the local weather page)">
+        <input value={zip} onChange={(e) => setZip(e.target.value)} inputMode="numeric"
+               maxLength={5} placeholder="25301"
+               className="w-full rounded-md border px-3 py-2 text-sm" />
+        {city && region && (
+          <p className="mt-1 text-xs text-muted-foreground">Resolved: {city}, {region}</p>
+        )}
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Contact email">
+          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="news@station.com"
+                 className="w-full rounded-md border px-3 py-2 text-sm" />
+        </Field>
+        <Field label="Contact phone">
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 555-1234"
+                 className="w-full rounded-md border px-3 py-2 text-sm" />
+        </Field>
+      </div>
       <Field label="Logo URL">
         <input value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="https://…"
                className="w-full rounded-md border px-3 py-2 text-sm" />
@@ -470,11 +498,12 @@ function BrandingTab({ site }: { site: any }) {
       </Field>
       <button onClick={() => save.mutate()} disabled={save.isPending || !name}
               className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-        {save.isPending ? "Saving…" : "Save branding"}
+        {save.isPending ? "Saving…" : "Save"}
       </button>
     </div>
   );
 }
+
 
 // ---------- BILLING ----------
 function BillingTab({ site }: { site: any }) {
