@@ -696,8 +696,9 @@ function OnboardingPage() {
             sessionCode={shortSessionCode(siteId)}
             answersComplete={answersComplete}
             onOpenNewsroom={() => {
-              const host = status.data?.customDomain || `${status.data?.subdomain}.wkna49.com`;
-              window.open(`https://${host}/admin`, "_blank", "noopener");
+              const host = status.data?.customDomain;
+              const url = host ? `https://${host}/admin` : `https://wkna49.com/network/${status.data?.subdomain}/admin`;
+              window.open(url, "_blank", "noopener");
             }}
 
             onRetry={async () => {
