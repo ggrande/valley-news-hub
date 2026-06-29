@@ -51,6 +51,7 @@ function TenantHome() {
 
   return (
     <Layout>
+      <TenantNav tenant={tenantData ?? tenant} active="home" />
       <section className="border-b bg-[color:var(--ivory)]">
         <div className="mx-auto max-w-7xl px-4 py-8">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--broadcast)]">
