@@ -168,7 +168,7 @@ function Dashboard({ session }: { session: any }) {
             <a key={s.id} href={`/network/${s.subdomain}/admin`}
                className="block rounded-lg border bg-card p-4 hover:border-primary">
               <div className="font-semibold text-primary">{s.display_name}</div>
-              <div className="font-mono text-xs text-muted-foreground">network.wkna49.com/{s.subdomain}</div>
+              <div className="font-mono text-xs text-muted-foreground">wkna49.com/network/{s.subdomain}</div>
             </a>
           ))}
         </div>
