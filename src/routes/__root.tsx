@@ -16,6 +16,19 @@ import { NetworkUpdateBanner } from "../components/NetworkUpdateBanner";
 import { useTenant } from "../lib/use-tenant";
 
 function NotFoundComponent() {
+  // On network.wkna49.com, rewrite bare `/{slug}/...` URLs to the actual
+  // path-based tenant route `/network/{slug}/...` so shared links work
+  // without forcing the `/network/` prefix in the URL bar.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const host = window.location.hostname.toLowerCase();
+    if (host !== "network.wkna49.com") return;
+    const path = window.location.pathname;
+    if (!path || path === "/") return;
+    if (path.startsWith("/network/") || path.startsWith("/network_/") || path.startsWith("/api/") || path.startsWith("/_") || path.startsWith("/station/")) return;
+    const rest = path + window.location.search + window.location.hash;
+    window.location.replace(`/network${rest}`);
+  }, []);
   return (
     <Layout>
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
