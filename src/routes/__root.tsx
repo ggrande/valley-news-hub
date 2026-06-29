@@ -153,8 +153,25 @@ function RootComponent() {
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
+      <TenantTitle />
       <NetworkUpdateBanner />
       <Outlet />
     </QueryClientProvider>
   );
+}
+
+// Lightweight tenant-aware <title> override so subdomains read as the
+// affiliate's station name in the browser tab and on share previews crawled
+// client-side. SSR still serves the master metadata for SEO of the root site.
+function TenantTitle() {
+  // Lazy import to avoid pulling the resolver into SSR bundles unnecessarily.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { useTenant } = require("../lib/use-tenant") as typeof import("../lib/use-tenant");
+  const { tenant } = useTenant();
+  useEffect(() => {
+    if (typeof document === "undefined" || !tenant) return;
+    const name = tenant.displayName;
+    document.title = `${name} — Affiliate Station of WKNA 49`;
+  }, [tenant]);
+  return null;
 }
