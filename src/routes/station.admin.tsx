@@ -143,8 +143,8 @@ function Dashboard({ session }: { session: any }) {
             <h2 className="font-semibold text-primary">Newsroom</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               Your station lives at{" "}
-              <a href={`https://network.wkna49.com/${active.subdomain}`} className="font-mono text-primary underline">
-                network.wkna49.com/{active.subdomain}
+              <a href={`https://wkna49.com/network/${active.subdomain}`} className="font-mono text-primary underline">
+                wkna49.com/network/{active.subdomain}
               </a>
               . By default it mirrors the WKNA 49 master newsroom &mdash; toggle that off below or hide individual stories.
             </p>
@@ -168,7 +168,7 @@ function Dashboard({ session }: { session: any }) {
             <a key={s.id} href={`/network/${s.subdomain}/admin`}
                className="block rounded-lg border bg-card p-4 hover:border-primary">
               <div className="font-semibold text-primary">{s.display_name}</div>
-              <div className="font-mono text-xs text-muted-foreground">network.wkna49.com/{s.subdomain}</div>
+              <div className="font-mono text-xs text-muted-foreground">wkna49.com/network/{s.subdomain}</div>
             </a>
           ))}
         </div>
