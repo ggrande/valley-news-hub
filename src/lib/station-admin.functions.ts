@@ -242,3 +242,82 @@ export const updateStationBranding = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ---------- BILLING (Stripe) ----------
+async function findPurchase(siteId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  // Prefer linking through managed_sites -> stripe_subscription_id
+  const { data: site } = await (supabaseAdmin as any)
+    .from("managed_sites")
+    .select("id, stripe_subscription_id, purchase_id, owner_email")
+    .eq("id", siteId)
+    .maybeSingle();
+  if (!site) return null;
+  let purchase: any = null;
+  if (site.purchase_id) {
+    const { data } = await (supabaseAdmin as any)
+      .from("network_purchases")
+      .select("stripe_customer_id, stripe_subscription_id, status, tier, environment, amount_cents, currency, created_at")
+      .eq("id", site.purchase_id).maybeSingle();
+    purchase = data;
+  }
+  if (!purchase && site.stripe_subscription_id) {
+    const { data } = await (supabaseAdmin as any)
+      .from("network_purchases")
+      .select("stripe_customer_id, stripe_subscription_id, status, tier, environment, amount_cents, currency, created_at")
+      .eq("stripe_subscription_id", site.stripe_subscription_id)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    purchase = data;
+  }
+  if (!purchase) {
+    const { data } = await (supabaseAdmin as any)
+      .from("network_purchases")
+      .select("stripe_customer_id, stripe_subscription_id, status, tier, environment, amount_cents, currency, created_at")
+      .ilike("email", site.owner_email)
+      .not("stripe_customer_id", "is", null)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    purchase = data;
+  }
+  return purchase;
+}
+
+export const getStationBilling = createServerFn({ method: "POST" })
+  .inputValidator((d: { siteId: string }) => d)
+  .handler(async ({ data }) => {
+    await requireSession(data.siteId);
+    const p = await findPurchase(data.siteId);
+    if (!p) return { hasBilling: false as const };
+    return {
+      hasBilling: true as const,
+      tier: p.tier as string,
+      status: p.status as string,
+      environment: p.environment as "sandbox" | "live",
+      hasSubscription: !!p.stripe_subscription_id,
+      hasCustomer: !!p.stripe_customer_id,
+      amountCents: p.amount_cents as number | null,
+      currency: p.currency as string | null,
+      since: p.created_at as string | null,
+    };
+  });
+
+export const createStationBillingPortal = createServerFn({ method: "POST" })
+  .inputValidator((d: { siteId: string; returnUrl: string }) => d)
+  .handler(async ({ data }): Promise<{ url: string } | { error: string }> => {
+    await requireSession(data.siteId);
+    const p = await findPurchase(data.siteId);
+    if (!p?.stripe_customer_id) {
+      return { error: "No Stripe customer is linked to this station yet." };
+    }
+    try {
+      const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
+      const stripe = createStripeClient(p.environment);
+      const portal = await stripe.billingPortal.sessions.create({
+        customer: p.stripe_customer_id,
+        return_url: data.returnUrl,
+      });
+      return { url: portal.url };
+    } catch (e) {
+      const { getStripeErrorMessage } = await import("@/lib/stripe.server");
+      return { error: getStripeErrorMessage(e) };
+    }
+  });
