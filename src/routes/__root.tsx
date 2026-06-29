@@ -156,11 +156,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  // Client-only tenant subdomain redirect. SSR will render the master page once
-  // and the client mount redirects to the station admin if needed.
-  // Back-compat: old `{slug}.wkna49.com/*` URLs now redirect to the
-  // path-based tenant route `network.wkna49.com/{slug}/*`. Custom domains are
-  // untouched.
+  // Client-only tenant subdomain back-compat. Old `{slug}.wkna49.com/*` URLs
+  // now redirect to the path-based tenant route `wkna49.com/network/{slug}/*`.
+  // Custom domains are untouched.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const host = window.location.hostname.toLowerCase();
@@ -169,7 +167,7 @@ function RootComponent() {
     const slug = host.replace(/\.wkna49\.com$/, "");
     if (!slug || slug.includes(".")) return; // skip nested subdomains
     const rest = window.location.pathname + window.location.search + window.location.hash;
-    window.location.replace(`https://network.wkna49.com/${slug}${rest === "/" ? "" : rest}`);
+    window.location.replace(`https://wkna49.com/network/${slug}${rest === "/" ? "" : rest}`);
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
