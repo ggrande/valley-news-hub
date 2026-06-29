@@ -77,6 +77,54 @@ do $$ begin
   end if;
 end $$;
 
+-- Comments (lightweight starter schema)
+create table if not exists public.comments (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid references public.posts(id) on delete cascade,
+  author_name text,
+  author_email text,
+  body text not null,
+  status text not null default 'pending',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+grant select on public.comments to anon;
+grant select, insert, update, delete on public.comments to authenticated;
+grant all on public.comments to service_role;
+alter table public.comments enable row level security;
+do $$ begin
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='comments' and policyname='Public read approved comments') then
+    create policy "Public read approved comments" on public.comments for select to anon using (status = 'approved');
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='comments' and policyname='Anyone can submit comments') then
+    create policy "Anyone can submit comments" on public.comments for insert to anon with check (true);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='comments' and policyname='Admins manage comments') then
+    create policy "Admins manage comments" on public.comments for all to authenticated
+      using (public.has_role(auth.uid(), 'admin')) with check (public.has_role(auth.uid(), 'admin'));
+  end if;
+end $$;
+
+-- Site settings (key/value for branding & toggles)
+create table if not exists public.site_settings (
+  key text primary key,
+  value jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+grant select on public.site_settings to anon;
+grant select, insert, update, delete on public.site_settings to authenticated;
+grant all on public.site_settings to service_role;
+alter table public.site_settings enable row level security;
+do $$ begin
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='site_settings' and policyname='Public read settings') then
+    create policy "Public read settings" on public.site_settings for select to anon using (true);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='site_settings' and policyname='Admins write settings') then
+    create policy "Admins write settings" on public.site_settings for all to authenticated
+      using (public.has_role(auth.uid(), 'admin')) with check (public.has_role(auth.uid(), 'admin'));
+  end if;
+end $$;
+
 -- updated_at trigger
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
