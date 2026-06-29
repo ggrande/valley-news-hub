@@ -27,8 +27,9 @@ export const getTenantByHost = createServerFn({ method: "GET" })
     const req = getRequest();
     const host = normalizeHost(data?.host || req?.headers.get("host"));
     if (!host) return null;
-    // Master domains are never tenants.
-    if (host === "wkna49.com" || host === "www.wkna49.com") return null;
+    // Master domains are never tenants. `network.wkna49.com` is the shared
+    // path-based tenant host (network.wkna49.com/{slug}) — not a tenant itself.
+    if (host === "wkna49.com" || host === "www.wkna49.com" || host === "network.wkna49.com") return null;
     if (host.endsWith(".lovable.app")) return null;
     if (host === "localhost" || host.startsWith("127.")) return null;
 
