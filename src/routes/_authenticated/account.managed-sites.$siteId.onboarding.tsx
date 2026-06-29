@@ -472,7 +472,7 @@ function OnboardingPage() {
                   </Field>
                   <p className="text-xs text-muted-foreground">
                     Your station URL is{" "}
-                    <span className="font-mono">{profile.subdomain}.wkna49.com</span> — you can
+                    <span className="font-mono">wkna49.com/network/{profile.subdomain}</span> — you can
                     map a custom domain in a moment.
                   </p>
                 </div>
