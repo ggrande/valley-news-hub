@@ -732,6 +732,7 @@ export type Database = {
           display_name: string
           id: string
           last_deployed_at: string | null
+          network_sync_enabled: boolean
           notes: string | null
           onboarding_completed_at: string | null
           owner_email: string
@@ -777,6 +778,7 @@ export type Database = {
           display_name?: string
           id?: string
           last_deployed_at?: string | null
+          network_sync_enabled?: boolean
           notes?: string | null
           onboarding_completed_at?: string | null
           owner_email: string
@@ -822,6 +824,7 @@ export type Database = {
           display_name?: string
           id?: string
           last_deployed_at?: string | null
+          network_sync_enabled?: boolean
           notes?: string | null
           onboarding_completed_at?: string | null
           owner_email?: string
@@ -1984,6 +1987,42 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tenant_admin_sessions_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "managed_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_hidden_network_posts: {
+        Row: {
+          hidden_at: string
+          hidden_by: string | null
+          post_id: string
+          site_id: string
+        }
+        Insert: {
+          hidden_at?: string
+          hidden_by?: string | null
+          post_id: string
+          site_id: string
+        }
+        Update: {
+          hidden_at?: string
+          hidden_by?: string | null
+          post_id?: string
+          site_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_hidden_network_posts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_hidden_network_posts_site_id_fkey"
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "managed_sites"
