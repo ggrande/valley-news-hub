@@ -150,6 +150,7 @@ function Dashboard({ session }: { session: any }) {
     { id: "posts", label: "Posts" },
     { id: "comments", label: "Comments" },
     { id: "branding", label: "Branding" },
+    { id: "billing", label: "Billing" },
     { id: "network", label: "Network" },
   ];
 
