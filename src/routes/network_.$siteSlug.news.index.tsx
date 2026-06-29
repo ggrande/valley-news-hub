@@ -37,8 +37,10 @@ function TenantNewsIndex() {
     queryKey: ["tenant-feed-news", siteSlug],
     queryFn: () => feedFn({ data: { siteSlug, limit: 60 } }),
   });
+  const tenant = useTenantSite();
   return (
     <Layout>
+      <TenantNav tenant={tenant} active="news" />
       <PageHeader eyebrow="All stories" title="News" description="The latest from our newsroom and the WKNA 49 network." />
       <section className="mx-auto max-w-7xl px-4 py-8">
         {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
