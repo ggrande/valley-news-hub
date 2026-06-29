@@ -1,53 +1,99 @@
-## Goal
-Walk a single brand-new "managed_mirror" purchase all the way through, from Stripe checkout to a working `{site}.wkna49.com` newsroom with a magic-link admin login. Fix every break we hit; no new features.
+# Path-based tenants + Network feed sync
 
-## Test scenario
-A new Stripe test purchase (managed_mirror tier) → wizard runs to completion → tenant subdomain serves a branded public newsroom reading from `site_content` → tenant owner receives + uses a magic-link to access `/station/admin`.
+Two changes, shipped together.
 
-## Verification checklist (in order)
+## 1. Tenant URL: `network.wkna49.com/{slug}`
 
-1. **Purchase → DB row**
-   - Run a sandbox Stripe checkout for managed_mirror.
-   - Confirm webhook created `network_purchases` + `managed_sites` rows with `status='pending_provision'` and a unique `subdomain`.
-   - Confirm post-checkout return URL lands on the onboarding wizard, not the merch/network success page.
+Replace subdomain routing with a path-prefix model. `{slug}.wkna49.com` lookups are removed from the resolver; the wildcard `*` DNS record is no longer load-bearing for tenants (safe to leave).
 
-2. **Wizard Step 0 — Project**
-   - Supabase OAuth handshake completes; orgs + regions list.
-   - "(default)" org auto-selects.
-   - Project creation succeeds (random-suffix retry path tested by forcing a name collision once).
-   - `tenant_provision_attempts` records the attempt with the full project name.
+### Routing
 
-3. **Wizard Steps 1–4 — Brand / Directory / Domain / Finish**
-   - `site_content` rows written for the new tenant (name, tagline, logo, colors).
-   - `directory_opt_in` and directory fields persist.
-   - Domain step accepts skip ("use {site}.wkna49.com").
-   - "Open newsroom" button targets `https://{subdomain}.wkna49.com` (not `/account/managed-sites`).
+- New pathless layout `src/routes/network_.$siteSlug.tsx`:
+  - `beforeLoad`: resolves slug → tenant via `getTenantBySlug` server fn; throws `notFound()` if missing.
+  - Puts tenant branding into route context (`siteId`, `displayName`, `logoUrl`, ...).
+  - Renders `<Outlet />`.
+- New leaves under that layout for every public tenant page:
+  - `network_.$siteSlug.index.tsx` → homepage (mirrors `routes/index.tsx`)
+  - `network_.$siteSlug.news.index.tsx`, `news.$slug.tsx`, `weather.tsx`, `about.tsx`, `contact.tsx`, `merch.index.tsx`, etc. Each reuses the existing page component, parameterized by the tenant from route context.
+  - `network_.$siteSlug.admin.tsx` redirects to `/station/admin?site={slug}` for the magic-link login flow.
 
-4. **Tenant subdomain renders branded newsroom** ← biggest unknown
-   - Visit `https://{subdomain}.wkna49.com/` in a real browser.
-   - Confirm DNS resolves (wildcard `*.wkna49.com` at Porkbun + host cert).
-   - Confirm `__root.tsx` subdomain detection loads the tenant's `site_content` instead of WKNA49 defaults.
-   - Confirm Header/Footer/Logo show tenant brand.
-   - Confirm `/news` and an article page render (even if empty) without 500s.
-   - If DNS/cert is missing, document the exact records the user must add and stop here for that subtask.
+Underscore-suffixed segment (`network_`) keeps it from nesting under the existing `/network` marketing route.
 
-5. **Tenant admin magic-link login**
-   - Visit `https://{subdomain}.wkna49.com/admin` → redirects to `/station/admin` with subdomain context.
-   - Submit owner email; confirm `tenant_admin_login_tokens` row and email delivered.
-   - Visit `/station/verify?token=…` → `tenant_admin_sessions` row created → lands in tenant admin.
-   - Confirm the session is scoped to that tenant only.
+### Tenant resolver
 
-6. **Reset/recovery still works after a real run**
-   - From `/account/managed-sites`, hit "Full reset" on the test site.
-   - Confirm the orphan Supabase project is purged and local rows return to `pending_provision`.
+- `src/lib/tenant-resolver.functions.ts`:
+  - Add `getTenantBySlug({ slug })` — looks up `managed_sites` by `subdomain` column (we keep the column; it's now the URL slug).
+  - `getTenantByHost` stays but only returns a tenant for **custom domains**, not for `*.wkna49.com` subdomains.
+- `src/lib/use-tenant.ts`: accept an explicit `siteSlug` from route params; fall back to host lookup for custom domains.
 
-## Deliverables
-- A live test purchase walked through end-to-end with screenshots/links per step.
-- A short status table: each checklist item → ✅ / ❌ / ⚠ (with exact failure).
-- Patches for any failures discovered along the way, applied in the same iteration. No scope creep into custom-domain verification, in-tenant billing, or revenue share — those stay in the gap list for a follow-up plan.
+### Header / Logo / chrome
 
-## Technical notes
-- Use Stripe **sandbox** webhook env so we don't bill real money.
-- Drive the browser via Playwright in the sandbox for the subdomain + magic-link checks; restore the managed Supabase session for the wizard steps that require auth.
-- Magic-link email: if SMTP isn't configured for the test, read the token directly from `tenant_admin_login_tokens` and hit `/station/verify` manually — note this in the report so we don't ship without verifying delivery.
-- DNS wildcard: if `*.wkna49.com` isn't pointed at Lovable's host, the subdomain step will fail. That's a config task for the user at Porkbun + the publish settings, not a code change — surface it clearly rather than trying to "fix" it in code.
+- `src/components/site/Layout.tsx`, `Header.tsx`, `Footer.tsx`, `Logo.tsx`: when a tenant context is active, all internal `<Link>`s are prefixed with `/network/{siteSlug}` via a small helper `useTenantHref(to)`. Master site links stay unprefixed.
+
+### Subdomain redirect
+
+- `src/routes/__root.tsx`: existing `*.wkna49.com` → `/admin` redirect becomes a one-time client redirect of `{slug}.wkna49.com/*` → `network.wkna49.com/{slug}/*` for back-compat with any links already shared. Custom domains are untouched.
+
+## 2. Network feed sync (master → tenant, mixed feed)
+
+Tenants display master WKNA49 posts blended with their own, by `published_at desc`. Each tenant can hide individual network posts and toggle the whole sync off.
+
+### Data
+
+Migration:
+
+```sql
+ALTER TABLE public.managed_sites
+  ADD COLUMN network_sync_enabled boolean NOT NULL DEFAULT true;
+
+CREATE TABLE public.tenant_hidden_network_posts (
+  site_id uuid NOT NULL REFERENCES public.managed_sites(id) ON DELETE CASCADE,
+  post_id uuid NOT NULL REFERENCES public.posts(id) ON DELETE CASCADE,
+  hidden_at timestamptz NOT NULL DEFAULT now(),
+  hidden_by uuid,
+  PRIMARY KEY (site_id, post_id)
+);
+
+GRANT SELECT, INSERT, DELETE ON public.tenant_hidden_network_posts TO authenticated;
+GRANT ALL ON public.tenant_hidden_network_posts TO service_role;
+ALTER TABLE public.tenant_hidden_network_posts ENABLE ROW LEVEL SECURITY;
+
+-- Policy: tenant admins (matched via tenant_admin_sessions) manage their own rows.
+CREATE POLICY "tenant admins manage hides" ON public.tenant_hidden_network_posts
+  FOR ALL TO authenticated
+  USING (public.is_admin())   -- master admins can see all
+  WITH CHECK (public.is_admin());
+-- Tenant magic-link sessions go through server fns w/ service role.
+```
+
+(Tenant-side writes happen via server functions authorized by `tenant_admin_sessions`, not direct RLS — same pattern already used for managed-site admin actions.)
+
+### Feed query
+
+- New `src/lib/network-feed.functions.ts`:
+  - `getTenantFeed({ siteSlug, limit, categorySlug? })`: returns master posts (status='published', `network_syndicate=true` — default `true` for now) minus rows in `tenant_hidden_network_posts`, plus tenant-owned posts (future), unioned and sorted by `published_at desc`. Each item is tagged `source: 'network' | 'local'` so the UI can show a small "Network" chip.
+  - Honors `managed_sites.network_sync_enabled`; when false, returns only local posts.
+- `network_.$siteSlug.index.tsx` and `news.index.tsx` call this instead of `fetchPublishedPosts`.
+
+### Tenant admin controls
+
+In `/station/admin`:
+- **Settings → Network sync** toggle that flips `network_sync_enabled`.
+- **Network posts** list: paginated view of master posts with a per-row **Hide on my site** button → inserts/deletes a `tenant_hidden_network_posts` row via `hideNetworkPost` / `unhideNetworkPost` server fns (authorized by `tenant_admin_sessions`).
+
+### Article page
+
+- `network_.$siteSlug.news.$slug.tsx`: loads the master post; if it's hidden for this tenant, return `notFound()`. Local posts (future) resolve the same way.
+
+## Out of scope (call out)
+
+- Tenant-authored posts. The "local" half of the mixed feed is wired but empty until tenants can author. Happy to follow up with a tenant CMS pass.
+- Removing the `*` wildcard A record. Harmless to leave; can be cleaned up later.
+- Per-post categorization overrides per-tenant.
+
+## Verification
+
+1. `network.wkna49.com/fresh-station-dbb835` renders the mixed feed with the tenant's branding.
+2. Hiding a post from the tenant admin removes it from that tenant only; master site unaffected.
+3. Toggling sync off hides all network posts on that tenant.
+4. `fresh-station-dbb835.wkna49.com/anything` redirects to `network.wkna49.com/fresh-station-dbb835/anything`.
