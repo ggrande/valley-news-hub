@@ -72,10 +72,14 @@ function TenantArticle() {
         <p className="mt-4 text-xs text-muted-foreground">
           By {a.author} · {formatDate(a.date)}
         </p>
-        {post.featured_image && (
-          <div className="mt-6">
-            <ArticleImage src={post.featured_image} alt={a.title} hue={a.imageHue} />
+        {post.featured_image ? (
+          <div className="mt-6 overflow-hidden rounded-lg">
+            <img src={post.featured_image} alt={a.title} className="w-full" loading="lazy" />
             {post.hero_caption && <p className="mt-2 text-xs text-muted-foreground">{post.hero_caption}</p>}
+          </div>
+        ) : (
+          <div className="mt-6">
+            <ArticleImage hue={a.imageHue} label={a.title} className="aspect-[16/9] rounded-lg" />
           </div>
         )}
         <div className="prose prose-neutral mt-6 max-w-none">
