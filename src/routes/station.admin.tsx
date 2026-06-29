@@ -26,6 +26,8 @@ import {
   deleteStationComment,
   getStationBranding,
   updateStationBranding,
+  getStationBilling,
+  createStationBillingPortal,
 } from "@/lib/station-admin.functions";
 
 export const Route = createFileRoute("/station/admin")({
@@ -33,7 +35,7 @@ export const Route = createFileRoute("/station/admin")({
   component: StationAdminPage,
 });
 
-type Tab = "dashboard" | "posts" | "comments" | "branding" | "network";
+type Tab = "dashboard" | "posts" | "comments" | "branding" | "billing" | "network";
 
 function StationAdminPage() {
   const sessionFn = useServerFn(getStationSession);
@@ -148,6 +150,7 @@ function Dashboard({ session }: { session: any }) {
     { id: "posts", label: "Posts" },
     { id: "comments", label: "Comments" },
     { id: "branding", label: "Branding" },
+    { id: "billing", label: "Billing" },
     { id: "network", label: "Network" },
   ];
 
@@ -177,6 +180,7 @@ function Dashboard({ session }: { session: any }) {
         {tab === "posts" && <PostsTab site={active} />}
         {tab === "comments" && <CommentsTab site={active} />}
         {tab === "branding" && <BrandingTab site={active} />}
+        {tab === "billing" && <BillingTab site={active} />}
         {tab === "network" && (
           <div className="space-y-4">
             <NetworkSyncPanel site={active} />
@@ -468,6 +472,70 @@ function BrandingTab({ site }: { site: any }) {
               className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">
         {save.isPending ? "Saving…" : "Save branding"}
       </button>
+    </div>
+  );
+}
+
+// ---------- BILLING ----------
+function BillingTab({ site }: { site: any }) {
+  const getFn = useServerFn(getStationBilling);
+  const portalFn = useServerFn(createStationBillingPortal);
+  const q = useQuery({
+    queryKey: ["station-billing", site.id],
+    queryFn: () => getFn({ data: { siteId: site.id } }),
+  });
+  const open = useMutation({
+    mutationFn: () => portalFn({ data: {
+      siteId: site.id,
+      returnUrl: typeof window !== "undefined" ? window.location.href : "https://wkna49.com/station/admin",
+    } }),
+    onSuccess: (r: any) => {
+      if ("error" in r) { alert(r.error); return; }
+      window.open(r.url, "_blank", "noopener");
+    },
+    onError: (e: Error) => alert(e.message),
+  });
+
+  if (q.isLoading) return <p className="text-xs text-muted-foreground">Loading billing…</p>;
+  const b = q.data;
+  if (!b?.hasBilling) {
+    return (
+      <div className="max-w-xl rounded-lg border bg-card p-5">
+        <h2 className="font-semibold text-primary">Billing</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          No Stripe purchase is linked to this station yet. If you just checked out, this page will populate within a minute.
+        </p>
+      </div>
+    );
+  }
+  const fmt = (cents: number | null, cur: string | null) =>
+    cents == null ? "—" : new Intl.NumberFormat("en-US", { style: "currency", currency: (cur || "usd").toUpperCase() })
+      .format(cents / 100);
+
+  return (
+    <div className="max-w-xl space-y-3 rounded-lg border bg-card p-5">
+      <h2 className="font-semibold text-primary">Billing</h2>
+      <dl className="grid grid-cols-2 gap-y-2 text-sm">
+        <dt className="text-muted-foreground">Plan</dt>
+        <dd className="font-semibold capitalize">{b.tier.replace(/_/g, " ")}</dd>
+        <dt className="text-muted-foreground">Status</dt>
+        <dd className="font-semibold capitalize">{b.status}</dd>
+        <dt className="text-muted-foreground">Last charge</dt>
+        <dd>{fmt(b.amountCents, b.currency)}</dd>
+        <dt className="text-muted-foreground">Environment</dt>
+        <dd className="capitalize">{b.environment}</dd>
+        <dt className="text-muted-foreground">Since</dt>
+        <dd>{(b.since ?? "").slice(0, 10) || "—"}</dd>
+      </dl>
+      <div className="pt-2">
+        <button onClick={() => open.mutate()} disabled={open.isPending || !b.hasCustomer}
+                className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+          {open.isPending ? "Opening…" : b.hasSubscription ? "Manage subscription" : "Open billing portal"}
+        </button>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Opens Stripe's secure billing portal in a new tab — update payment method, download invoices, or cancel.
+        </p>
+      </div>
     </div>
   );
 }
