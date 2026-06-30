@@ -13,14 +13,45 @@ const loadTenantPost = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: site } = await (supabaseAdmin as any)
       .from("managed_sites")
-      .select("id, network_sync_enabled")
+      .select("id, network_sync_enabled, supabase_project_url, supabase_service_key_enc, supabase_service_key_iv")
       .eq("subdomain", data.siteSlug)
       .maybeSingle();
     if (!site) return { notFound: true as const };
 
+    // 1) Try tenant-local post in the station's own DB first.
+    try {
+      const { getLocalPostBySlug } = await import("@/lib/tenant-local-posts.server");
+      const local = await getLocalPostBySlug(site as any, data.slug);
+      if (local) {
+        const synthetic = {
+          id: local.id,
+          slug: local.slug,
+          title: local.title,
+          dek: null,
+          body: local.body,
+          status: "published",
+          published_at: local.published_at,
+          updated_at: local.updated_at,
+          is_breaking: false,
+          is_pinned: false,
+          featured_image: local.cover_url,
+          hero_caption: null,
+          seo_title: null,
+          seo_description: null,
+          og_image: null,
+          category: null,
+          author: null,
+          __source: "local" as const,
+        };
+        return { notFound: false as const, post: synthetic };
+      }
+    } catch {
+      // fall through to network lookup
+    }
+
+    // 2) Fall back to the master/network post.
     const post = await fetchPostBySlug(data.slug);
     if (!post) return { notFound: true as const };
-
     if (site.network_sync_enabled === false) return { notFound: true as const };
 
     const { data: hide } = await (supabaseAdmin as any)
@@ -31,7 +62,7 @@ const loadTenantPost = createServerFn({ method: "GET" })
       .maybeSingle();
     if (hide) return { notFound: true as const };
 
-    return { notFound: false as const, post };
+    return { notFound: false as const, post: { ...post, __source: "network" as const } };
   });
 
 export const Route = createFileRoute("/network_/$siteSlug/news/$slug")({
@@ -63,7 +94,7 @@ function TenantArticle() {
     <Layout>
       <article className="mx-auto max-w-3xl px-4 py-10">
         <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--broadcast)]">
-          {a.category} · From the WKNA 49 Network
+          {a.category}{post.__source === "network" ? " · From the WKNA 49 Network" : " · Local story"}
         </p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight text-primary sm:text-5xl">
           {a.title}
