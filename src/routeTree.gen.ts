@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeatherRouteImport } from './routes/weather'
 import { Route as WatchLiveRouteImport } from './routes/watch-live'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
 import { Route as SubmitNewsTipRouteImport } from './routes/submit-news-tip'
 import { Route as SportsRouteImport } from './routes/sports'
@@ -115,6 +116,11 @@ const WeatherRoute = WeatherRouteImport.update({
 const WatchLiveRoute = WatchLiveRouteImport.update({
   id: '/watch-live',
   path: '/watch-live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsOfUseRoute = TermsOfUseRouteImport.update({
@@ -652,6 +658,7 @@ export interface FileRoutesByFullPath {
   '/sports': typeof SportsRoute
   '/submit-news-tip': typeof SubmitNewsTipRoute
   '/terms-of-use': typeof TermsOfUseRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -750,6 +757,7 @@ export interface FileRoutesByTo {
   '/sports': typeof SportsRoute
   '/submit-news-tip': typeof SubmitNewsTipRoute
   '/terms-of-use': typeof TermsOfUseRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRouteWithChildren
   '/api/media': typeof ApiMediaRoute
@@ -848,6 +856,7 @@ export interface FileRoutesById {
   '/sports': typeof SportsRoute
   '/submit-news-tip': typeof SubmitNewsTipRoute
   '/terms-of-use': typeof TermsOfUseRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -948,6 +957,7 @@ export interface FileRouteTypes {
     | '/sports'
     | '/submit-news-tip'
     | '/terms-of-use'
+    | '/unsubscribe'
     | '/watch-live'
     | '/weather'
     | '/admin'
@@ -1046,6 +1056,7 @@ export interface FileRouteTypes {
     | '/sports'
     | '/submit-news-tip'
     | '/terms-of-use'
+    | '/unsubscribe'
     | '/watch-live'
     | '/weather'
     | '/api/media'
@@ -1143,6 +1154,7 @@ export interface FileRouteTypes {
     | '/sports'
     | '/submit-news-tip'
     | '/terms-of-use'
+    | '/unsubscribe'
     | '/watch-live'
     | '/weather'
     | '/_authenticated/admin'
@@ -1243,6 +1255,7 @@ export interface RootRouteChildren {
   SportsRoute: typeof SportsRoute
   SubmitNewsTipRoute: typeof SubmitNewsTipRoute
   TermsOfUseRoute: typeof TermsOfUseRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   WatchLiveRoute: typeof WatchLiveRoute
   WeatherRoute: typeof WeatherRouteWithChildren
   ApiMediaRoute: typeof ApiMediaRoute
@@ -1294,6 +1307,13 @@ declare module '@tanstack/react-router' {
       path: '/watch-live'
       fullPath: '/watch-live'
       preLoaderRoute: typeof WatchLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms-of-use': {
@@ -2154,6 +2174,7 @@ const rootRouteChildren: RootRouteChildren = {
   SportsRoute: SportsRoute,
   SubmitNewsTipRoute: SubmitNewsTipRoute,
   TermsOfUseRoute: TermsOfUseRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   WatchLiveRoute: WatchLiveRoute,
   WeatherRoute: WeatherRouteWithChildren,
   ApiMediaRoute: ApiMediaRoute,
