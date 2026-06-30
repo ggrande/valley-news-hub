@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WeatherRouteImport } from './routes/weather'
 import { Route as WatchLiveRouteImport } from './routes/watch-live'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
 import { Route as SubmitNewsTipRouteImport } from './routes/submit-news-tip'
 import { Route as SportsRouteImport } from './routes/sports'
@@ -44,6 +45,7 @@ import { Route as NetworkStationsRouteImport } from './routes/network.stations'
 import { Route as NetworkDocsRouteImport } from './routes/network.docs'
 import { Route as NetworkChangelogRouteImport } from './routes/network.changelog'
 import { Route as MerchIdRouteImport } from './routes/merch.$id'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as CheckoutMerchReturnRouteImport } from './routes/checkout.merch-return'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
@@ -57,6 +59,7 @@ import { Route as NetworkSiteSlugShowsRouteImport } from './routes/network_.$sit
 import { Route as NetworkSiteSlugContactRouteImport } from './routes/network_.$siteSlug.contact'
 import { Route as NetworkSiteSlugAdminRouteImport } from './routes/network_.$siteSlug.admin'
 import { Route as NetworkSiteSlugAboutRouteImport } from './routes/network_.$siteSlug.about'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AuthenticatedAdminVerdictRouteImport } from './routes/_authenticated/admin.verdict'
 import { Route as AuthenticatedAdminSubmissionsRouteImport } from './routes/_authenticated/admin.submissions'
 import { Route as AuthenticatedAdminSiteContentRouteImport } from './routes/_authenticated/admin.site-content'
@@ -81,6 +84,8 @@ import { Route as AuthenticatedAccountLicensesRouteImport } from './routes/_auth
 import { Route as NetworkSiteSlugNewsIndexRouteImport } from './routes/network_.$siteSlug.news.index'
 import { Route as AuthenticatedAccountManagedSitesIndexRouteImport } from './routes/_authenticated/account.managed-sites.index'
 import { Route as NetworkSiteSlugNewsSlugRouteImport } from './routes/network_.$siteSlug.news.$slug'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -111,6 +116,11 @@ const WeatherRoute = WeatherRouteImport.update({
 const WatchLiveRoute = WatchLiveRouteImport.update({
   id: '/watch-live',
   path: '/watch-live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsOfUseRoute = TermsOfUseRouteImport.update({
@@ -277,6 +287,11 @@ const MerchIdRoute = MerchIdRouteImport.update({
   path: '/merch/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
@@ -342,6 +357,11 @@ const NetworkSiteSlugAboutRoute = NetworkSiteSlugAboutRouteImport.update({
   id: '/about',
   path: '/about',
   getParentRoute: () => NetworkSiteSlugRoute,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminVerdictRoute =
   AuthenticatedAdminVerdictRouteImport.update({
@@ -482,6 +502,18 @@ const NetworkSiteSlugNewsSlugRoute = NetworkSiteSlugNewsSlugRouteImport.update({
   path: '/news/$slug',
   getParentRoute: () => NetworkSiteSlugRoute,
 } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -626,12 +658,14 @@ export interface FileRoutesByFullPath {
   '/sports': typeof SportsRoute
   '/submit-news-tip': typeof SubmitNewsTipRoute
   '/terms-of-use': typeof TermsOfUseRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/checkout/merch-return': typeof CheckoutMerchReturnRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
   '/network/docs': typeof NetworkDocsRoute
@@ -666,6 +700,7 @@ export interface FileRoutesByFullPath {
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin/verdict': typeof AuthenticatedAdminVerdictRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/network/$siteSlug/about': typeof NetworkSiteSlugAboutRoute
   '/network/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
   '/network/$siteSlug/contact': typeof NetworkSiteSlugContactRoute
@@ -694,6 +729,8 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/network/$siteSlug/news/$slug': typeof NetworkSiteSlugNewsSlugRoute
   '/account/managed-sites/': typeof AuthenticatedAccountManagedSitesIndexRoute
   '/network/$siteSlug/news/': typeof NetworkSiteSlugNewsIndexRoute
@@ -720,11 +757,13 @@ export interface FileRoutesByTo {
   '/sports': typeof SportsRoute
   '/submit-news-tip': typeof SubmitNewsTipRoute
   '/terms-of-use': typeof TermsOfUseRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/checkout/merch-return': typeof CheckoutMerchReturnRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
   '/network/docs': typeof NetworkDocsRoute
@@ -758,6 +797,7 @@ export interface FileRoutesByTo {
   '/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/admin/verdict': typeof AuthenticatedAdminVerdictRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/network/$siteSlug/about': typeof NetworkSiteSlugAboutRoute
   '/network/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
   '/network/$siteSlug/contact': typeof NetworkSiteSlugContactRoute
@@ -786,6 +826,8 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/network/$siteSlug/news/$slug': typeof NetworkSiteSlugNewsSlugRoute
   '/account/managed-sites': typeof AuthenticatedAccountManagedSitesIndexRoute
   '/network/$siteSlug/news': typeof NetworkSiteSlugNewsIndexRoute
@@ -814,12 +856,14 @@ export interface FileRoutesById {
   '/sports': typeof SportsRoute
   '/submit-news-tip': typeof SubmitNewsTipRoute
   '/terms-of-use': typeof TermsOfUseRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/watch-live': typeof WatchLiveRoute
   '/weather': typeof WeatherRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/checkout/merch-return': typeof CheckoutMerchReturnRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/merch/$id': typeof MerchIdRoute
   '/network/changelog': typeof NetworkChangelogRoute
   '/network/docs': typeof NetworkDocsRoute
@@ -854,6 +898,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/site-content': typeof AuthenticatedAdminSiteContentRoute
   '/_authenticated/admin/submissions': typeof AuthenticatedAdminSubmissionsRoute
   '/_authenticated/admin/verdict': typeof AuthenticatedAdminVerdictRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/network_/$siteSlug/about': typeof NetworkSiteSlugAboutRoute
   '/network_/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
   '/network_/$siteSlug/contact': typeof NetworkSiteSlugContactRoute
@@ -882,6 +927,8 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/network_/$siteSlug/news/$slug': typeof NetworkSiteSlugNewsSlugRoute
   '/_authenticated/account/managed-sites/': typeof AuthenticatedAccountManagedSitesIndexRoute
   '/network_/$siteSlug/news/': typeof NetworkSiteSlugNewsIndexRoute
@@ -910,12 +957,14 @@ export interface FileRouteTypes {
     | '/sports'
     | '/submit-news-tip'
     | '/terms-of-use'
+    | '/unsubscribe'
     | '/watch-live'
     | '/weather'
     | '/admin'
     | '/api/media'
     | '/checkout/merch-return'
     | '/checkout/return'
+    | '/email/unsubscribe'
     | '/merch/$id'
     | '/network/changelog'
     | '/network/docs'
@@ -950,6 +999,7 @@ export interface FileRouteTypes {
     | '/admin/site-content'
     | '/admin/submissions'
     | '/admin/verdict'
+    | '/lovable/email/suppression'
     | '/network/$siteSlug/about'
     | '/network/$siteSlug/admin'
     | '/network/$siteSlug/contact'
@@ -978,6 +1028,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/network/$siteSlug/news/$slug'
     | '/account/managed-sites/'
     | '/network/$siteSlug/news/'
@@ -1004,11 +1056,13 @@ export interface FileRouteTypes {
     | '/sports'
     | '/submit-news-tip'
     | '/terms-of-use'
+    | '/unsubscribe'
     | '/watch-live'
     | '/weather'
     | '/api/media'
     | '/checkout/merch-return'
     | '/checkout/return'
+    | '/email/unsubscribe'
     | '/merch/$id'
     | '/network/changelog'
     | '/network/docs'
@@ -1042,6 +1096,7 @@ export interface FileRouteTypes {
     | '/admin/site-content'
     | '/admin/submissions'
     | '/admin/verdict'
+    | '/lovable/email/suppression'
     | '/network/$siteSlug/about'
     | '/network/$siteSlug/admin'
     | '/network/$siteSlug/contact'
@@ -1070,6 +1125,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/network/$siteSlug/news/$slug'
     | '/account/managed-sites'
     | '/network/$siteSlug/news'
@@ -1097,12 +1154,14 @@ export interface FileRouteTypes {
     | '/sports'
     | '/submit-news-tip'
     | '/terms-of-use'
+    | '/unsubscribe'
     | '/watch-live'
     | '/weather'
     | '/_authenticated/admin'
     | '/api/media'
     | '/checkout/merch-return'
     | '/checkout/return'
+    | '/email/unsubscribe'
     | '/merch/$id'
     | '/network/changelog'
     | '/network/docs'
@@ -1137,6 +1196,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/site-content'
     | '/_authenticated/admin/submissions'
     | '/_authenticated/admin/verdict'
+    | '/lovable/email/suppression'
     | '/network_/$siteSlug/about'
     | '/network_/$siteSlug/admin'
     | '/network_/$siteSlug/contact'
@@ -1165,6 +1225,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/network_/$siteSlug/news/$slug'
     | '/_authenticated/account/managed-sites/'
     | '/network_/$siteSlug/news/'
@@ -1193,11 +1255,13 @@ export interface RootRouteChildren {
   SportsRoute: typeof SportsRoute
   SubmitNewsTipRoute: typeof SubmitNewsTipRoute
   TermsOfUseRoute: typeof TermsOfUseRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   WatchLiveRoute: typeof WatchLiveRoute
   WeatherRoute: typeof WeatherRouteWithChildren
   ApiMediaRoute: typeof ApiMediaRoute
   CheckoutMerchReturnRoute: typeof CheckoutMerchReturnRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MerchIdRoute: typeof MerchIdRoute
   NetworkSiteSlugRoute: typeof NetworkSiteSlugRouteWithChildren
   NewsSlugRoute: typeof NewsSlugRoute
@@ -1207,6 +1271,7 @@ export interface RootRouteChildren {
   StoriesSlugRoute: typeof StoriesSlugRoute
   MerchIndexRoute: typeof MerchIndexRoute
   NewsIndexRoute: typeof NewsIndexRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksBackfillCommentsRoute: typeof ApiPublicHooksBackfillCommentsRoute
   ApiPublicHooksManualJsonlImportRoute: typeof ApiPublicHooksManualJsonlImportRoute
   ApiPublicHooksProcessPendingRoute: typeof ApiPublicHooksProcessPendingRoute
@@ -1223,6 +1288,8 @@ export interface RootRouteChildren {
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
   ApiPublicIntegrationsSupabaseCallbackRoute: typeof ApiPublicIntegrationsSupabaseCallbackRoute
 }
 
@@ -1240,6 +1307,13 @@ declare module '@tanstack/react-router' {
       path: '/watch-live'
       fullPath: '/watch-live'
       preLoaderRoute: typeof WatchLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms-of-use': {
@@ -1473,6 +1547,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MerchIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/return': {
       id: '/checkout/return'
       path: '/checkout/return'
@@ -1563,6 +1644,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/network/$siteSlug/about'
       preLoaderRoute: typeof NetworkSiteSlugAboutRouteImport
       parentRoute: typeof NetworkSiteSlugRoute
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/verdict': {
       id: '/_authenticated/admin/verdict'
@@ -1731,6 +1819,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/network/$siteSlug/news/$slug'
       preLoaderRoute: typeof NetworkSiteSlugNewsSlugRouteImport
       parentRoute: typeof NetworkSiteSlugRoute
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -2072,11 +2174,13 @@ const rootRouteChildren: RootRouteChildren = {
   SportsRoute: SportsRoute,
   SubmitNewsTipRoute: SubmitNewsTipRoute,
   TermsOfUseRoute: TermsOfUseRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   WatchLiveRoute: WatchLiveRoute,
   WeatherRoute: WeatherRouteWithChildren,
   ApiMediaRoute: ApiMediaRoute,
   CheckoutMerchReturnRoute: CheckoutMerchReturnRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MerchIdRoute: MerchIdRoute,
   NetworkSiteSlugRoute: NetworkSiteSlugRouteWithChildren,
   NewsSlugRoute: NewsSlugRoute,
@@ -2086,6 +2190,7 @@ const rootRouteChildren: RootRouteChildren = {
   StoriesSlugRoute: StoriesSlugRoute,
   MerchIndexRoute: MerchIndexRoute,
   NewsIndexRoute: NewsIndexRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksBackfillCommentsRoute: ApiPublicHooksBackfillCommentsRoute,
   ApiPublicHooksManualJsonlImportRoute: ApiPublicHooksManualJsonlImportRoute,
   ApiPublicHooksProcessPendingRoute: ApiPublicHooksProcessPendingRoute,
@@ -2104,6 +2209,8 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
   ApiPublicIntegrationsSupabaseCallbackRoute:
     ApiPublicIntegrationsSupabaseCallbackRoute,
 }

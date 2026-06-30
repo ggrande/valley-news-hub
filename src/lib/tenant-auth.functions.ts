@@ -123,22 +123,20 @@ export const requestStationLogin = createServerFn({ method: "POST" })
     const linkBase = host ? `${proto}://${host}` : appBaseUrl();
     const link = `${linkBase}/station/verify?token=${encodeURIComponent(token)}`;
 
-    // Send. Try Lovable transactional email; fall back to console log so dev still works.
+    // Send via internal helper (bypasses HTTP auth on the public send route).
     try {
-      const sendUrl = `${appBaseUrl()}/lovable/email/transactional/send`;
-      const r = await fetch(sendUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          templateName: "station-magic-link",
-          recipientEmail: email,
-          idempotencyKey: `magic-${tokenHash.slice(0, 16)}`,
-          templateData: { link, siteName: resolvedSite?.display_name ?? "WKNA 49 Network" },
-        }),
+      const { sendTransactionalEmailInternal } = await import("@/lib/transactional-email.server");
+      const result = await sendTransactionalEmailInternal({
+        templateName: "station-magic-link",
+        recipientEmail: email,
+        idempotencyKey: `magic-${tokenHash.slice(0, 16)}`,
+        templateData: { link, siteName: resolvedSite?.display_name ?? "WKNA 49 Network" },
       });
-      if (!r.ok) console.log("[magic-link] email send not configured; link:", link);
+      if (!result.success) {
+        console.log("[magic-link] send not delivered:", result.reason, "link:", link);
+      }
     } catch (e) {
-      console.log("[magic-link] email send failed; link:", link, e);
+      console.log("[magic-link] send threw; link:", link, e);
     }
 
     return { ok: true, message: "Check your inbox for a sign-in link (expires in 15 minutes)." };
