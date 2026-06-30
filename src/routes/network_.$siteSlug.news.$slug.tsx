@@ -94,7 +94,7 @@ function TenantArticle() {
     <Layout>
       <article className="mx-auto max-w-3xl px-4 py-10">
         <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--broadcast)]">
-          {a.category} · From the WKNA 49 Network
+          {a.category}{post.__source === "network" ? " · From the WKNA 49 Network" : " · Local story"}
         </p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight text-primary sm:text-5xl">
           {a.title}
