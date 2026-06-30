@@ -108,7 +108,7 @@ export const getTenantFeed = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: site } = await (supabaseAdmin as any)
       .from("managed_sites")
-      .select("id, network_sync_enabled")
+      .select("id, network_sync_enabled, supabase_project_url, supabase_service_key_enc, supabase_service_key_iv")
       .eq("subdomain", data.siteSlug)
       .maybeSingle();
     if (!site) return { items: [], networkSyncEnabled: true };
@@ -154,8 +154,38 @@ export const getTenantFeed = createServerFn({ method: "GET" })
       }
     }
 
-    // (Future) tenant-local posts would be appended + re-sorted here.
-    return { items, networkSyncEnabled };
+    // Append tenant-local posts from the station's own Supabase project.
+    try {
+      const { listLocalPublishedPosts } = await import("@/lib/tenant-local-posts.server");
+      const local = await listLocalPublishedPosts(site as any, limit);
+      for (const p of local) {
+        items.push({
+          source: "local",
+          id: p.id,
+          slug: p.slug,
+          title: p.title,
+          dek: null,
+          published_at: p.published_at,
+          updated_at: p.updated_at,
+          is_pinned: false,
+          is_breaking: false,
+          featured_image: p.cover_url,
+          category: null,
+          author: null,
+        });
+      }
+    } catch {
+      // Tenant DB unreachable — silently fall back to network items.
+    }
+
+    // Re-sort by published_at desc (pinned first stays for network items via earlier order).
+    items.sort((a, b) => {
+      if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+      const ta = a.published_at ? Date.parse(a.published_at) : 0;
+      const tb = b.published_at ? Date.parse(b.published_at) : 0;
+      return tb - ta;
+    });
+    return { items: items.slice(0, limit), networkSyncEnabled };
   });
 
 // Toggle the network sync for a tenant site.
