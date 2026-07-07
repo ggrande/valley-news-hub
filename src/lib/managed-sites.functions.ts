@@ -195,3 +195,30 @@ export const adminStageReleaseForSites = createServerFn({ method: "POST" })
 
     return { ok: true, staged: count ?? 0 };
   });
+
+/** Admin: force a managed site to a specific status. Records an event. */
+export const adminSetSiteStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { siteId: string; status: "active" | "suspended" | "provisioning" | "failed"; notes?: string }) => {
+    if (!["active", "suspended", "provisioning", "failed"].includes(d.status)) {
+      throw new Error("Invalid status");
+    }
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    if (!(await isAdmin(context.supabase, context.userId))) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .update({ status: data.status })
+      .eq("id", data.siteId);
+    if (error) throw new Error(error.message);
+    await (supabaseAdmin as any).from("managed_site_release_events").insert({
+      site_id: data.siteId,
+      release_id: null,
+      event_type: `admin_status_${data.status}`,
+      actor_user_id: context.userId,
+      notes: data.notes ?? null,
+    });
+    return { ok: true, status: data.status };
+  });
