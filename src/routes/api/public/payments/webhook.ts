@@ -183,6 +183,33 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
   }
 }
 
+// Map a Stripe subscription status onto the tenant site lifecycle.
+// active/trialing => site active; past_due => keep current status (dunning);
+// canceled/unpaid/incomplete_expired => suspend the tenant site.
+function siteStatusForSubscription(subStatus: string, currentSiteStatus?: string | null): string | null {
+  if (subStatus === "active" || subStatus === "trialing") return "active";
+  if (subStatus === "canceled" || subStatus === "unpaid" || subStatus === "incomplete_expired") return "suspended";
+  if (subStatus === "past_due") return currentSiteStatus ?? null; // no change
+  return null;
+}
+
+async function applySubscriptionStatusToSites(subId: string, subStatus: string) {
+  const supabase = getSupabase();
+  const { data: sites } = await supabase
+    .from("managed_sites")
+    .select("id, status")
+    .eq("stripe_subscription_id", subId);
+  for (const s of (sites ?? []) as any[]) {
+    const nextStatus = siteStatusForSubscription(subStatus, s.status);
+    const patch: Record<string, any> = {
+      subscription_status: subStatus,
+      updated_at: new Date().toISOString(),
+    };
+    if (nextStatus && nextStatus !== s.status) patch.status = nextStatus;
+    await supabase.from("managed_sites").update(patch).eq("id", s.id);
+  }
+}
+
 async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
   const supabase = getSupabase();
   await supabase
@@ -190,11 +217,7 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
     .update({ status: subscription.status, updated_at: new Date().toISOString() })
     .eq("stripe_subscription_id", subscription.id)
     .eq("environment", env);
-  // Mirror subscription_status onto managed_sites so we can gate access
-  await supabase
-    .from("managed_sites")
-    .update({ subscription_status: subscription.status, updated_at: new Date().toISOString() })
-    .eq("stripe_subscription_id", subscription.id);
+  await applySubscriptionStatusToSites(subscription.id, subscription.status);
 }
 
 async function handleInvoiceEvent(invoice: any, env: StripeEnv, type: string) {
@@ -209,11 +232,9 @@ async function handleInvoiceEvent(invoice: any, env: StripeEnv, type: string) {
     .update({ status, updated_at: new Date().toISOString() })
     .eq("stripe_subscription_id", subId)
     .eq("environment", env);
-  await supabase
-    .from("managed_sites")
-    .update({ subscription_status: status, updated_at: new Date().toISOString() })
-    .eq("stripe_subscription_id", subId);
+  await applySubscriptionStatusToSites(subId, status);
 }
+
 
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
