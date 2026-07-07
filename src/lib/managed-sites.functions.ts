@@ -18,6 +18,7 @@ export type ManagedSiteRow = {
   created_at: string;
   onboarding_completed_at: string | null;
   directory_opt_in: boolean;
+  custom_domain_status: string | null;
   current_release?: { version: string; channel: string } | null;
   pending_release?: { version: string; channel: string; notes: string | null; is_security: boolean; is_breaking: boolean } | null;
 };
@@ -31,10 +32,11 @@ const SITE_SELECT = `
   id, owner_user_id, owner_email, subdomain, custom_domain, display_name,
   status, subscription_status, current_release_id, pending_release_id,
   auto_apply_security, last_deployed_at, notes, created_at,
-  onboarding_completed_at, directory_opt_in,
+  onboarding_completed_at, directory_opt_in, custom_domain_status,
   current_release:platform_releases!managed_sites_current_release_id_fkey(version,channel),
   pending_release:platform_releases!managed_sites_pending_release_id_fkey(version,channel,notes,is_security,is_breaking)
 `;
+
 
 export const listMyManagedSites = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -193,3 +195,26 @@ export const adminStageReleaseForSites = createServerFn({ method: "POST" })
 
     return { ok: true, staged: count ?? 0 };
   });
+
+/** Admin: force a managed site to a specific status. Records an event. */
+export const adminSetSiteStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { siteId: string; status: "active" | "suspended" | "provisioning" | "failed"; notes?: string }) => {
+    if (!["active", "suspended", "provisioning", "failed"].includes(d.status)) {
+      throw new Error("Invalid status");
+    }
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    if (!(await isAdmin(context.supabase, context.userId))) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: Record<string, unknown> = { status: data.status };
+    if (data.notes !== undefined) patch.notes = data.notes;
+    const { error } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .update(patch)
+      .eq("id", data.siteId);
+    if (error) throw new Error(error.message);
+    return { ok: true, status: data.status };
+  });
+
