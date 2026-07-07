@@ -81,6 +81,9 @@ export const getTenantBySlug = createServerFn({ method: "GET" })
       .eq("subdomain", slug)
       .maybeSingle();
     if (!row) return null;
+    // Suspended tenants (Stripe canceled/unpaid) should 404, not render.
+    if (row.status === "suspended") return null;
+
     return {
       siteId: row.id as string,
       slug: row.subdomain as string,
