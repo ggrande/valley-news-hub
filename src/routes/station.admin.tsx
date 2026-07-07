@@ -682,3 +682,131 @@ function SignOutButton() {
     </button>
   );
 }
+
+// ---------- CUSTOM DOMAIN ----------
+function DomainTab({ site }: { site: any }) {
+  const qc = useQueryClient();
+  const getFn = useServerFn(getStationDomain);
+  const setFn = useServerFn(setStationCustomDomain);
+  const clearFn = useServerFn(clearStationCustomDomain);
+  const verifyFn = useServerFn(verifyStationCustomDomain);
+  const q = useQuery({
+    queryKey: ["station-domain", site.id],
+    queryFn: () => getFn({ data: { siteId: site.id } }),
+  });
+  const [input, setInput] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  if (q.data && !loaded) {
+    setInput(q.data.customDomain ?? "");
+    setLoaded(true);
+  }
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["station-domain", site.id] });
+  const attach = useMutation({
+    mutationFn: () => setFn({ data: { siteId: site.id, domain: input } }),
+    onSuccess: invalidate,
+    onError: (e: Error) => alert(e.message),
+  });
+  const verify = useMutation({
+    mutationFn: () => verifyFn({ data: { siteId: site.id } }),
+    onSuccess: (r: any) => {
+      invalidate();
+      if (r.ok) alert("Verified — your custom domain is live.");
+      else alert(r.error || "DNS not ready yet. Give it a few minutes.");
+    },
+    onError: (e: Error) => alert(e.message),
+  });
+  const detach = useMutation({
+    mutationFn: () => clearFn({ data: { siteId: site.id } }),
+    onSuccess: () => { setLoaded(false); invalidate(); },
+    onError: (e: Error) => alert(e.message),
+  });
+
+  const status = q.data?.status ?? "unset";
+  const badge = (() => {
+    const map: Record<string, string> = {
+      unset: "bg-muted text-muted-foreground",
+      pending: "bg-amber-100 text-amber-900",
+      failed: "bg-destructive/10 text-destructive",
+      verified: "bg-emerald-100 text-emerald-900",
+    };
+    const label: Record<string, string> = {
+      unset: "No domain",
+      pending: "Awaiting DNS",
+      failed: "Verification failed",
+      verified: "Live",
+    };
+    return <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${map[status] ?? map.unset}`}>{label[status] ?? status}</span>;
+  })();
+
+  return (
+    <div className="max-w-2xl space-y-4">
+      <div className="rounded-lg border bg-card p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-semibold text-primary">Custom domain</h2>
+          {badge}
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Point your own domain (e.g. <span className="font-mono">news.example.com</span>) at your station.
+          Your default address <span className="font-mono">wkna49.com/network/{site.subdomain}</span> keeps working either way.
+        </p>
+
+        <div className="mt-4 flex flex-wrap items-end gap-2">
+          <Field label="Domain">
+            <input value={input} onChange={(e) => setInput(e.target.value)}
+                   placeholder="news.example.com"
+                   className="w-72 rounded-md border px-3 py-2 text-sm font-mono" />
+          </Field>
+          <button onClick={() => attach.mutate()} disabled={attach.isPending || !input}
+                  className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+            {attach.isPending ? "Saving…" : q.data?.customDomain ? "Update" : "Attach"}
+          </button>
+          {q.data?.customDomain && (
+            <button onClick={() => confirm("Remove custom domain?") && detach.mutate()}
+                    className="h-10 rounded-md border border-destructive/40 px-3 text-xs font-semibold text-destructive">
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
+
+      {q.data?.instructions && (
+        <div className="rounded-lg border bg-card p-5">
+          <h3 className="font-semibold text-primary">DNS records</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Add both of these at your DNS provider (Cloudflare, Namecheap, GoDaddy, etc.). Propagation usually takes 5–30 minutes.
+          </p>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                <tr><th className="py-2 pr-3">Type</th><th className="py-2 pr-3">Name / Host</th><th className="py-2">Value</th></tr>
+              </thead>
+              <tbody className="font-mono text-[12px]">
+                <tr className="border-t"><td className="py-2 pr-3">CNAME</td><td className="py-2 pr-3">{q.data.instructions.cname.name}</td><td className="py-2 break-all">{q.data.instructions.cname.target}</td></tr>
+                <tr className="border-t"><td className="py-2 pr-3">TXT</td><td className="py-2 pr-3">{q.data.instructions.txt.name}</td><td className="py-2 break-all">{q.data.instructions.txt.value}</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button onClick={() => verify.mutate()} disabled={verify.isPending}
+                    className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+              {verify.isPending ? "Checking DNS…" : "Verify now"}
+            </button>
+            {q.data.lastCheckedAt && (
+              <span className="text-[11px] text-muted-foreground">
+                Last checked {new Date(q.data.lastCheckedAt).toLocaleString()}
+              </span>
+            )}
+          </div>
+          {q.data.lastError && status !== "verified" && (
+            <p className="mt-3 rounded-md bg-destructive/10 p-3 text-[12px] text-destructive">{q.data.lastError}</p>
+          )}
+          {status === "verified" && (
+            <p className="mt-3 rounded-md bg-emerald-100 p-3 text-[12px] text-emerald-900">
+              Verified — <a href={`https://${q.data.customDomain}`} target="_blank" rel="noreferrer" className="underline">https://{q.data.customDomain}</a> now serves your station.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
