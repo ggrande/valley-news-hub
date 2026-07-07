@@ -4,6 +4,18 @@ import { TenantNav, TenantHeader } from "@/components/site/TenantNav";
 import { useTenantSite } from "@/lib/use-tenant-site";
 
 export const Route = createFileRoute("/network_/$siteSlug/about")({
+  head: ({ params }) => {
+    const url = `https://network.wkna49.com/network/${params.siteSlug}/about`;
+    return {
+      meta: [
+        { title: `About — ${params.siteSlug}` },
+        { name: "description", content: "About this WKNA 49 affiliate station: coverage, community focus, and how to reach the newsroom." },
+        { property: "og:url", content: url },
+        { property: "og:type", content: "website" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: TenantAbout,
 });
 

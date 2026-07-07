@@ -9,6 +9,18 @@ import { getTenantFeed, type FeedItem } from "@/lib/network-feed.functions";
 import type { Article } from "@/lib/news-data";
 
 export const Route = createFileRoute("/network_/$siteSlug/news/")({
+  head: ({ params }) => {
+    const url = `https://network.wkna49.com/network/${params.siteSlug}/news`;
+    return {
+      meta: [
+        { title: `News — ${params.siteSlug}` },
+        { name: "description", content: "Latest local reporting and network coverage from this affiliate station." },
+        { property: "og:url", content: url },
+        { property: "og:type", content: "website" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: TenantNewsIndex,
 });
 

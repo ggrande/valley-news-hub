@@ -71,17 +71,25 @@ export const Route = createFileRoute("/network_/$siteSlug/news/$slug")({
     if (r.notFound) throw notFound();
     return { post: r.post };
   },
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
     const p = loaderData?.post as any;
     if (!p) return {};
     const a = dbPostToArticle(p);
+    const url = `https://network.wkna49.com/network/${params.siteSlug}/news/${params.slug}`;
+    const image = p.og_image ?? p.featured_image ?? null;
+    const desc = p.seo_description ?? a.summary ?? "";
     return {
       meta: [
-        { title: p.seo_title ?? `${a.title}` },
-        { name: "description", content: p.seo_description ?? a.summary },
+        { title: p.seo_title ?? a.title },
+        { name: "description", content: desc },
         { property: "og:title", content: a.title },
-        { property: "og:description", content: p.seo_description ?? a.summary },
+        { property: "og:description", content: desc },
+        { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
+        ...(image ? [{ property: "og:image", content: image }] : []),
+        ...(image ? [{ name: "twitter:card", content: "summary_large_image" }] : []),
       ],
+      links: [{ rel: "canonical", href: url }],
     };
   },
   component: TenantArticle,
