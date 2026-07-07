@@ -285,6 +285,25 @@ function PostsTab({ site }: { site: any }) {
   );
 }
 
+function renderMarkdown(md: string): string {
+  // Tiny, safe subset — enough for a live preview without a heavy dep.
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as any
+  )[c]);
+  let out = esc(md);
+  out = out.replace(/^### (.*)$/gm, "<h3>$1</h3>");
+  out = out.replace(/^## (.*)$/gm, "<h2>$1</h2>");
+  out = out.replace(/^# (.*)$/gm, "<h1>$1</h1>");
+  out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  out = out.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  out = out.replace(/\[([^\]]+)\]\((https?:[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  out = out
+    .split(/\n{2,}/)
+    .map((p) => (/^<h[1-6]>/.test(p) ? p : `<p>${p.replace(/\n/g, "<br/>")}</p>`))
+    .join("\n");
+  return out;
+}
+
 function PostEditor({ site, postId, onClose }: { site: any; postId?: string; onClose: () => void }) {
   const getFn = useServerFn(getStationPost);
   const upsertFn = useServerFn(upsertStationPost);
@@ -298,6 +317,7 @@ function PostEditor({ site, postId, onClose }: { site: any; postId?: string; onC
   const [cover, setCover] = useState("");
   const [slug, setSlug] = useState("");
   const [published, setPublished] = useState(false);
+  const [preview, setPreview] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   if (postId && existing.data?.post && !loaded) {
@@ -315,6 +335,9 @@ function PostEditor({ site, postId, onClose }: { site: any; postId?: string; onC
     onError: (e: Error) => alert(e.message),
   });
 
+  const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
+  const readingMin = Math.max(1, Math.round(wordCount / 220));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -323,8 +346,9 @@ function PostEditor({ site, postId, onClose }: { site: any; postId?: string; onC
       </div>
       <div className="space-y-3 rounded-lg border bg-card p-4">
         <Field label="Title">
-          <input value={title} onChange={(e) => setTitle(e.target.value)}
+          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140}
                  className="w-full rounded-md border px-3 py-2 text-sm" />
+          <div className="mt-1 text-[10px] text-muted-foreground">{title.length}/140 characters</div>
         </Field>
         <Field label="Slug (optional — auto from title)">
           <input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="auto"
@@ -333,19 +357,40 @@ function PostEditor({ site, postId, onClose }: { site: any; postId?: string; onC
         <Field label="Cover image URL">
           <input value={cover} onChange={(e) => setCover(e.target.value)} placeholder="https://…"
                  className="w-full rounded-md border px-3 py-2 text-sm" />
+          {cover && (
+            <img src={cover} alt="" className="mt-2 max-h-40 rounded-md border object-cover"
+                 onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
+          )}
         </Field>
-        <Field label="Body (markdown supported)">
-          <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={14}
-                    className="w-full rounded-md border px-3 py-2 font-mono text-xs" />
-        </Field>
+        <div>
+          <div className="mb-1 flex items-center justify-between">
+            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Body (markdown supported)
+            </label>
+            <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+              <span>{wordCount} words · ~{readingMin} min read</span>
+              <button type="button" onClick={() => setPreview((p) => !p)}
+                      className="rounded border px-2 py-0.5 text-[10px] font-semibold">
+                {preview ? "Edit" : "Preview"}
+              </button>
+            </div>
+          </div>
+          {preview ? (
+            <div className="prose prose-sm max-w-none rounded-md border bg-background p-3 text-sm"
+                 dangerouslySetInnerHTML={{ __html: renderMarkdown(body) || "<p><em>Nothing to preview yet.</em></p>" }} />
+          ) : (
+            <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={16}
+                      className="w-full rounded-md border px-3 py-2 font-mono text-xs" />
+          )}
+        </div>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
-          Published
+          Published (visible on your public site immediately)
         </label>
         <div className="flex gap-2 pt-2">
           <button onClick={() => save.mutate()} disabled={save.isPending || !title}
                   className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-            {save.isPending ? "Saving…" : "Save"}
+            {save.isPending ? "Saving…" : published ? "Save & publish" : "Save draft"}
           </button>
           <button onClick={onClose} className="h-10 rounded-md border px-4 text-sm">Cancel</button>
         </div>
@@ -353,6 +398,7 @@ function PostEditor({ site, postId, onClose }: { site: any; postId?: string; onC
     </div>
   );
 }
+
 
 // ---------- COMMENTS ----------
 function CommentsTab({ site }: { site: any }) {
