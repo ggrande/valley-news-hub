@@ -8,6 +8,16 @@ import { getTenantFeed, type FeedItem } from "@/lib/network-feed.functions";
 import type { Article } from "@/lib/news-data";
 
 export const Route = createFileRoute("/network_/$siteSlug/")({
+  head: ({ params }) => {
+    const url = `https://network.wkna49.com/network/${params.siteSlug}`;
+    return {
+      meta: [
+        { property: "og:url", content: url },
+        { property: "og:type", content: "website" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: TenantHome,
 });
 
