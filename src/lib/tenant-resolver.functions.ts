@@ -55,6 +55,10 @@ export const getTenantByHost = createServerFn({ method: "GET" })
     const { data: row } = await query.maybeSingle();
 
     if (!row) return null;
+    // A suspended site (e.g. after Stripe cancellation) must not resolve
+    // as a live tenant — return null so callers 404 the request.
+    if (row.status === "suspended") return null;
+
     return {
       siteId: row.id,
       displayName: row.display_name,
