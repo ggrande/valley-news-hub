@@ -725,6 +725,11 @@ export type Database = {
           created_at: string
           current_release_id: string | null
           custom_domain: string | null
+          custom_domain_last_checked_at: string | null
+          custom_domain_last_error: string | null
+          custom_domain_status: string
+          custom_domain_verified_at: string | null
+          custom_domain_verify_token: string | null
           directory_city: string | null
           directory_logo_url: string | null
           directory_opt_in: boolean
@@ -776,6 +781,11 @@ export type Database = {
           created_at?: string
           current_release_id?: string | null
           custom_domain?: string | null
+          custom_domain_last_checked_at?: string | null
+          custom_domain_last_error?: string | null
+          custom_domain_status?: string
+          custom_domain_verified_at?: string | null
+          custom_domain_verify_token?: string | null
           directory_city?: string | null
           directory_logo_url?: string | null
           directory_opt_in?: boolean
@@ -827,6 +837,11 @@ export type Database = {
           created_at?: string
           current_release_id?: string | null
           custom_domain?: string | null
+          custom_domain_last_checked_at?: string | null
+          custom_domain_last_error?: string | null
+          custom_domain_status?: string
+          custom_domain_verified_at?: string | null
+          custom_domain_verify_token?: string | null
           directory_city?: string | null
           directory_logo_url?: string | null
           directory_opt_in?: boolean

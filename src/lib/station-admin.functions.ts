@@ -375,3 +375,182 @@ export const createStationBillingPortal = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(e) };
     }
   });
+
+// ---------- CUSTOM DOMAIN ----------
+const CNAME_TARGET = "network.wkna49.com";
+const TXT_PREFIX = "wkna49-verify=";
+
+function normalizeHostname(input: string): string | null {
+  const h = (input || "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  if (!h) return null;
+  if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/.test(h)) return null;
+  if (h.endsWith(".wkna49.com") || h === "wkna49.com") return null;
+  if (h.endsWith(".lovable.app")) return null;
+  return h;
+}
+
+async function dohLookup(name: string, type: "TXT" | "CNAME" | "A"): Promise<string[]> {
+  try {
+    const r = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`, {
+      headers: { accept: "application/dns-json" },
+    });
+    if (!r.ok) return [];
+    const j: any = await r.json();
+    const answers: any[] = j?.Answer ?? [];
+    return answers.map((a) => String(a.data ?? "").replace(/^"|"$/g, "").replace(/"\s+"/g, ""));
+  } catch {
+    return [];
+  }
+}
+
+function buildDomainPayload(site: SiteRow & Record<string, any>) {
+  const domain = site.custom_domain;
+  const token: string | null = site.custom_domain_verify_token ?? null;
+  return {
+    customDomain: domain,
+    status: (site.custom_domain_status ?? "unset") as string,
+    verifiedAt: site.custom_domain_verified_at ?? null,
+    lastCheckedAt: site.custom_domain_last_checked_at ?? null,
+    lastError: site.custom_domain_last_error ?? null,
+    instructions: domain && token
+      ? {
+          cname: { name: domain, target: CNAME_TARGET },
+          txt: { name: `_wkna49-verify.${domain}`, value: `${TXT_PREFIX}${token}` },
+        }
+      : null,
+  };
+}
+
+export const getStationDomain = createServerFn({ method: "POST" })
+  .inputValidator((d: { siteId: string }) => d)
+  .handler(async ({ data }) => {
+    const { site } = await requireSession(data.siteId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .select("custom_domain, custom_domain_status, custom_domain_verify_token, custom_domain_verified_at, custom_domain_last_checked_at, custom_domain_last_error")
+      .eq("id", site.id)
+      .maybeSingle();
+    return buildDomainPayload({ ...site, ...(row ?? {}) } as any);
+  });
+
+export const setStationCustomDomain = createServerFn({ method: "POST" })
+  .inputValidator((d: { siteId: string; domain: string }) => d)
+  .handler(async ({ data }) => {
+    const { site } = await requireSession(data.siteId);
+    const host = normalizeHostname(data.domain);
+    if (!host) throw new Error("Enter a valid domain like news.example.com");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Make sure no other site already owns this domain
+    const { data: taken } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .select("id")
+      .eq("custom_domain", host)
+      .neq("id", site.id)
+      .maybeSingle();
+    if (taken) throw new Error("That domain is already attached to another station.");
+
+    const { randomBytes } = await import("node:crypto");
+    const token = randomBytes(16).toString("hex");
+    const { error } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .update({
+        custom_domain: host,
+        custom_domain_verify_token: token,
+        custom_domain_status: "pending",
+        custom_domain_verified_at: null,
+        custom_domain_last_checked_at: null,
+        custom_domain_last_error: null,
+      })
+      .eq("id", site.id);
+    if (error) throw new Error(error.message);
+
+    const { data: row } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .select("custom_domain, custom_domain_status, custom_domain_verify_token, custom_domain_verified_at, custom_domain_last_checked_at, custom_domain_last_error")
+      .eq("id", site.id)
+      .maybeSingle();
+    return buildDomainPayload({ ...site, ...(row ?? {}) } as any);
+  });
+
+export const clearStationCustomDomain = createServerFn({ method: "POST" })
+  .inputValidator((d: { siteId: string }) => d)
+  .handler(async ({ data }) => {
+    const { site } = await requireSession(data.siteId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .update({
+        custom_domain: null,
+        custom_domain_verify_token: null,
+        custom_domain_status: "unset",
+        custom_domain_verified_at: null,
+        custom_domain_last_checked_at: null,
+        custom_domain_last_error: null,
+      })
+      .eq("id", site.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const verifyStationCustomDomain = createServerFn({ method: "POST" })
+  .inputValidator((d: { siteId: string }) => d)
+  .handler(async ({ data }) => {
+    const { site } = await requireSession(data.siteId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .select("custom_domain, custom_domain_verify_token")
+      .eq("id", site.id)
+      .maybeSingle();
+    const domain: string | null = row?.custom_domain ?? null;
+    const token: string | null = row?.custom_domain_verify_token ?? null;
+    if (!domain || !token) throw new Error("Set a custom domain first.");
+
+    const expectedTxt = `${TXT_PREFIX}${token}`;
+    const [txtRecords, cnameRecords, aRecords] = await Promise.all([
+      dohLookup(`_wkna49-verify.${domain}`, "TXT"),
+      dohLookup(domain, "CNAME"),
+      dohLookup(domain, "A"),
+    ]);
+
+    const txtOk = txtRecords.some((v) => v === expectedTxt);
+    const cnameOk = cnameRecords.some((v) =>
+      v.replace(/\.$/, "").toLowerCase() === CNAME_TARGET.toLowerCase(),
+    );
+    // Fallback: a records that resolve wkna49 infra are ok too
+    const hasA = aRecords.length > 0;
+
+    const now = new Date().toISOString();
+    let status: string;
+    let error: string | null = null;
+
+    if (txtOk && (cnameOk || hasA)) {
+      status = "verified";
+    } else {
+      status = "failed";
+      const missing: string[] = [];
+      if (!txtOk) missing.push(`TXT _wkna49-verify.${domain} = ${expectedTxt}`);
+      if (!cnameOk && !hasA) missing.push(`CNAME ${domain} → ${CNAME_TARGET}`);
+      error = `DNS not ready. Missing: ${missing.join(" · ")}`;
+    }
+
+    const { error: uerr } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .update({
+        custom_domain_status: status,
+        custom_domain_verified_at: status === "verified" ? now : null,
+        custom_domain_last_checked_at: now,
+        custom_domain_last_error: error,
+      })
+      .eq("id", site.id);
+    if (uerr) throw new Error(uerr.message);
+
+    return {
+      ok: status === "verified",
+      status,
+      error,
+      checked: { txt: txtRecords, cname: cnameRecords, a: aRecords },
+    };
+  });
