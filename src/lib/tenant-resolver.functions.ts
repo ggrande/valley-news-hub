@@ -38,17 +38,21 @@ export const getTenantByHost = createServerFn({ method: "GET" })
       : null;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const orClauses: string[] = [];
-    if (sub) orClauses.push(`subdomain.eq.${sub}`);
-    orClauses.push(`custom_domain.eq.${host}`);
-
-    const { data: row } = await (supabaseAdmin as any)
+    // Only match a subdomain OR a *verified* custom domain — unverified
+    // custom_domain values must not hijack a host they don't yet own.
+    let query = (supabaseAdmin as any)
       .from("managed_sites")
       .select(
-        "id, display_name, subdomain, custom_domain, directory_logo_url, directory_tagline, directory_city, directory_region, directory_website_url, status"
-      )
-      .or(orClauses.join(","))
-      .maybeSingle();
+        "id, display_name, subdomain, custom_domain, custom_domain_status, directory_logo_url, directory_tagline, directory_city, directory_region, directory_website_url, status"
+      );
+    if (sub) {
+      query = query.or(
+        `subdomain.eq.${sub},and(custom_domain.eq.${host},custom_domain_status.eq.verified)`
+      );
+    } else {
+      query = query.eq("custom_domain", host).eq("custom_domain_status", "verified");
+    }
+    const { data: row } = await query.maybeSingle();
 
     if (!row) return null;
     return {
