@@ -185,6 +185,7 @@ function Dashboard({ session }: { session: any }) {
         {tab === "posts" && <PostsTab site={active} />}
         {tab === "comments" && <CommentsTab site={active} />}
         {tab === "branding" && <BrandingTab site={active} />}
+        {tab === "domain" && <DomainTab site={active} />}
         {tab === "billing" && <BillingTab site={active} />}
         {tab === "network" && (
           <div className="space-y-4">
