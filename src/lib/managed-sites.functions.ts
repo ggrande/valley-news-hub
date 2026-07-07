@@ -208,17 +208,13 @@ export const adminSetSiteStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     if (!(await isAdmin(context.supabase, context.userId))) throw new Error("Forbidden");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: Record<string, unknown> = { status: data.status };
+    if (data.notes !== undefined) patch.notes = data.notes;
     const { error } = await (supabaseAdmin as any)
       .from("managed_sites")
-      .update({ status: data.status })
+      .update(patch)
       .eq("id", data.siteId);
     if (error) throw new Error(error.message);
-    await (supabaseAdmin as any).from("managed_site_release_events").insert({
-      site_id: data.siteId,
-      release_id: null,
-      event_type: `admin_status_${data.status}`,
-      actor_user_id: context.userId,
-      notes: data.notes ?? null,
-    });
     return { ok: true, status: data.status };
   });
+
