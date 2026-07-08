@@ -59,6 +59,14 @@ function Dashboard() {
           <Link to="/admin/settings" className="rounded-md border px-4 py-2 text-sm font-semibold">Site settings</Link>
         </div>
       </div>
+      <div className="rounded-lg border bg-white p-6">
+        <h2 className="font-display text-lg font-bold text-primary">Affiliate network</h2>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link to="/admin/managed-sites" className="rounded-md border px-4 py-2 text-sm font-semibold">Managed sites</Link>
+          <Link to="/admin/abuse" className="rounded-md border px-4 py-2 text-sm font-semibold">Abuse reports</Link>
+          <Link to="/admin/network/health" className="rounded-md border px-4 py-2 text-sm font-semibold">Network health</Link>
+        </div>
+      </div>
     </div>
   );
 }

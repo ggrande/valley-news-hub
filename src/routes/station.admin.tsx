@@ -37,6 +37,8 @@ import {
   deleteStationMedia,
   getStationLegal,
   updateStationLegal,
+  getStationAi,
+  updateStationAi,
 } from "@/lib/station-admin.functions";
 
 
@@ -45,7 +47,7 @@ export const Route = createFileRoute("/station/admin")({
   component: StationAdminPage,
 });
 
-type Tab = "dashboard" | "posts" | "comments" | "branding" | "media" | "domain" | "legal" | "billing" | "network";
+type Tab = "dashboard" | "posts" | "comments" | "branding" | "media" | "domain" | "legal" | "ai" | "billing" | "network";
 
 function StationAdminPage() {
   const sessionFn = useServerFn(getStationSession);
@@ -163,6 +165,7 @@ function Dashboard({ session }: { session: any }) {
     { id: "media", label: "Media" },
     { id: "domain", label: "Domain" },
     { id: "legal", label: "Legal" },
+    { id: "ai", label: "AI" },
     { id: "billing", label: "Billing" },
     { id: "network", label: "Network" },
   ];
@@ -196,6 +199,7 @@ function Dashboard({ session }: { session: any }) {
         {tab === "media" && <MediaTab site={active} />}
         {tab === "domain" && <DomainTab site={active} />}
         {tab === "legal" && <LegalTab site={active} />}
+        {tab === "ai" && <AiTab site={active} />}
         {tab === "billing" && <BillingTab site={active} />}
         {tab === "network" && (
           <div className="space-y-4">
@@ -1073,4 +1077,162 @@ function LegalTab({ site }: { site: any }) {
     </div>
   );
 }
+
+// ---------- AI ----------
+function AiTab({ site }: { site: any }) {
+  const qc = useQueryClient();
+  const getFn = useServerFn(getStationAi);
+  const saveFn = useServerFn(updateStationAi);
+  const q = useQuery({
+    queryKey: ["station-ai", site.id],
+    queryFn: () => getFn({ data: { siteId: site.id } }),
+  });
+  const [mode, setMode] = useState<"lovable" | "disabled" | "byo_gemini" | "">("");
+  const [model, setModel] = useState<string>("");
+  const [apiKey, setApiKey] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  if (q.data && !loaded) {
+    setMode(q.data.ai_mode as any);
+    setModel(q.data.ai_model ?? "");
+    setLoaded(true);
+  }
+  const save = useMutation({
+    mutationFn: (payload: any) => saveFn({ data: { siteId: site.id, ...payload } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["station-ai", site.id] });
+      setApiKey("");
+      alert("Saved");
+    },
+    onError: (e: Error) => alert(e.message),
+  });
+  if (!q.data) return <p className="text-sm text-muted-foreground">Loading…</p>;
+
+  const usage = q.data.usage;
+  const quotas = q.data.quotas;
+  const Row = ({ label, used, cap }: { label: string; used: number; cap: number }) => (
+    <div className="flex items-center justify-between rounded border bg-background px-3 py-2 text-xs">
+      <span className="font-semibold">{label}</span>
+      <span className={used >= cap ? "text-red-600 font-semibold" : "text-muted-foreground"}>
+        {used} / {cap}
+      </span>
+    </div>
+  );
+
+  return (
+    <div className="max-w-3xl space-y-4">
+      <div className="rounded-lg border bg-card p-4">
+        <h2 className="font-semibold text-primary">AI mode</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Choose how AI features (post drafting, filler images) work on your station.
+        </p>
+        <div className="mt-3 space-y-2">
+          {[
+            { v: "lovable", t: "Use built-in AI (Lovable AI)", d: "Included with your subscription. Subject to the quotas below." },
+            { v: "disabled", t: "Disable AI", d: "You'll create every post and image manually. No AI calls will run on your site." },
+            { v: "byo_gemini", t: "Bring your own Gemini API key", d: "Charges go to your Google account. Cleanly replaces all built-in AI use." },
+          ].map((o) => (
+            <label key={o.v} className="flex cursor-pointer items-start gap-3 rounded border p-3 hover:bg-muted/40">
+              <input type="radio" checked={mode === o.v} onChange={() => setMode(o.v as any)} className="mt-1" />
+              <span>
+                <span className="block text-sm font-semibold">{o.t}</span>
+                <span className="block text-xs text-muted-foreground">{o.d}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+
+        {mode === "byo_gemini" && (
+          <div className="mt-4 space-y-3 rounded border bg-background p-3">
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Gemini model</label>
+              <input
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                placeholder="gemini-2.5-flash"
+                className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Model id from Google AI Studio (e.g. <code>gemini-2.5-flash</code>, <code>gemini-2.5-pro</code>).
+              </p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Gemini API key {q.data.has_api_key && <span className="ml-2 text-emerald-700">(saved)</span>}
+              </label>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={q.data.has_api_key ? "•••• (leave blank to keep current)" : "Paste your Gemini API key"}
+                className="mt-1 w-full rounded-md border px-3 py-2 font-mono text-xs"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Get one at <a className="underline" href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">aistudio.google.com/apikey</a>.
+                Encrypted at rest.
+              </p>
+              {q.data.has_api_key && (
+                <button
+                  onClick={() => {
+                    if (confirm("Remove the saved Gemini API key?")) {
+                      save.mutate({ api_key: null });
+                    }
+                  }}
+                  className="mt-2 text-xs text-red-600 underline"
+                >
+                  Remove saved key
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={() => {
+              const payload: any = { ai_mode: mode };
+              if (mode === "byo_gemini") {
+                payload.ai_model = model || null;
+                if (apiKey) payload.api_key = apiKey;
+              }
+              save.mutate(payload);
+            }}
+            disabled={save.isPending || !mode}
+            className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          >
+            {save.isPending ? "Saving…" : "Save AI settings"}
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-card p-4">
+        <h2 className="font-semibold text-primary">Current usage & quotas</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Quotas apply to built-in Lovable AI mode. Bring-your-own-Gemini mode is not counted.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Post generation</p>
+            <div className="space-y-1">
+              <Row label="Last minute" used={usage.posts.minute} cap={quotas.posts_per_min} />
+              <Row label="Last 24 hours" used={usage.posts.day} cap={quotas.posts_per_day} />
+              <Row label="Last 30 days" used={usage.posts.month} cap={quotas.posts_per_month} />
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Image generation</p>
+            <div className="space-y-1">
+              <Row label="Last minute" used={usage.images.minute} cap={quotas.images_per_min} />
+              <Row label="Last 24 hours" used={usage.images.day} cap={quotas.images_per_day} />
+              <Row label="Last 30 days" used={usage.images.month} cap={quotas.images_per_month} />
+            </div>
+          </div>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Need a higher limit? Contact us and we can raise your station's cap.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 

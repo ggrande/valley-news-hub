@@ -83,6 +83,7 @@ import { Route as AuthenticatedAdminClosingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminAuthorsRouteImport } from './routes/_authenticated/admin.authors'
 import { Route as AuthenticatedAdminAiLogRouteImport } from './routes/_authenticated/admin.ai-log'
+import { Route as AuthenticatedAdminAbuseRouteImport } from './routes/_authenticated/admin.abuse'
 import { Route as AuthenticatedAccountOrdersRouteImport } from './routes/_authenticated/account.orders'
 import { Route as AuthenticatedAccountLicensesRouteImport } from './routes/_authenticated/account.licenses'
 import { Route as NetworkSiteSlugNewsIndexRouteImport } from './routes/network_.$siteSlug.news.index'
@@ -108,6 +109,7 @@ import { Route as ApiPublicHooksManualJsonlImportRouteImport } from './routes/ap
 import { Route as ApiPublicHooksBackfillCommentsRouteImport } from './routes/api/public/hooks/backfill-comments'
 import { Route as AuthenticatedAdminRedditIdRouteImport } from './routes/_authenticated/admin.reddit.$id'
 import { Route as AuthenticatedAdminPostsIdRouteImport } from './routes/_authenticated/admin.posts.$id'
+import { Route as AuthenticatedAdminNetworkHealthRouteImport } from './routes/_authenticated/admin.network.health'
 import { Route as AuthenticatedAdminImportBatchIdRouteImport } from './routes/_authenticated/admin.import.$batchId'
 import { Route as ApiPublicIntegrationsSupabaseCallbackRouteImport } from './routes/api/public/integrations/supabase/callback'
 import { Route as AuthenticatedAccountManagedSitesSiteIdOnboardingRouteImport } from './routes/_authenticated/account.managed-sites.$siteId.onboarding'
@@ -497,6 +499,11 @@ const AuthenticatedAdminAiLogRoute = AuthenticatedAdminAiLogRouteImport.update({
   path: '/ai-log',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminAbuseRoute = AuthenticatedAdminAbuseRouteImport.update({
+  id: '/abuse',
+  path: '/abuse',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAccountOrdersRoute =
   AuthenticatedAccountOrdersRouteImport.update({
     id: '/account/orders',
@@ -643,6 +650,12 @@ const AuthenticatedAdminPostsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminPostsRoute,
   } as any)
+const AuthenticatedAdminNetworkHealthRoute =
+  AuthenticatedAdminNetworkHealthRouteImport.update({
+    id: '/network/health',
+    path: '/network/health',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminImportBatchIdRoute =
   AuthenticatedAdminImportBatchIdRouteImport.update({
     id: '/$batchId',
@@ -706,6 +719,7 @@ export interface FileRoutesByFullPath {
   '/news/': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/account/orders': typeof AuthenticatedAccountOrdersRoute
+  '/admin/abuse': typeof AuthenticatedAdminAbuseRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -739,6 +753,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/network/$siteSlug/': typeof NetworkSiteSlugIndexRoute
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
+  '/admin/network/health': typeof AuthenticatedAdminNetworkHealthRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
   '/api/public/hooks/backfill-comments': typeof ApiPublicHooksBackfillCommentsRoute
@@ -807,6 +822,7 @@ export interface FileRoutesByTo {
   '/news': typeof NewsIndexRoute
   '/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/account/orders': typeof AuthenticatedAccountOrdersRoute
+  '/admin/abuse': typeof AuthenticatedAdminAbuseRoute
   '/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -840,6 +856,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/network/$siteSlug': typeof NetworkSiteSlugIndexRoute
   '/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
+  '/admin/network/health': typeof AuthenticatedAdminNetworkHealthRoute
   '/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
   '/api/public/hooks/backfill-comments': typeof ApiPublicHooksBackfillCommentsRoute
@@ -912,6 +929,7 @@ export interface FileRoutesById {
   '/news/': typeof NewsIndexRoute
   '/_authenticated/account/licenses': typeof AuthenticatedAccountLicensesRoute
   '/_authenticated/account/orders': typeof AuthenticatedAccountOrdersRoute
+  '/_authenticated/admin/abuse': typeof AuthenticatedAdminAbuseRoute
   '/_authenticated/admin/ai-log': typeof AuthenticatedAdminAiLogRoute
   '/_authenticated/admin/authors': typeof AuthenticatedAdminAuthorsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -945,6 +963,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/network_/$siteSlug/': typeof NetworkSiteSlugIndexRoute
   '/_authenticated/admin/import/$batchId': typeof AuthenticatedAdminImportBatchIdRoute
+  '/_authenticated/admin/network/health': typeof AuthenticatedAdminNetworkHealthRoute
   '/_authenticated/admin/posts/$id': typeof AuthenticatedAdminPostsIdRoute
   '/_authenticated/admin/reddit/$id': typeof AuthenticatedAdminRedditIdRoute
   '/api/public/hooks/backfill-comments': typeof ApiPublicHooksBackfillCommentsRoute
@@ -1017,6 +1036,7 @@ export interface FileRouteTypes {
     | '/news/'
     | '/account/licenses'
     | '/account/orders'
+    | '/admin/abuse'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
@@ -1050,6 +1070,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/network/$siteSlug/'
     | '/admin/import/$batchId'
+    | '/admin/network/health'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
     | '/api/public/hooks/backfill-comments'
@@ -1118,6 +1139,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/account/licenses'
     | '/account/orders'
+    | '/admin/abuse'
     | '/admin/ai-log'
     | '/admin/authors'
     | '/admin/categories'
@@ -1151,6 +1173,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/network/$siteSlug'
     | '/admin/import/$batchId'
+    | '/admin/network/health'
     | '/admin/posts/$id'
     | '/admin/reddit/$id'
     | '/api/public/hooks/backfill-comments'
@@ -1222,6 +1245,7 @@ export interface FileRouteTypes {
     | '/news/'
     | '/_authenticated/account/licenses'
     | '/_authenticated/account/orders'
+    | '/_authenticated/admin/abuse'
     | '/_authenticated/admin/ai-log'
     | '/_authenticated/admin/authors'
     | '/_authenticated/admin/categories'
@@ -1255,6 +1279,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/network_/$siteSlug/'
     | '/_authenticated/admin/import/$batchId'
+    | '/_authenticated/admin/network/health'
     | '/_authenticated/admin/posts/$id'
     | '/_authenticated/admin/reddit/$id'
     | '/api/public/hooks/backfill-comments'
@@ -1862,6 +1887,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAiLogRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/abuse': {
+      id: '/_authenticated/admin/abuse'
+      path: '/abuse'
+      fullPath: '/admin/abuse'
+      preLoaderRoute: typeof AuthenticatedAdminAbuseRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/account/orders': {
       id: '/_authenticated/account/orders'
       path: '/account/orders'
@@ -2037,6 +2069,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPostsIdRouteImport
       parentRoute: typeof AuthenticatedAdminPostsRoute
     }
+    '/_authenticated/admin/network/health': {
+      id: '/_authenticated/admin/network/health'
+      path: '/network/health'
+      fullPath: '/admin/network/health'
+      preLoaderRoute: typeof AuthenticatedAdminNetworkHealthRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/import/$batchId': {
       id: '/_authenticated/admin/import/$batchId'
       path: '/$batchId'
@@ -2104,6 +2143,7 @@ const AuthenticatedAdminRedditRouteWithChildren =
   )
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAbuseRoute: typeof AuthenticatedAdminAbuseRoute
   AuthenticatedAdminAiLogRoute: typeof AuthenticatedAdminAiLogRoute
   AuthenticatedAdminAuthorsRoute: typeof AuthenticatedAdminAuthorsRoute
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
@@ -2124,9 +2164,11 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminSubmissionsRoute: typeof AuthenticatedAdminSubmissionsRoute
   AuthenticatedAdminVerdictRoute: typeof AuthenticatedAdminVerdictRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminNetworkHealthRoute: typeof AuthenticatedAdminNetworkHealthRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAbuseRoute: AuthenticatedAdminAbuseRoute,
   AuthenticatedAdminAiLogRoute: AuthenticatedAdminAiLogRoute,
   AuthenticatedAdminAuthorsRoute: AuthenticatedAdminAuthorsRoute,
   AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
@@ -2148,6 +2190,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminSubmissionsRoute: AuthenticatedAdminSubmissionsRoute,
   AuthenticatedAdminVerdictRoute: AuthenticatedAdminVerdictRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminNetworkHealthRoute: AuthenticatedAdminNetworkHealthRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =

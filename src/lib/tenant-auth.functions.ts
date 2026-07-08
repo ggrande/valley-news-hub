@@ -78,6 +78,16 @@ export const requestStationLogin = createServerFn({ method: "POST" })
     const host = data.host || req?.headers.get("host") || null;
     const site = await findSiteByHost(host);
 
+    // Rate-limit by caller IP + email to slow brute-force / bombing.
+    try {
+      const { enforceRateLimit, callerIp } = await import("@/lib/rate-limit.server");
+      const ip = callerIp(req ?? undefined);
+      await enforceRateLimit({ scope: "magic-link", key: `${ip}:${email}`, siteId: site?.id ?? null });
+    } catch (rlErr: any) {
+      if (rlErr?.name === "RateLimitError") throw new Error(rlErr.message);
+      throw rlErr;
+    }
+
     // If site exists but no owner_email, try Stripe backfill.
     if (site && !site.owner_email && site.stripe_customer_id) {
       await backfillOwnerEmailFromStripe(site.id, site.stripe_customer_id);

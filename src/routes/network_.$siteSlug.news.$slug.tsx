@@ -2,6 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Layout } from "@/components/site/Layout";
 import { ArticleImage } from "@/components/site/ArticleImage";
 import { MarkdownBody } from "@/components/site/MarkdownBody";
+import { ReportButton } from "@/components/site/ReportButton";
 import { fetchPostBySlug, dbPostToArticle } from "@/lib/posts-queries";
 import { formatDate } from "@/lib/news-data";
 import { createServerFn } from "@tanstack/react-start";
@@ -43,7 +44,7 @@ const loadTenantPost = createServerFn({ method: "GET" })
           author: null,
           __source: "local" as const,
         };
-        return { notFound: false as const, post: synthetic };
+        return { notFound: false as const, post: synthetic, siteId: site.id as string };
       }
     } catch {
       // fall through to network lookup
@@ -62,7 +63,7 @@ const loadTenantPost = createServerFn({ method: "GET" })
       .maybeSingle();
     if (hide) return { notFound: true as const };
 
-    return { notFound: false as const, post: { ...post, __source: "network" as const } };
+    return { notFound: false as const, post: { ...post, __source: "network" as const }, siteId: site.id as string };
   });
 
 export const Route = createFileRoute("/network_/$siteSlug/news/$slug")({
@@ -96,7 +97,7 @@ export const Route = createFileRoute("/network_/$siteSlug/news/$slug")({
 });
 
 function TenantArticle() {
-  const { post } = Route.useLoaderData() as any;
+  const { post, siteId } = Route.useLoaderData() as any;
   const a = dbPostToArticle(post);
   return (
     <Layout>
@@ -123,6 +124,9 @@ function TenantArticle() {
         )}
         <div className="prose prose-neutral mt-6 max-w-none">
           <MarkdownBody source={post.body ?? ""} />
+        </div>
+        <div className="mt-8 flex justify-end border-t pt-4">
+          <ReportButton targetKind="post" targetId={post.id} managedSiteId={siteId} />
         </div>
       </article>
     </Layout>
