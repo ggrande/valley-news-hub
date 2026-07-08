@@ -13,6 +13,7 @@ import { createNetworkBillingPortalSession } from "@/lib/network-payments.functi
 import { getStripeEnvironment } from "@/lib/stripe";
 import { purgeAndResetTenant } from "@/lib/supabase-provisioning.functions";
 import { listMyLicenses, getMyLicenseDownloadUrl } from "@/lib/network-licenses.functions";
+import { getMyManagedSiteProfile } from "@/lib/affiliate-directory.functions";
 
 export const Route = createFileRoute("/_authenticated/account/managed-sites/")({
   head: () => ({ meta: [{ title: "My Affiliate Stations — WKNA 49 Affiliate Network" }, { name: "robots", content: "noindex" }] }),
