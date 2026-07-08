@@ -228,11 +228,11 @@ function SiteCard({ site }: { site: ManagedSiteRow }) {
               Update pending
             </span>
             <span className="font-mono text-sm font-semibold">v{site.pending_release.version}</span>
-            {site.pending_release.is_security && <Badge tone="danger">Security</Badge>}
-            {site.pending_release.is_breaking && <Badge tone="warn">Breaking</Badge>}
+            {site.pending_release.security && <Badge tone="danger">Security</Badge>}
+            {site.pending_release.breaking && <Badge tone="warn">Breaking</Badge>}
           </div>
-          {site.pending_release.notes && (
-            <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{site.pending_release.notes}</p>
+          {site.pending_release.changelog_md && (
+            <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{site.pending_release.changelog_md}</p>
           )}
           <div className="mt-3 flex gap-2">
             <button

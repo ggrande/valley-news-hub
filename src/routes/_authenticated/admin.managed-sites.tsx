@@ -84,7 +84,7 @@ function Page() {
             <option value="">Choose published release…</option>
             {publishedReleases.map((r: any) => (
               <option key={r.id} value={r.id}>
-                v{r.version} {r.is_security ? "[security]" : ""} {r.is_breaking ? "[breaking]" : ""}
+                v{r.version} {r.security ? "[security]" : ""} {r.breaking ? "[breaking]" : ""}
               </option>
             ))}
           </select>

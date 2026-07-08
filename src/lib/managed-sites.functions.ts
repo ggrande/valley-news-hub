@@ -20,7 +20,7 @@ export type ManagedSiteRow = {
   directory_opt_in: boolean;
   custom_domain_status: string | null;
   current_release?: { version: string; channel: string } | null;
-  pending_release?: { version: string; channel: string; notes: string | null; is_security: boolean; is_breaking: boolean } | null;
+  pending_release?: { version: string; channel: string; title: string | null; changelog_md: string | null; security: boolean; breaking: boolean } | null;
 };
 
 async function isAdmin(supabase: any, userId: string): Promise<boolean> {
@@ -34,7 +34,7 @@ const SITE_SELECT = `
   auto_apply_security, last_deployed_at, notes, created_at,
   onboarding_completed_at, directory_opt_in, custom_domain_status,
   current_release:platform_releases!managed_sites_current_release_id_fkey(version,channel),
-  pending_release:platform_releases!managed_sites_pending_release_id_fkey(version,channel,notes,is_security,is_breaking)
+  pending_release:platform_releases!managed_sites_pending_release_id_fkey(version,channel,title,changelog_md,security,breaking)
 `;
 
 
@@ -155,7 +155,7 @@ export const adminStageReleaseForSites = createServerFn({ method: "POST" })
 
     const { data: release } = await (supabaseAdmin as any)
       .from("platform_releases")
-      .select("id, is_security, channel")
+      .select("id, security, channel")
       .eq("id", data.releaseId)
       .maybeSingle();
     if (!release) throw new Error("Release not found");
@@ -169,7 +169,7 @@ export const adminStageReleaseForSites = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // Auto-accept for sites with auto_apply_security on, if security release
-    if (release.is_security) {
+    if (release.security) {
       const { data: autoSites } = await (supabaseAdmin as any)
         .from("managed_sites")
         .select("id")
