@@ -169,7 +169,7 @@ export const adminStageReleaseForSites = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // Auto-accept for sites with auto_apply_security on, if security release
-    if (release.is_security) {
+    if (release.security) {
       const { data: autoSites } = await (supabaseAdmin as any)
         .from("managed_sites")
         .select("id")
