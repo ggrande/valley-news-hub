@@ -136,6 +136,7 @@ do $$ begin
   end if;
   if not exists (select 1 from pg_trigger where tgname = 'trg_profiles_updated_at') then
     create trigger trg_profiles_updated_at before update on public.profiles for each row execute function public.set_updated_at();
+  end if;
   if not exists (select 1 from pg_trigger where tgname = 'trg_comments_updated_at') then
     create trigger trg_comments_updated_at before update on public.comments for each row execute function public.set_updated_at();
   end if;
