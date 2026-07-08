@@ -132,9 +132,9 @@ export async function getTenantAiProvider(cfg: TenantAiConfig): Promise<{
   };
 }
 
-export function encryptTenantApiKey(plain: string): string {
+export async function encryptTenantApiKey(plain: string): Promise<string> {
   // Returns "iv:ciphertext" combined for single-column storage.
-  const { encryptSecret } = require("@/lib/tenant-crypto.server") as typeof import("@/lib/tenant-crypto.server");
+  const { encryptSecret } = await import("@/lib/tenant-crypto.server");
   const { ciphertext, iv } = encryptSecret(plain);
   return `${iv}:${ciphertext}`;
 }
