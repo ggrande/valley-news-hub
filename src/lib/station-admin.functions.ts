@@ -679,4 +679,104 @@ export const updateStationLegal = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ---------- AI CONTROLS ----------
+export const getStationAi = createServerFn({ method: "POST" })
+  .inputValidator((d: { siteId: string }) => d)
+  .handler(async ({ data }) => {
+    const { site } = await requireSession(data.siteId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .select(
+        "ai_mode, ai_model, ai_provider_api_key_enc, " +
+        "ai_posts_quota_per_min, ai_posts_quota_per_day, ai_posts_quota_per_month, " +
+        "ai_images_quota_per_min, ai_images_quota_per_day, ai_images_quota_per_month"
+      )
+      .eq("id", site.id)
+      .maybeSingle();
+
+    // Compute current usage windows for display.
+    const now = Date.now();
+    const counts = async (op: string, since: number) => {
+      const { count } = await (supabaseAdmin as any)
+        .from("tenant_ai_usage")
+        .select("id", { count: "exact", head: true })
+        .eq("managed_site_id", site.id)
+        .eq("op_type", op)
+        .eq("succeeded", true)
+        .gte("created_at", new Date(now - since).toISOString());
+      return count ?? 0;
+    };
+    const [pm, pd, pmo, im, id, imo] = await Promise.all([
+      counts("post", 60_000),
+      counts("post", 24 * 3600_000),
+      counts("post", 30 * 24 * 3600_000),
+      counts("image", 60_000),
+      counts("image", 24 * 3600_000),
+      counts("image", 30 * 24 * 3600_000),
+    ]);
+
+    return {
+      ai_mode: row?.ai_mode ?? "lovable",
+      ai_model: row?.ai_model ?? "google/gemini-3-flash-preview",
+      has_api_key: !!row?.ai_provider_api_key_enc,
+      quotas: {
+        posts_per_min: row?.ai_posts_quota_per_min ?? 5,
+        posts_per_day: row?.ai_posts_quota_per_day ?? 20,
+        posts_per_month: row?.ai_posts_quota_per_month ?? 50,
+        images_per_min: row?.ai_images_quota_per_min ?? 5,
+        images_per_day: row?.ai_images_quota_per_day ?? 20,
+        images_per_month: row?.ai_images_quota_per_month ?? 50,
+      },
+      usage: {
+        posts: { minute: pm, day: pd, month: pmo },
+        images: { minute: im, day: id, month: imo },
+      },
+    };
+  });
+
+export const updateStationAi = createServerFn({ method: "POST" })
+  .inputValidator((d: {
+    siteId: string;
+    ai_mode?: "lovable" | "disabled" | "byo_gemini";
+    ai_model?: string | null;
+    api_key?: string | null; // null = clear
+  }) => d)
+  .handler(async ({ data }) => {
+    const { site } = await requireSession(data.siteId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const patch: Record<string, unknown> = {};
+    if (data.ai_mode) {
+      if (!["lovable", "disabled", "byo_gemini"].includes(data.ai_mode)) {
+        throw new Error("Invalid ai_mode");
+      }
+      patch.ai_mode = data.ai_mode;
+    }
+    if (data.ai_model !== undefined) {
+      patch.ai_model = data.ai_model?.trim() || null;
+    }
+    if (data.api_key !== undefined) {
+      if (data.api_key === null || data.api_key === "") {
+        patch.ai_provider_api_key_enc = null;
+      } else {
+        const trimmed = data.api_key.trim();
+        if (trimmed.length < 10 || trimmed.length > 500) {
+          throw new Error("API key looks invalid");
+        }
+        const { encryptTenantApiKey } = await import("@/lib/tenant-ai.server");
+        patch.ai_provider_api_key_enc = await encryptTenantApiKey(trimmed);
+      }
+    }
+    if (Object.keys(patch).length === 0) return { ok: true };
+
+    const { error } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .update(patch)
+      .eq("id", site.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
 
