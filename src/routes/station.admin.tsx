@@ -37,6 +37,8 @@ import {
   deleteStationMedia,
   getStationLegal,
   updateStationLegal,
+  getStationAi,
+  updateStationAi,
 } from "@/lib/station-admin.functions";
 
 
