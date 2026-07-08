@@ -2,14 +2,18 @@ import type { ReactNode } from "react";
 import { AlertBar } from "./AlertBar";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
+import { TenantHeader } from "./TenantHeader";
+import { TenantFooter } from "./TenantFooter";
+import { useTenantSite } from "@/lib/use-tenant-site";
 
 export function Layout({ children }: { children: ReactNode }) {
+  const tenant = useTenantSite();
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <AlertBar />
-      <Header />
+      {!tenant && <AlertBar />}
+      {tenant ? <TenantHeader tenant={tenant} /> : <Header />}
       <main className="flex-1">{children}</main>
-      <Footer />
+      {tenant ? <TenantFooter tenant={tenant} /> : <Footer />}
     </div>
   );
 }

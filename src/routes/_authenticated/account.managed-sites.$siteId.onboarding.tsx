@@ -699,25 +699,21 @@ function OnboardingPage() {
             sessionCode={shortSessionCode(siteId)}
             answersComplete={answersComplete}
             onOpenNewsroom={async () => {
-              // Open a placeholder tab synchronously so popup blockers allow it.
-              // NOTE: do NOT pass "noopener" — with noopener, window.open returns null
-              // and we'd have no handle to redirect, causing the current tab to navigate.
-              const win = window.open("about:blank", "_blank");
               try {
                 const { link } = await mintOwnerStationLoginLink({ data: { siteId } });
-                if (win && !win.closed) {
-                  win.opener = null; // drop opener reference after we're done with it
-                  win.location.href = link;
-                } else {
-                  // Popup was blocked — navigate in a new tab via anchor click as fallback.
+                // Open the real URL directly. If the browser blocks it (rare on
+                // an explicit click even after an await), fall back to an anchor.
+                const win = window.open(link, "_blank", "noopener,noreferrer");
+                if (!win) {
                   const a = document.createElement("a");
                   a.href = link;
                   a.target = "_blank";
                   a.rel = "noopener noreferrer";
+                  document.body.appendChild(a);
                   a.click();
+                  a.remove();
                 }
               } catch (e) {
-                if (win && !win.closed) win.close();
                 toast.error(
                   `Couldn't create a one-click link: ${(e as Error).message}`,
                 );

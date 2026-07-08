@@ -1,55 +1,9 @@
 import type { TenantSite } from "@/lib/use-tenant-site";
 
-export function TenantNav({ tenant, active }: { tenant: TenantSite; active?: string }) {
-  if (!tenant) return null;
-  const base = `/network/${tenant.slug}`;
-  const items: { href: string; label: string; key: string }[] = [
-    { href: `${base}`, label: "Home", key: "home" },
-    { href: `${base}/news`, label: "News", key: "news" },
-    { href: `${base}/weather`, label: "Weather", key: "weather" },
-    { href: `${base}/sports`, label: "Sports", key: "sports" },
-    { href: `${base}/shows`, label: "Shows", key: "shows" },
-    { href: `${base}/watch-live`, label: "Watch Live", key: "watch" },
-    { href: `${base}/about`, label: "About", key: "about" },
-    { href: `${base}/contact`, label: "Contact", key: "contact" },
-  ];
-  const legal: { href: string; label: string }[] = [
-    { href: `${base}/terms`, label: "Terms" },
-    { href: `${base}/privacy`, label: "Privacy" },
-    { href: `${base}/dmca`, label: "DMCA" },
-  ];
-  return (
-    <nav className="border-b bg-[color:var(--navy)] text-white">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-2 text-xs font-bold uppercase tracking-wider">
-        {items.map((i) => (
-          <a
-            key={i.key}
-            href={i.href}
-            className={
-              "transition-colors hover:text-[color:var(--gold)] " +
-              (active === i.key ? "text-[color:var(--gold)]" : "text-white/85")
-            }
-          >
-            {i.label}
-          </a>
-        ))}
-        <span className="ml-auto flex flex-wrap gap-3 text-[10px] font-medium tracking-normal text-white/60">
-          {legal.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className={
-                "hover:text-[color:var(--gold)] " +
-                (active === "legal" ? "text-[color:var(--gold)]" : "")
-              }
-            >
-              {l.label}
-            </a>
-          ))}
-        </span>
-      </div>
-    </nav>
-  );
+// TenantNav is now rendered by the shared Layout via TenantHeader, so this
+// component is a no-op kept for backward compatibility with existing imports.
+export function TenantNav(_props: { tenant: TenantSite; active?: string }) {
+  return null;
 }
 
 export function TenantHeader({ tenant, eyebrow, title, description }: {
