@@ -7,6 +7,7 @@ import { SupportButton } from "@/components/site/SupportButton";
 import { ShareBar } from "@/components/site/ShareBar";
 import { VerdictArena } from "@/components/site/VerdictArena";
 import { RemovedArticle } from "@/components/site/RemovedArticle";
+import { ReportButton } from "@/components/site/ReportButton";
 import { useSettingEnabled } from "@/lib/use-verdict-enabled";
 import { formatDate } from "@/lib/news-data";
 import { ShoppingBag } from "lucide-react";
@@ -211,6 +212,9 @@ function PublishedArticleView({ post }: { post: any }) {
                   {c.source_created_at && <span className="ml-2 text-muted-foreground">· {new Date(c.source_created_at).toLocaleDateString()}</span>}
                 </p>
                 <p className="mt-2 whitespace-pre-wrap text-sm">{c.body}</p>
+                <div className="mt-2 flex justify-end">
+                  <ReportButton targetKind="comment" targetId={c.id} />
+                </div>
               </li>
             ))}
           </ul>
