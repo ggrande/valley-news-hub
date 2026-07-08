@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      abuse_reports: {
+        Row: {
+          actioned_at: string | null
+          actioned_by: string | null
+          admin_notes: string | null
+          created_at: string
+          details: string | null
+          id: string
+          managed_site_id: string | null
+          reason: string
+          reporter_email: string | null
+          reporter_ip_hash: string | null
+          status: string
+          target_id: string
+          target_kind: string
+          target_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          actioned_at?: string | null
+          actioned_by?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          managed_site_id?: string | null
+          reason: string
+          reporter_email?: string | null
+          reporter_ip_hash?: string | null
+          status?: string
+          target_id: string
+          target_kind: string
+          target_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actioned_at?: string | null
+          actioned_by?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          managed_site_id?: string | null
+          reason?: string
+          reporter_email?: string | null
+          reporter_ip_hash?: string | null
+          status?: string
+          target_id?: string
+          target_kind?: string
+          target_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abuse_reports_managed_site_id_fkey"
+            columns: ["managed_site_id"]
+            isOneToOne: false
+            referencedRelation: "managed_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_inquiries: {
         Row: {
           budget_range: string | null
@@ -729,6 +791,9 @@ export type Database = {
           ai_posts_quota_per_month: number
           ai_provider_api_key_enc: string | null
           auto_apply_security: boolean
+          captcha_provider: string
+          captcha_secret_key_enc: string | null
+          captcha_site_key: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string
@@ -797,6 +862,9 @@ export type Database = {
           ai_posts_quota_per_month?: number
           ai_provider_api_key_enc?: string | null
           auto_apply_security?: boolean
+          captcha_provider?: string
+          captcha_secret_key_enc?: string | null
+          captcha_site_key?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -865,6 +933,9 @@ export type Database = {
           ai_posts_quota_per_month?: number
           ai_provider_api_key_enc?: string | null
           auto_apply_security?: boolean
+          captcha_provider?: string
+          captcha_secret_key_enc?: string | null
+          captcha_site_key?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -1464,6 +1535,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      rate_limit_events: {
+        Row: {
+          id: number
+          key: string
+          managed_site_id: string | null
+          occurred_at: string
+          scope: string
+        }
+        Insert: {
+          id?: number
+          key: string
+          managed_site_id?: string | null
+          occurred_at?: string
+          scope: string
+        }
+        Update: {
+          id?: number
+          key?: string
+          managed_site_id?: string | null
+          occurred_at?: string
+          scope?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_limit_events_managed_site_id_fkey"
+            columns: ["managed_site_id"]
+            isOneToOne: false
+            referencedRelation: "managed_sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reddit_automation_settings: {
         Row: {
@@ -2100,6 +2203,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tenant_ai_usage_managed_site_id_fkey"
+            columns: ["managed_site_id"]
+            isOneToOne: false
+            referencedRelation: "managed_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_error_events: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: number
+          kind: string
+          managed_site_id: string | null
+          message: string
+          stack: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: number
+          kind: string
+          managed_site_id?: string | null
+          message: string
+          stack?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: number
+          kind?: string
+          managed_site_id?: string | null
+          message?: string
+          stack?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_error_events_managed_site_id_fkey"
             columns: ["managed_site_id"]
             isOneToOne: false
             referencedRelation: "managed_sites"
