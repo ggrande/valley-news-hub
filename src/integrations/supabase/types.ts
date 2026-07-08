@@ -740,6 +740,9 @@ export type Database = {
           id: string
           last_deployed_at: string | null
           latitude: number | null
+          legal_dmca_md: string | null
+          legal_privacy_md: string | null
+          legal_terms_md: string | null
           longitude: number | null
           network_sync_enabled: boolean
           notes: string | null
@@ -796,6 +799,9 @@ export type Database = {
           id?: string
           last_deployed_at?: string | null
           latitude?: number | null
+          legal_dmca_md?: string | null
+          legal_privacy_md?: string | null
+          legal_terms_md?: string | null
           longitude?: number | null
           network_sync_enabled?: boolean
           notes?: string | null
@@ -852,6 +858,9 @@ export type Database = {
           id?: string
           last_deployed_at?: string | null
           latitude?: number | null
+          legal_dmca_md?: string | null
+          legal_privacy_md?: string | null
+          legal_terms_md?: string | null
           longitude?: number | null
           network_sync_enabled?: boolean
           notes?: string | null
