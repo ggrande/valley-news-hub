@@ -990,7 +990,6 @@ function ProvisioningPanel({
                     }${res.skipped.length ? `, skipped ${res.skipped.length}` : ""}.`,
                   );
                   await Promise.all([status.refetch(), attempts.refetch()]);
-                  setStep(0);
                 } catch (e) {
                   toast.error((e as Error).message);
                 } finally {
