@@ -47,7 +47,7 @@ export const submitContactMessage = createServerFn({ method: "POST" })
 
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { error } = await (supabaseAdmin as any).from("contact_submissions").insert({
-        name, email, subject, message, managed_site_id: siteId,
+        name, email, subject, message,
       });
       if (error) throw new Error(error.message);
       return { ok: true };
@@ -77,7 +77,7 @@ export const submitNewsTip = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { error } = await (supabaseAdmin as any).from("news_tips").insert({
         name: name || null, email: email || null, location: location || null,
-        category: category || null, summary, details, managed_site_id: siteId,
+        category: category || null, summary, details,
       });
       if (error) throw new Error(error.message);
       return { ok: true };
@@ -99,7 +99,7 @@ export const subscribeNewsletter = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { error } = await (supabaseAdmin as any)
         .from("newsletters")
-        .insert({ email, managed_site_id: siteId });
+        .insert({ email });
       if (error && !/duplicate/i.test(error.message)) throw new Error(error.message);
       return { ok: true };
     });
