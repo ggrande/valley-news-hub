@@ -284,3 +284,51 @@ export const getHostContext = createServerFn({ method: "GET" })
       } : null,
     };
   });
+
+// ----- 6. Owner one-click sign-in link -----
+// Signed-in platform owner mints a fresh station magic link for a site they own,
+// so the "Open Newsroom Admin" button can auto-login instead of asking for email.
+export const mintOwnerStationLoginLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { siteId: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: site, error } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .select("id, owner_user_id, owner_email, subdomain, custom_domain, custom_domain_status, display_name")
+      .eq("id", data.siteId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!site) throw new Error("Site not found");
+    if (site.owner_user_id !== context.userId) throw new Error("Not the owner of this site");
+
+    // Resolve the owner email — prefer the site's owner_email, fall back to the auth user's email.
+    let email: string | null = site.owner_email ?? null;
+    if (!email) {
+      email = (context.claims?.email as string | undefined)?.toLowerCase() ?? null;
+      if (email) {
+        await (supabaseAdmin as any).from("managed_sites").update({ owner_email: email }).eq("id", site.id);
+      }
+    }
+    if (!email) throw new Error("No owner email on file for this site");
+
+    const token = await randomToken(32);
+    const tokenHash = await sha256Hex(token);
+    const expires = new Date(Date.now() + TOKEN_TTL_MIN * 60_000).toISOString();
+    const req = getRequest();
+
+    await (supabaseAdmin as any).from("tenant_admin_login_tokens").insert({
+      token_hash: tokenHash,
+      email,
+      site_id: site.id,
+      requested_ip: req?.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+      expires_at: expires,
+    });
+
+    const host =
+      site.custom_domain && site.custom_domain_status === "verified"
+        ? site.custom_domain
+        : `${site.subdomain}.wkna49.com`;
+    const link = `https://${host}/station/verify?token=${encodeURIComponent(token)}`;
+    return { ok: true, link, expiresAt: expires };
+  });
