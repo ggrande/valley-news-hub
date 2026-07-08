@@ -47,7 +47,7 @@ export const Route = createFileRoute("/station/admin")({
   component: StationAdminPage,
 });
 
-type Tab = "dashboard" | "posts" | "comments" | "branding" | "media" | "domain" | "legal" | "billing" | "network";
+type Tab = "dashboard" | "posts" | "comments" | "branding" | "media" | "domain" | "legal" | "ai" | "billing" | "network";
 
 function StationAdminPage() {
   const sessionFn = useServerFn(getStationSession);
