@@ -253,6 +253,8 @@ function SiteCard({ site }: { site: ManagedSiteRow }) {
         </div>
       )}
 
+      {site.onboarding_completed_at && <ReadinessChecklist site={site} />}
+
       <details className="mt-6">
         <summary className="cursor-pointer text-sm font-semibold text-primary">Site settings</summary>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
