@@ -62,7 +62,7 @@ const loadTenantPost = createServerFn({ method: "GET" })
       .maybeSingle();
     if (hide) return { notFound: true as const };
 
-    return { notFound: false as const, post: { ...post, __source: "network" as const } };
+    return { notFound: false as const, post: { ...post, __source: "network" as const }, siteId: site.id as string };
   });
 
 export const Route = createFileRoute("/network_/$siteSlug/news/$slug")({
