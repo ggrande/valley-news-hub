@@ -87,7 +87,7 @@ function shortSessionCode(siteId: string): string {
 
 const STATE_PCT: Record<string, number> = {
   awaiting_oauth: 5,
-  linking: 20,
+  linking: 5,
   provisioning: 55,
   migrating: 85,
   ready: 100,
