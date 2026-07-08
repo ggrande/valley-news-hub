@@ -27,6 +27,7 @@ import {
   purgeAndResetTenant,
   type ProvisionAttempt,
 } from "@/lib/supabase-provisioning.functions";
+import { mintOwnerStationLoginLink } from "@/lib/tenant-auth.functions";
 
 export const Route = createFileRoute("/_authenticated/account/managed-sites/$siteId/onboarding")({
   head: () => ({
