@@ -32,14 +32,18 @@ import {
   setStationCustomDomain,
   clearStationCustomDomain,
   verifyStationCustomDomain,
+  uploadStationMedia,
+  listStationMedia,
+  deleteStationMedia,
 } from "@/lib/station-admin.functions";
+
 
 export const Route = createFileRoute("/station/admin")({
   head: () => ({ meta: [{ title: "Station Admin" }, { name: "robots", content: "noindex" }] }),
   component: StationAdminPage,
 });
 
-type Tab = "dashboard" | "posts" | "comments" | "branding" | "domain" | "billing" | "network";
+type Tab = "dashboard" | "posts" | "comments" | "branding" | "media" | "domain" | "billing" | "network";
 
 function StationAdminPage() {
   const sessionFn = useServerFn(getStationSession);
@@ -154,6 +158,7 @@ function Dashboard({ session }: { session: any }) {
     { id: "posts", label: "Posts" },
     { id: "comments", label: "Comments" },
     { id: "branding", label: "Branding" },
+    { id: "media", label: "Media" },
     { id: "domain", label: "Domain" },
     { id: "billing", label: "Billing" },
     { id: "network", label: "Network" },
@@ -185,6 +190,7 @@ function Dashboard({ session }: { session: any }) {
         {tab === "posts" && <PostsTab site={active} />}
         {tab === "comments" && <CommentsTab site={active} />}
         {tab === "branding" && <BrandingTab site={active} />}
+        {tab === "media" && <MediaTab site={active} />}
         {tab === "domain" && <DomainTab site={active} />}
         {tab === "billing" && <BillingTab site={active} />}
         {tab === "network" && (
@@ -355,13 +361,17 @@ function PostEditor({ site, postId, onClose }: { site: any; postId?: string; onC
                  className="w-full rounded-md border px-3 py-2 font-mono text-xs" />
         </Field>
         <Field label="Cover image URL">
-          <input value={cover} onChange={(e) => setCover(e.target.value)} placeholder="https://…"
-                 className="w-full rounded-md border px-3 py-2 text-sm" />
+          <div className="flex gap-2">
+            <input value={cover} onChange={(e) => setCover(e.target.value)} placeholder="https://…"
+                   className="flex-1 rounded-md border px-3 py-2 text-sm" />
+            <MediaPickerButton siteId={site.id} label="Upload" onUploaded={(u) => setCover(u)} />
+          </div>
           {cover && (
             <img src={cover} alt="" className="mt-2 max-h-40 rounded-md border object-cover"
                  onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
           )}
         </Field>
+
         <div>
           <div className="mb-1 flex items-center justify-between">
             <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -539,10 +549,14 @@ function BrandingTab({ site }: { site: any }) {
         </Field>
       </div>
       <Field label="Logo URL">
-        <input value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="https://…"
-               className="w-full rounded-md border px-3 py-2 text-sm" />
+        <div className="flex gap-2">
+          <input value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="https://…"
+                 className="flex-1 rounded-md border px-3 py-2 text-sm" />
+          <MediaPickerButton siteId={site.id} label="Upload" onUploaded={(u) => setLogo(u)} />
+        </div>
         {logo && <img src={logo} alt="" className="mt-2 h-16 w-auto rounded border" />}
       </Field>
+
       <Field label="Website URL (where visitors go)">
         <input value={website} onChange={(e) => setWebsite(e.target.value)}
                placeholder={`https://wkna49.com/network/${q.data?.subdomain ?? ""}`}
@@ -856,3 +870,115 @@ function DomainTab({ site }: { site: any }) {
     </div>
   );
 }
+
+// ---------- MEDIA ----------
+async function readFileAsBase64(file: File): Promise<{ base64: string; contentType: string; name: string }> {
+  const buf = await file.arrayBuffer();
+  let binary = "";
+  const bytes = new Uint8Array(buf);
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)) as any);
+  }
+  return { base64: btoa(binary), contentType: file.type || "image/jpeg", name: file.name };
+}
+
+function MediaPickerButton({
+  siteId,
+  label = "Upload image",
+  onUploaded,
+}: {
+  siteId: string;
+  label?: string;
+  onUploaded: (url: string) => void;
+}) {
+  const uploadFn = useServerFn(uploadStationMedia);
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  return (
+    <label className={`inline-flex h-8 cursor-pointer items-center rounded-md border px-3 text-[11px] font-semibold ${busy ? "opacity-60" : "hover:bg-muted"}`}>
+      {busy ? "Uploading…" : label}
+      <input
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          e.currentTarget.value = "";
+          if (!file) return;
+          if (file.size > 5 * 1024 * 1024) { alert("File too large (max 5MB)."); return; }
+          setBusy(true);
+          try {
+            const { base64, contentType, name } = await readFileAsBase64(file);
+            const res = await uploadFn({ data: { siteId, filename: name, contentType, dataBase64: base64 } });
+            onUploaded(res.url);
+            qc.invalidateQueries({ queryKey: ["station-media", siteId] });
+          } catch (err: any) {
+            alert(err?.message || "Upload failed");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
+    </label>
+  );
+}
+
+function MediaTab({ site }: { site: any }) {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listStationMedia);
+  const delFn = useServerFn(deleteStationMedia);
+  const q = useQuery({
+    queryKey: ["station-media", site.id],
+    queryFn: () => listFn({ data: { siteId: site.id } }),
+  });
+  const del = useMutation({
+    mutationFn: (path: string) => delFn({ data: { siteId: site.id, path } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["station-media", site.id] }),
+    onError: (e: Error) => alert(e.message),
+  });
+  return (
+    <div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="font-semibold text-primary">Media library</h2>
+          <p className="text-[11px] text-muted-foreground">
+            PNG, JPEG, WebP or GIF, up to 5MB. Files are served from your station's URL.
+          </p>
+        </div>
+        <MediaPickerButton
+          siteId={site.id}
+          label="Upload image"
+          onUploaded={() => qc.invalidateQueries({ queryKey: ["station-media", site.id] })}
+        />
+      </div>
+      {q.isLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
+      {q.error && <p className="text-xs text-destructive">{(q.error as Error).message}</p>}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        {(q.data?.items ?? []).map((m: any) => (
+          <div key={m.path} className="group rounded-lg border bg-card p-2">
+            <div className="aspect-video overflow-hidden rounded-md bg-muted">
+              {/* eslint-disable-next-line jsx-a11y/alt-text */}
+              <img src={m.url} className="h-full w-full object-cover" />
+            </div>
+            <div className="mt-2 truncate text-[10px] text-muted-foreground" title={m.name}>{m.name}</div>
+            <div className="mt-1 flex items-center justify-between gap-1">
+              <button
+                onClick={() => { navigator.clipboard.writeText(m.url); }}
+                className="h-7 flex-1 rounded border px-2 text-[10px] font-semibold"
+              >Copy URL</button>
+              <button
+                onClick={() => confirm("Delete this file?") && del.mutate(m.path)}
+                className="h-7 rounded border border-destructive/40 px-2 text-[10px] font-semibold text-destructive"
+              >Delete</button>
+            </div>
+          </div>
+        ))}
+        {q.data && q.data.items.length === 0 && (
+          <p className="col-span-full py-8 text-center text-xs text-muted-foreground">No uploads yet.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
