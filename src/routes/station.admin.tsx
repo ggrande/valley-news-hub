@@ -545,10 +545,14 @@ function BrandingTab({ site }: { site: any }) {
         </Field>
       </div>
       <Field label="Logo URL">
-        <input value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="https://…"
-               className="w-full rounded-md border px-3 py-2 text-sm" />
+        <div className="flex gap-2">
+          <input value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="https://…"
+                 className="flex-1 rounded-md border px-3 py-2 text-sm" />
+          <MediaPickerButton siteId={site.id} label="Upload" onUploaded={(u) => setLogo(u)} />
+        </div>
         {logo && <img src={logo} alt="" className="mt-2 h-16 w-auto rounded border" />}
       </Field>
+
       <Field label="Website URL (where visitors go)">
         <input value={website} onChange={(e) => setWebsite(e.target.value)}
                placeholder={`https://wkna49.com/network/${q.data?.subdomain ?? ""}`}
