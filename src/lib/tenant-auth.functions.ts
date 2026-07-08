@@ -325,10 +325,12 @@ export const mintOwnerStationLoginLink = createServerFn({ method: "POST" })
       expires_at: expires,
     });
 
+    // Prefer a verified custom domain; otherwise fall back to the platform host
+    // (wildcard subdomains like `${subdomain}.wkna49.com` aren't guaranteed to have DNS).
     const host =
       site.custom_domain && site.custom_domain_status === "verified"
         ? site.custom_domain
-        : `${site.subdomain}.wkna49.com`;
+        : appBaseUrl().replace(/^https?:\/\//, "");
     const link = `https://${host}/station/verify?token=${encodeURIComponent(token)}`;
     return { ok: true, link, expiresAt: expires };
   });
