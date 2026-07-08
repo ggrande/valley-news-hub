@@ -1122,16 +1122,19 @@ function CircularProgress({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-black text-foreground">{Math.round(percent)}%</span>
-        {state === "ready" && (
-          <span className="text-[10px] font-semibold uppercase text-[color:var(--broadcast)]">
-            Done
-          </span>
-        )}
-        {state === "failed" && (
-          <span className="text-[10px] font-semibold uppercase text-[color:var(--breaking)]">
+        {state === "failed" ? (
+          <span className="text-xl font-black uppercase tracking-wide text-[color:var(--breaking)]">
             Error
           </span>
+        ) : (
+          <>
+            <span className="text-2xl font-black text-foreground">{Math.round(percent)}%</span>
+            {state === "ready" && (
+              <span className="text-[10px] font-semibold uppercase text-[color:var(--broadcast)]">
+                Done
+              </span>
+            )}
+          </>
         )}
       </div>
     </div>
