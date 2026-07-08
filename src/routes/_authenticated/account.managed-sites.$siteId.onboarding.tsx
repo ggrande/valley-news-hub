@@ -817,7 +817,9 @@ function ProvisioningPanel({
       case "awaiting_oauth":
         return "Awaiting Supabase authorization";
       case "linking":
-        return "Linking your Supabase account";
+        return s?.project
+          ? "Linking your Supabase account"
+          : "Choose an organization to continue";
       case "provisioning":
         return "Provisioning database…";
       case "migrating":
@@ -829,7 +831,7 @@ function ProvisioningPanel({
       default:
         return "Initializing…";
     }
-  }, [s?.state]);
+  }, [s?.state, s?.project]);
 
   const startConnect = async () => {
     try {
