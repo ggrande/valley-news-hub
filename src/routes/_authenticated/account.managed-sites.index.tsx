@@ -13,6 +13,7 @@ import { createNetworkBillingPortalSession } from "@/lib/network-payments.functi
 import { getStripeEnvironment } from "@/lib/stripe";
 import { purgeAndResetTenant } from "@/lib/supabase-provisioning.functions";
 import { listMyLicenses, getMyLicenseDownloadUrl } from "@/lib/network-licenses.functions";
+import { getMyManagedSiteProfile } from "@/lib/affiliate-directory.functions";
 
 export const Route = createFileRoute("/_authenticated/account/managed-sites/")({
   head: () => ({ meta: [{ title: "My Affiliate Stations — WKNA 49 Affiliate Network" }, { name: "robots", content: "noindex" }] }),
@@ -252,6 +253,8 @@ function SiteCard({ site }: { site: ManagedSiteRow }) {
         </div>
       )}
 
+      {site.onboarding_completed_at && <ReadinessChecklist site={site} />}
+
       <details className="mt-6">
         <summary className="cursor-pointer text-sm font-semibold text-primary">Site settings</summary>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -308,4 +311,94 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: "ok" | "wa
     muted: "bg-gray-100 text-gray-700",
   }[tone];
   return <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${c}`}>{children}</span>;
+}
+
+function ReadinessChecklist({ site }: { site: ManagedSiteRow }) {
+  const fetchProfile = useServerFn(getMyManagedSiteProfile);
+  const { data: profile } = useQuery({
+    queryKey: ["managed-site-profile", site.id],
+    queryFn: () => fetchProfile({ data: { siteId: site.id } }),
+  });
+
+  const items: { label: string; done: boolean; hint?: string; href?: string }[] = [
+    { label: "Onboarding wizard finished", done: !!site.onboarding_completed_at },
+    {
+      label: "Logo & tagline set",
+      done: !!(profile?.directory_logo_url && profile?.directory_tagline?.trim()),
+      hint: "Adds visual identity to your station page and directory listing.",
+    },
+    {
+      label: "Location (city + region) set",
+      done: !!(profile?.directory_city?.trim() && profile?.directory_region?.trim()),
+      hint: "Helps readers find your local coverage.",
+    },
+    {
+      label: "Custom domain verified",
+      done: !!site.custom_domain && site.custom_domain_status === "verified",
+      hint: site.custom_domain
+        ? `Current status: ${site.custom_domain_status ?? "unknown"}.`
+        : "Optional — a custom domain builds trust and boosts SEO.",
+    },
+    {
+      label: "Listed in the public directory",
+      done: !!profile?.directory_opt_in,
+      hint: "Let network readers discover your station from the network page.",
+    },
+    {
+      label: "Auto-apply security updates",
+      done: site.auto_apply_security,
+      hint: "Recommended — keeps your station patched against vulnerabilities without action from you.",
+    },
+  ];
+
+  const done = items.filter((i) => i.done).length;
+  const pct = Math.round((done / items.length) * 100);
+  const complete = done === items.length;
+
+  return (
+    <details className="mt-4 rounded-md border bg-muted/40 p-4" open={!complete}>
+      <summary className="flex cursor-pointer items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-primary">
+          Station readiness · {done}/{items.length}
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="h-1.5 w-24 overflow-hidden rounded-full bg-border">
+            <span
+              className={`block h-full ${complete ? "bg-emerald-500" : "bg-primary"}`}
+              style={{ width: `${pct}%` }}
+            />
+          </span>
+          <Badge tone={complete ? "ok" : "warn"}>{complete ? "Ready" : `${pct}%`}</Badge>
+        </span>
+      </summary>
+      <ul className="mt-3 space-y-2 text-sm">
+        {items.map((i, ix) => (
+          <li key={ix} className="flex items-start gap-2">
+            <span
+              className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                i.done ? "bg-emerald-500 text-white" : "border border-muted-foreground/40 text-muted-foreground"
+              }`}
+            >
+              {i.done ? "✓" : ""}
+            </span>
+            <div className="min-w-0">
+              <div className={i.done ? "text-foreground" : "font-medium text-foreground"}>{i.label}</div>
+              {!i.done && i.hint && (
+                <div className="text-xs text-muted-foreground">{i.hint}</div>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {!complete && (
+        <Link
+          to="/account/managed-sites/$siteId/onboarding"
+          params={{ siteId: site.id }}
+          className="mt-3 inline-flex h-8 items-center rounded-md border px-3 text-xs font-semibold text-primary hover:bg-white"
+        >
+          Revisit setup wizard →
+        </Link>
+      )}
+    </details>
+  );
 }
