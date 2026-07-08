@@ -125,6 +125,9 @@ function TenantArticle() {
         <div className="prose prose-neutral mt-6 max-w-none">
           <MarkdownBody source={post.body ?? ""} />
         </div>
+        <div className="mt-8 flex justify-end border-t pt-4">
+          <ReportButton targetKind="post" targetId={post.id} managedSiteId={siteId} />
+        </div>
       </article>
     </Layout>
   );
