@@ -39,6 +39,21 @@ function slugify(s: string) {
 async function callAi(systemPrompt: string, userText: string, imageDataUrl: string | null) {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+
+  // Global master-site AI cap — prevents runaway usage of Lovable AI credits.
+  // 30/min, 200/hour, 800/day across all callers of the article generator.
+  try {
+    const { enforceRateLimit } = await import("@/lib/rate-limit.server");
+    await enforceRateLimit({
+      scope: "ai-post", key: "master", siteId: null,
+      perMinute: 30, perHour: 200, perDay: 800,
+    });
+  } catch (err) {
+    const { captureTenantError } = await import("@/lib/error-capture.server");
+    await captureTenantError(null, "ai_quota_post", err);
+    throw err;
+  }
+
   const userContent: any = imageDataUrl
     ? [
         { type: "text", text: userText },
@@ -57,7 +72,12 @@ async function callAi(systemPrompt: string, userText: string, imageDataUrl: stri
       response_format: { type: "json_object" },
     }),
   });
-  if (!res.ok) throw new Error(`AI gateway ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) {
+    const err = new Error(`AI gateway ${res.status}: ${(await res.text()).slice(0, 300)}`);
+    const { captureTenantError } = await import("@/lib/error-capture.server");
+    await captureTenantError(null, "ai_gateway_post", err, { status: res.status });
+    throw err;
+  }
   const j = await res.json();
   const raw = j?.choices?.[0]?.message?.content ?? "{}";
   try { return JSON.parse(raw); } catch { return { body: raw }; }

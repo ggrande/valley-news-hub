@@ -46,6 +46,19 @@ export async function generateFillerImageForPost(
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
 
+  // Global cap on AI image generation to protect Lovable AI credits.
+  try {
+    const { enforceRateLimit } = await import("@/lib/rate-limit.server");
+    await enforceRateLimit({
+      scope: "ai-image", key: "master", siteId: null,
+      perMinute: 10, perHour: 60, perDay: 200,
+    });
+  } catch (err) {
+    const { captureTenantError } = await import("@/lib/error-capture.server");
+    await captureTenantError(null, "ai_quota_image", err, { postId });
+    throw err;
+  }
+
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -60,7 +73,10 @@ export async function generateFillerImageForPost(
   });
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(`AI image error ${res.status}: ${t.slice(0, 300)}`);
+    const err = new Error(`AI image error ${res.status}: ${t.slice(0, 300)}`);
+    const { captureTenantError } = await import("@/lib/error-capture.server");
+    await captureTenantError(null, "ai_gateway_image", err, { postId, status: res.status });
+    throw err;
   }
   const json: any = await res.json();
   const images: any[] = json?.choices?.[0]?.message?.images ?? [];
