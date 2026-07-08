@@ -161,9 +161,11 @@ function OnboardingPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  // If a project is already kicked off (refresh / returning user), auto-advance past step 0.
+  // Advance past step 0 once a project exists; snap back to step 0 if a full
+  // reset clears the project so the "Start provisioning" CTA is visible again.
   useEffect(() => {
-    if (step === 0 && status.data?.project) setStep(1);
+    if (status.data?.project && step === 0) setStep(1);
+    else if (!status.data?.project && step !== 0) setStep(0);
   }, [status.data?.project, step]);
 
   // Default the org dropdown to the first org returned (usually "Personal").
