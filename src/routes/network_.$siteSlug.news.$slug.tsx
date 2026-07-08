@@ -2,6 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Layout } from "@/components/site/Layout";
 import { ArticleImage } from "@/components/site/ArticleImage";
 import { MarkdownBody } from "@/components/site/MarkdownBody";
+import { ReportButton } from "@/components/site/ReportButton";
 import { fetchPostBySlug, dbPostToArticle } from "@/lib/posts-queries";
 import { formatDate } from "@/lib/news-data";
 import { createServerFn } from "@tanstack/react-start";
