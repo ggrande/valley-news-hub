@@ -361,13 +361,17 @@ function PostEditor({ site, postId, onClose }: { site: any; postId?: string; onC
                  className="w-full rounded-md border px-3 py-2 font-mono text-xs" />
         </Field>
         <Field label="Cover image URL">
-          <input value={cover} onChange={(e) => setCover(e.target.value)} placeholder="https://…"
-                 className="w-full rounded-md border px-3 py-2 text-sm" />
+          <div className="flex gap-2">
+            <input value={cover} onChange={(e) => setCover(e.target.value)} placeholder="https://…"
+                   className="flex-1 rounded-md border px-3 py-2 text-sm" />
+            <MediaPickerButton siteId={site.id} label="Upload" onUploaded={(u) => setCover(u)} />
+          </div>
           {cover && (
             <img src={cover} alt="" className="mt-2 max-h-40 rounded-md border object-cover"
                  onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
           )}
         </Field>
+
         <div>
           <div className="mb-1 flex items-center justify-between">
             <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
