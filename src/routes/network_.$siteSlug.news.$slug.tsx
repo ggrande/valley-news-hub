@@ -97,7 +97,7 @@ export const Route = createFileRoute("/network_/$siteSlug/news/$slug")({
 });
 
 function TenantArticle() {
-  const { post } = Route.useLoaderData() as any;
+  const { post, siteId } = Route.useLoaderData() as any;
   const a = dbPostToArticle(post);
   return (
     <Layout>
