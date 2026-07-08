@@ -27,6 +27,7 @@ import {
   purgeAndResetTenant,
   type ProvisionAttempt,
 } from "@/lib/supabase-provisioning.functions";
+import { mintOwnerStationLoginLink } from "@/lib/tenant-auth.functions";
 
 export const Route = createFileRoute("/_authenticated/account/managed-sites/$siteId/onboarding")({
   head: () => ({
@@ -697,10 +698,24 @@ function OnboardingPage() {
             siteId={siteId}
             sessionCode={shortSessionCode(siteId)}
             answersComplete={answersComplete}
-            onOpenNewsroom={() => {
-              const host = status.data?.customDomain;
-              const url = host ? `https://${host}/admin` : `https://wkna49.com/network/${status.data?.subdomain}/admin`;
-              window.open(url, "_blank", "noopener");
+            onOpenNewsroom={async () => {
+              // Optimistically open a tab so popup blockers don't kill it while we mint.
+              const win = window.open("about:blank", "_blank", "noopener");
+              try {
+                const { link } = await mintOwnerStationLoginLink({ data: { siteId } });
+                if (win) win.location.href = link;
+                else window.location.href = link;
+              } catch (e) {
+                if (win) win.close();
+                const host = status.data?.customDomain;
+                const fallback = host
+                  ? `https://${host}/station/admin`
+                  : `https://${status.data?.subdomain}.wkna49.com/station/admin`;
+                toast.error(
+                  `Couldn't create a one-click link (${(e as Error).message}). Opening the sign-in page instead.`,
+                );
+                window.open(fallback, "_blank", "noopener");
+              }
             }}
 
             onRetry={async () => {
