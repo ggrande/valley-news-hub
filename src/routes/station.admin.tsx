@@ -199,6 +199,7 @@ function Dashboard({ session }: { session: any }) {
         {tab === "media" && <MediaTab site={active} />}
         {tab === "domain" && <DomainTab site={active} />}
         {tab === "legal" && <LegalTab site={active} />}
+        {tab === "ai" && <AiTab site={active} />}
         {tab === "billing" && <BillingTab site={active} />}
         {tab === "network" && (
           <div className="space-y-4">
