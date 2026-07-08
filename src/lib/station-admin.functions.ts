@@ -554,3 +554,81 @@ export const verifyStationCustomDomain = createServerFn({ method: "POST" })
       checked: { txt: txtRecords, cname: cnameRecords, a: aRecords },
     };
   });
+
+// ---------- MEDIA (tenant-scoped uploads) ----------
+// Media is stored in the master `news-media` bucket under `tenant/<siteId>/…`
+// and served through the existing `/api/media?p=…` streamer. This avoids
+// touching each tenant's Supabase storage while keeping URLs stable.
+const MEDIA_PREFIX = "tenant";
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+
+function extForMime(m: string) {
+  if (m === "image/png") return "png";
+  if (m === "image/webp") return "webp";
+  if (m === "image/gif") return "gif";
+  return "jpg";
+}
+
+export const uploadStationMedia = createServerFn({ method: "POST" })
+  .inputValidator((d: { siteId: string; filename: string; contentType: string; dataBase64: string }) => d)
+  .handler(async ({ data }): Promise<{ url: string; path: string }> => {
+    const { site } = await requireSession(data.siteId);
+    if (!ALLOWED_MIME.has(data.contentType)) {
+      throw new Error("Unsupported file type. Use PNG, JPEG, WebP, or GIF.");
+    }
+    const bytes = Uint8Array.from(atob(data.dataBase64), (c) => c.charCodeAt(0));
+    if (bytes.byteLength > MAX_UPLOAD_BYTES) {
+      throw new Error(`File too large (max ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)}MB).`);
+    }
+    const safe = slugify(data.filename.replace(/\.[^.]+$/, ""));
+    const ext = extForMime(data.contentType);
+    const path = `${MEDIA_PREFIX}/${site.id}/${Date.now()}-${safe}.${ext}`;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any).storage
+      .from("news-media")
+      .upload(path, bytes, { contentType: data.contentType, upsert: false });
+    if (error) throw new Error(error.message);
+    return { url: `/api/media?p=${encodeURIComponent(path)}`, path };
+  });
+
+export const listStationMedia = createServerFn({ method: "POST" })
+  .inputValidator((d: { siteId: string }) => d)
+  .handler(async ({ data }) => {
+    const { site } = await requireSession(data.siteId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const prefix = `${MEDIA_PREFIX}/${site.id}`;
+    const { data: rows, error } = await (supabaseAdmin as any).storage
+      .from("news-media")
+      .list(prefix, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+    if (error) throw new Error(error.message);
+    return {
+      items: (rows ?? [])
+        .filter((r: any) => r?.name && !r.name.endsWith("/"))
+        .map((r: any) => {
+          const p = `${prefix}/${r.name}`;
+          return {
+            path: p,
+            name: r.name,
+            size: r.metadata?.size ?? null,
+            createdAt: r.created_at ?? null,
+            url: `/api/media?p=${encodeURIComponent(p)}`,
+          };
+        }),
+    };
+  });
+
+export const deleteStationMedia = createServerFn({ method: "POST" })
+  .inputValidator((d: { siteId: string; path: string }) => d)
+  .handler(async ({ data }) => {
+    const { site } = await requireSession(data.siteId);
+    const expected = `${MEDIA_PREFIX}/${site.id}/`;
+    if (!data.path.startsWith(expected) || data.path.includes("..")) {
+      throw new Error("Invalid media path");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any).storage.from("news-media").remove([data.path]);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
