@@ -32,7 +32,11 @@ import {
   setStationCustomDomain,
   clearStationCustomDomain,
   verifyStationCustomDomain,
+  uploadStationMedia,
+  listStationMedia,
+  deleteStationMedia,
 } from "@/lib/station-admin.functions";
+
 
 export const Route = createFileRoute("/station/admin")({
   head: () => ({ meta: [{ title: "Station Admin" }, { name: "robots", content: "noindex" }] }),
