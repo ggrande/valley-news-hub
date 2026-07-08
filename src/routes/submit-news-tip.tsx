@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Layout, PageHeader } from "@/components/site/Layout";
 import { FormBlock } from "@/components/site/Form";
-import { supabase } from "@/integrations/supabase/client";
+import { submitNewsTip } from "@/lib/public-submissions.functions";
 
 export const Route = createFileRoute("/submit-news-tip")({
   head: () => ({
@@ -31,11 +31,10 @@ function TipPage() {
           successBody="A WKNA 49 News producer will review it and reach out if we need more information."
           submitLabel="Send News Tip"
           onSubmitValues={async (v) => {
-            const { error } = await supabase.from("news_tips").insert({
+            await submitNewsTip({ data: {
               name: v.name, email: v.email, location: v.location,
-              category: v.topic, summary: v.details.slice(0, 200), details: v.details,
-            });
-            if (error) throw error;
+              category: v.topic, details: v.details,
+            } });
           }}
           fields={[
             { name: "name", label: "Your Name" },

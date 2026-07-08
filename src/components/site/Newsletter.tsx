@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Mail, Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { subscribeNewsletter } from "@/lib/public-submissions.functions";
 
 export function Newsletter() {
   const [email, setEmail] = useState("");
@@ -29,10 +29,14 @@ export function Newsletter() {
               e.preventDefault();
               if (!email) return;
               setBusy(true); setErr(null);
-              const { error } = await supabase.from("newsletters").insert({ email });
-              setBusy(false);
-              if (error && !/duplicate/i.test(error.message)) { setErr(error.message); return; }
-              setDone(true);
+              try {
+                await subscribeNewsletter({ data: { email } });
+                setDone(true);
+              } catch (ex: any) {
+                setErr(ex?.message ?? "Subscription failed");
+              } finally {
+                setBusy(false);
+              }
             }}
             className="flex w-full max-w-md gap-2"
           >
