@@ -155,7 +155,7 @@ export const adminStageReleaseForSites = createServerFn({ method: "POST" })
 
     const { data: release } = await (supabaseAdmin as any)
       .from("platform_releases")
-      .select("id, is_security, channel")
+      .select("id, security, channel")
       .eq("id", data.releaseId)
       .maybeSingle();
     if (!release) throw new Error("Release not found");
