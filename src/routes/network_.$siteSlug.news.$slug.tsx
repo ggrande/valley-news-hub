@@ -43,7 +43,7 @@ const loadTenantPost = createServerFn({ method: "GET" })
           author: null,
           __source: "local" as const,
         };
-        return { notFound: false as const, post: synthetic };
+        return { notFound: false as const, post: synthetic, siteId: site.id as string };
       }
     } catch {
       // fall through to network lookup
