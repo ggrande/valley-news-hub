@@ -699,22 +699,28 @@ function OnboardingPage() {
             sessionCode={shortSessionCode(siteId)}
             answersComplete={answersComplete}
             onOpenNewsroom={async () => {
-              // Optimistically open a tab so popup blockers don't kill it while we mint.
-              const win = window.open("about:blank", "_blank", "noopener");
+              // Open a placeholder tab synchronously so popup blockers allow it.
+              // NOTE: do NOT pass "noopener" — with noopener, window.open returns null
+              // and we'd have no handle to redirect, causing the current tab to navigate.
+              const win = window.open("about:blank", "_blank");
               try {
                 const { link } = await mintOwnerStationLoginLink({ data: { siteId } });
-                if (win) win.location.href = link;
-                else window.location.href = link;
+                if (win && !win.closed) {
+                  win.opener = null; // drop opener reference after we're done with it
+                  win.location.href = link;
+                } else {
+                  // Popup was blocked — navigate in a new tab via anchor click as fallback.
+                  const a = document.createElement("a");
+                  a.href = link;
+                  a.target = "_blank";
+                  a.rel = "noopener noreferrer";
+                  a.click();
+                }
               } catch (e) {
-                if (win) win.close();
-                const host = status.data?.customDomain;
-                const fallback = host
-                  ? `https://${host}/station/admin`
-                  : `https://${status.data?.subdomain}.wkna49.com/station/admin`;
+                if (win && !win.closed) win.close();
                 toast.error(
-                  `Couldn't create a one-click link (${(e as Error).message}). Opening the sign-in page instead.`,
+                  `Couldn't create a one-click link: ${(e as Error).message}`,
                 );
-                window.open(fallback, "_blank", "noopener");
               }
             }}
 
