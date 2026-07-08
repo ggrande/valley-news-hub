@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { Layout, PageHeader } from "@/components/site/Layout";
 import { listMyManagedSites } from "@/lib/managed-sites.functions";
+import { createNetworkBillingPortalSession } from "@/lib/network-payments.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/checkout/return")({
   validateSearch: (search: Record<string, unknown>): { session_id?: string } => ({
@@ -19,9 +21,9 @@ function CheckoutReturn() {
   const { session_id } = Route.useSearch();
   const navigate = useNavigate();
   const fetchSites = useServerFn(listMyManagedSites);
+  const openPortalFn = useServerFn(createNetworkBillingPortalSession);
+  const [portalError, setPortalError] = useState<string | null>(null);
 
-  // If the buyer owns a managed site that hasn't finished onboarding, jump
-  // them straight into the split-screen setup so provisioning starts now.
   const sites = useQuery({
     queryKey: ["my-managed-sites-postcheckout"],
     queryFn: () => fetchSites(),
@@ -38,6 +40,21 @@ function CheckoutReturn() {
       });
     }
   }, [sites.data, navigate]);
+
+  const portal = useMutation({
+    mutationFn: async () => {
+      const result = await openPortalFn({
+        data: {
+          returnUrl: window.location.origin + "/account/managed-sites",
+          environment: getStripeEnvironment(),
+        },
+      });
+      if ("error" in result) throw new Error(result.error);
+      return result.url;
+    },
+    onSuccess: (url) => window.open(url, "_blank", "noopener"),
+    onError: (e: Error) => setPortalError(e.message),
+  });
 
   return (
     <Layout>
@@ -71,6 +88,14 @@ function CheckoutReturn() {
           >
             View my licenses
           </Link>
+          <button
+            type="button"
+            onClick={() => { setPortalError(null); portal.mutate(); }}
+            disabled={portal.isPending}
+            className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-semibold disabled:opacity-60"
+          >
+            {portal.isPending ? "Opening…" : "Manage billing"}
+          </button>
           <Link
             to="/network"
             className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-semibold"
@@ -78,6 +103,9 @@ function CheckoutReturn() {
             Back to Network
           </Link>
         </div>
+        {portalError && (
+          <p className="text-sm text-[color:var(--breaking)]">{portalError}</p>
+        )}
       </div>
     </Layout>
   );
