@@ -35,6 +35,8 @@ import {
   uploadStationMedia,
   listStationMedia,
   deleteStationMedia,
+  getStationLegal,
+  updateStationLegal,
 } from "@/lib/station-admin.functions";
 
 
@@ -43,7 +45,7 @@ export const Route = createFileRoute("/station/admin")({
   component: StationAdminPage,
 });
 
-type Tab = "dashboard" | "posts" | "comments" | "branding" | "media" | "domain" | "billing" | "network";
+type Tab = "dashboard" | "posts" | "comments" | "branding" | "media" | "domain" | "legal" | "billing" | "network";
 
 function StationAdminPage() {
   const sessionFn = useServerFn(getStationSession);
@@ -160,6 +162,7 @@ function Dashboard({ session }: { session: any }) {
     { id: "branding", label: "Branding" },
     { id: "media", label: "Media" },
     { id: "domain", label: "Domain" },
+    { id: "legal", label: "Legal" },
     { id: "billing", label: "Billing" },
     { id: "network", label: "Network" },
   ];
@@ -192,6 +195,7 @@ function Dashboard({ session }: { session: any }) {
         {tab === "branding" && <BrandingTab site={active} />}
         {tab === "media" && <MediaTab site={active} />}
         {tab === "domain" && <DomainTab site={active} />}
+        {tab === "legal" && <LegalTab site={active} />}
         {tab === "billing" && <BillingTab site={active} />}
         {tab === "network" && (
           <div className="space-y-4">
@@ -539,7 +543,7 @@ function BrandingTab({ site }: { site: any }) {
         )}
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Contact email">
+        <Field label="Public email (used site-wide for contact, tips, hiring)">
           <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="news@station.com"
                  className="w-full rounded-md border px-3 py-2 text-sm" />
         </Field>
@@ -977,6 +981,94 @@ function MediaTab({ site }: { site: any }) {
         {q.data && q.data.items.length === 0 && (
           <p className="col-span-full py-8 text-center text-xs text-muted-foreground">No uploads yet.</p>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- LEGAL ----------
+function LegalTab({ site }: { site: any }) {
+  const qc = useQueryClient();
+  const getFn = useServerFn(getStationLegal);
+  const saveFn = useServerFn(updateStationLegal);
+  const q = useQuery({
+    queryKey: ["station-legal", site.id],
+    queryFn: () => getFn({ data: { siteId: site.id } }),
+  });
+  const [kind, setKind] = useState<"terms" | "privacy" | "dmca">("terms");
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [loaded, setLoaded] = useState(false);
+  if (q.data && !loaded) {
+    setDrafts({
+      terms: q.data.terms || q.data.defaults.terms,
+      privacy: q.data.privacy || q.data.defaults.privacy,
+      dmca: q.data.dmca || q.data.defaults.dmca,
+    });
+    setLoaded(true);
+  }
+  const save = useMutation({
+    mutationFn: () => saveFn({ data: { siteId: site.id, kind, body: drafts[kind] ?? "" } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["station-legal", site.id] });
+      alert("Saved");
+    },
+    onError: (e: Error) => alert(e.message),
+  });
+  const resetToDefault = () => {
+    if (!q.data) return;
+    if (!confirm("Replace the current draft with the boilerplate template? (Doesn't save until you click Save.)")) return;
+    setDrafts((d) => ({ ...d, [kind]: q.data!.defaults[kind] }));
+  };
+  const isCustom = q.data
+    ? (kind === "terms" ? !!q.data.terms.trim()
+      : kind === "privacy" ? !!q.data.privacy.trim()
+      : !!q.data.dmca.trim())
+    : false;
+  const slug = (site.subdomain ?? "") as string;
+  const publicUrl = `/network/${slug}/${kind === "terms" ? "terms" : kind === "privacy" ? "privacy" : "dmca"}`;
+  return (
+    <div className="max-w-3xl space-y-4 rounded-lg border bg-card p-4">
+      <div>
+        <h2 className="font-semibold text-primary">Legal pages</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Each page ships with a boilerplate template pre-filled with your station name.
+          Edit the markdown to customize. Leave blank to keep showing the template.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-1 border-b">
+        {(["terms", "privacy", "dmca"] as const).map((k) => (
+          <button key={k} onClick={() => setKind(k)}
+                  className={`px-3 py-2 text-sm font-semibold border-b-2 -mb-px capitalize ${
+                    kind === k ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-primary"
+                  }`}>
+            {k === "dmca" ? "DMCA" : k}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center justify-between text-xs">
+        <span className={isCustom ? "text-emerald-700" : "text-muted-foreground"}>
+          {isCustom ? "Showing your custom version publicly." : "Currently showing the boilerplate template publicly."}
+        </span>
+        <a href={publicUrl} target="_blank" rel="noreferrer" className="text-primary underline">
+          View public page ↗
+        </a>
+      </div>
+      <textarea
+        value={drafts[kind] ?? ""}
+        onChange={(e) => setDrafts((d) => ({ ...d, [kind]: e.target.value }))}
+        rows={22}
+        className="w-full rounded-md border px-3 py-2 font-mono text-xs"
+        placeholder="Write your policy here in markdown…"
+      />
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => save.mutate()} disabled={save.isPending}
+                className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+          {save.isPending ? "Saving…" : "Save"}
+        </button>
+        <button onClick={resetToDefault}
+                className="h-10 rounded-md border px-4 text-sm font-semibold">
+          Reset to boilerplate
+        </button>
       </div>
     </div>
   );

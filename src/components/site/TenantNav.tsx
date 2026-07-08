@@ -13,6 +13,11 @@ export function TenantNav({ tenant, active }: { tenant: TenantSite; active?: str
     { href: `${base}/about`, label: "About", key: "about" },
     { href: `${base}/contact`, label: "Contact", key: "contact" },
   ];
+  const legal: { href: string; label: string }[] = [
+    { href: `${base}/terms`, label: "Terms" },
+    { href: `${base}/privacy`, label: "Privacy" },
+    { href: `${base}/dmca`, label: "DMCA" },
+  ];
   return (
     <nav className="border-b bg-[color:var(--navy)] text-white">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-2 text-xs font-bold uppercase tracking-wider">
@@ -28,6 +33,20 @@ export function TenantNav({ tenant, active }: { tenant: TenantSite; active?: str
             {i.label}
           </a>
         ))}
+        <span className="ml-auto flex flex-wrap gap-3 text-[10px] font-medium tracking-normal text-white/60">
+          {legal.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className={
+                "hover:text-[color:var(--gold)] " +
+                (active === "legal" ? "text-[color:var(--gold)]" : "")
+              }
+            >
+              {l.label}
+            </a>
+          ))}
+        </span>
       </div>
     </nav>
   );

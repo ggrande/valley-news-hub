@@ -55,8 +55,11 @@ import { Route as NetworkSiteSlugIndexRouteImport } from './routes/network_.$sit
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as NetworkSiteSlugWeatherRouteImport } from './routes/network_.$siteSlug.weather'
 import { Route as NetworkSiteSlugWatchLiveRouteImport } from './routes/network_.$siteSlug.watch-live'
+import { Route as NetworkSiteSlugTermsRouteImport } from './routes/network_.$siteSlug.terms'
 import { Route as NetworkSiteSlugSportsRouteImport } from './routes/network_.$siteSlug.sports'
 import { Route as NetworkSiteSlugShowsRouteImport } from './routes/network_.$siteSlug.shows'
+import { Route as NetworkSiteSlugPrivacyRouteImport } from './routes/network_.$siteSlug.privacy'
+import { Route as NetworkSiteSlugDmcaRouteImport } from './routes/network_.$siteSlug.dmca'
 import { Route as NetworkSiteSlugContactRouteImport } from './routes/network_.$siteSlug.contact'
 import { Route as NetworkSiteSlugAdminRouteImport } from './routes/network_.$siteSlug.admin'
 import { Route as NetworkSiteSlugAboutRouteImport } from './routes/network_.$siteSlug.about'
@@ -339,6 +342,11 @@ const NetworkSiteSlugWatchLiveRoute =
     path: '/watch-live',
     getParentRoute: () => NetworkSiteSlugRoute,
   } as any)
+const NetworkSiteSlugTermsRoute = NetworkSiteSlugTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => NetworkSiteSlugRoute,
+} as any)
 const NetworkSiteSlugSportsRoute = NetworkSiteSlugSportsRouteImport.update({
   id: '/sports',
   path: '/sports',
@@ -347,6 +355,16 @@ const NetworkSiteSlugSportsRoute = NetworkSiteSlugSportsRouteImport.update({
 const NetworkSiteSlugShowsRoute = NetworkSiteSlugShowsRouteImport.update({
   id: '/shows',
   path: '/shows',
+  getParentRoute: () => NetworkSiteSlugRoute,
+} as any)
+const NetworkSiteSlugPrivacyRoute = NetworkSiteSlugPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => NetworkSiteSlugRoute,
+} as any)
+const NetworkSiteSlugDmcaRoute = NetworkSiteSlugDmcaRouteImport.update({
+  id: '/dmca',
+  path: '/dmca',
   getParentRoute: () => NetworkSiteSlugRoute,
 } as any)
 const NetworkSiteSlugContactRoute = NetworkSiteSlugContactRouteImport.update({
@@ -711,8 +729,11 @@ export interface FileRoutesByFullPath {
   '/network/$siteSlug/about': typeof NetworkSiteSlugAboutRoute
   '/network/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
   '/network/$siteSlug/contact': typeof NetworkSiteSlugContactRoute
+  '/network/$siteSlug/dmca': typeof NetworkSiteSlugDmcaRoute
+  '/network/$siteSlug/privacy': typeof NetworkSiteSlugPrivacyRoute
   '/network/$siteSlug/shows': typeof NetworkSiteSlugShowsRoute
   '/network/$siteSlug/sports': typeof NetworkSiteSlugSportsRoute
+  '/network/$siteSlug/terms': typeof NetworkSiteSlugTermsRoute
   '/network/$siteSlug/watch-live': typeof NetworkSiteSlugWatchLiveRoute
   '/network/$siteSlug/weather': typeof NetworkSiteSlugWeatherRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -809,8 +830,11 @@ export interface FileRoutesByTo {
   '/network/$siteSlug/about': typeof NetworkSiteSlugAboutRoute
   '/network/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
   '/network/$siteSlug/contact': typeof NetworkSiteSlugContactRoute
+  '/network/$siteSlug/dmca': typeof NetworkSiteSlugDmcaRoute
+  '/network/$siteSlug/privacy': typeof NetworkSiteSlugPrivacyRoute
   '/network/$siteSlug/shows': typeof NetworkSiteSlugShowsRoute
   '/network/$siteSlug/sports': typeof NetworkSiteSlugSportsRoute
+  '/network/$siteSlug/terms': typeof NetworkSiteSlugTermsRoute
   '/network/$siteSlug/watch-live': typeof NetworkSiteSlugWatchLiveRoute
   '/network/$siteSlug/weather': typeof NetworkSiteSlugWeatherRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -911,8 +935,11 @@ export interface FileRoutesById {
   '/network_/$siteSlug/about': typeof NetworkSiteSlugAboutRoute
   '/network_/$siteSlug/admin': typeof NetworkSiteSlugAdminRoute
   '/network_/$siteSlug/contact': typeof NetworkSiteSlugContactRoute
+  '/network_/$siteSlug/dmca': typeof NetworkSiteSlugDmcaRoute
+  '/network_/$siteSlug/privacy': typeof NetworkSiteSlugPrivacyRoute
   '/network_/$siteSlug/shows': typeof NetworkSiteSlugShowsRoute
   '/network_/$siteSlug/sports': typeof NetworkSiteSlugSportsRoute
+  '/network_/$siteSlug/terms': typeof NetworkSiteSlugTermsRoute
   '/network_/$siteSlug/watch-live': typeof NetworkSiteSlugWatchLiveRoute
   '/network_/$siteSlug/weather': typeof NetworkSiteSlugWeatherRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -1013,8 +1040,11 @@ export interface FileRouteTypes {
     | '/network/$siteSlug/about'
     | '/network/$siteSlug/admin'
     | '/network/$siteSlug/contact'
+    | '/network/$siteSlug/dmca'
+    | '/network/$siteSlug/privacy'
     | '/network/$siteSlug/shows'
     | '/network/$siteSlug/sports'
+    | '/network/$siteSlug/terms'
     | '/network/$siteSlug/watch-live'
     | '/network/$siteSlug/weather'
     | '/admin/'
@@ -1111,8 +1141,11 @@ export interface FileRouteTypes {
     | '/network/$siteSlug/about'
     | '/network/$siteSlug/admin'
     | '/network/$siteSlug/contact'
+    | '/network/$siteSlug/dmca'
+    | '/network/$siteSlug/privacy'
     | '/network/$siteSlug/shows'
     | '/network/$siteSlug/sports'
+    | '/network/$siteSlug/terms'
     | '/network/$siteSlug/watch-live'
     | '/network/$siteSlug/weather'
     | '/admin'
@@ -1212,8 +1245,11 @@ export interface FileRouteTypes {
     | '/network_/$siteSlug/about'
     | '/network_/$siteSlug/admin'
     | '/network_/$siteSlug/contact'
+    | '/network_/$siteSlug/dmca'
+    | '/network_/$siteSlug/privacy'
     | '/network_/$siteSlug/shows'
     | '/network_/$siteSlug/sports'
+    | '/network_/$siteSlug/terms'
     | '/network_/$siteSlug/watch-live'
     | '/network_/$siteSlug/weather'
     | '/_authenticated/admin/'
@@ -1630,6 +1666,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NetworkSiteSlugWatchLiveRouteImport
       parentRoute: typeof NetworkSiteSlugRoute
     }
+    '/network_/$siteSlug/terms': {
+      id: '/network_/$siteSlug/terms'
+      path: '/terms'
+      fullPath: '/network/$siteSlug/terms'
+      preLoaderRoute: typeof NetworkSiteSlugTermsRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
+    }
     '/network_/$siteSlug/sports': {
       id: '/network_/$siteSlug/sports'
       path: '/sports'
@@ -1642,6 +1685,20 @@ declare module '@tanstack/react-router' {
       path: '/shows'
       fullPath: '/network/$siteSlug/shows'
       preLoaderRoute: typeof NetworkSiteSlugShowsRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
+    }
+    '/network_/$siteSlug/privacy': {
+      id: '/network_/$siteSlug/privacy'
+      path: '/privacy'
+      fullPath: '/network/$siteSlug/privacy'
+      preLoaderRoute: typeof NetworkSiteSlugPrivacyRouteImport
+      parentRoute: typeof NetworkSiteSlugRoute
+    }
+    '/network_/$siteSlug/dmca': {
+      id: '/network_/$siteSlug/dmca'
+      path: '/dmca'
+      fullPath: '/network/$siteSlug/dmca'
+      preLoaderRoute: typeof NetworkSiteSlugDmcaRouteImport
       parentRoute: typeof NetworkSiteSlugRoute
     }
     '/network_/$siteSlug/contact': {
@@ -2147,8 +2204,11 @@ interface NetworkSiteSlugRouteChildren {
   NetworkSiteSlugAboutRoute: typeof NetworkSiteSlugAboutRoute
   NetworkSiteSlugAdminRoute: typeof NetworkSiteSlugAdminRoute
   NetworkSiteSlugContactRoute: typeof NetworkSiteSlugContactRoute
+  NetworkSiteSlugDmcaRoute: typeof NetworkSiteSlugDmcaRoute
+  NetworkSiteSlugPrivacyRoute: typeof NetworkSiteSlugPrivacyRoute
   NetworkSiteSlugShowsRoute: typeof NetworkSiteSlugShowsRoute
   NetworkSiteSlugSportsRoute: typeof NetworkSiteSlugSportsRoute
+  NetworkSiteSlugTermsRoute: typeof NetworkSiteSlugTermsRoute
   NetworkSiteSlugWatchLiveRoute: typeof NetworkSiteSlugWatchLiveRoute
   NetworkSiteSlugWeatherRoute: typeof NetworkSiteSlugWeatherRoute
   NetworkSiteSlugIndexRoute: typeof NetworkSiteSlugIndexRoute
@@ -2160,8 +2220,11 @@ const NetworkSiteSlugRouteChildren: NetworkSiteSlugRouteChildren = {
   NetworkSiteSlugAboutRoute: NetworkSiteSlugAboutRoute,
   NetworkSiteSlugAdminRoute: NetworkSiteSlugAdminRoute,
   NetworkSiteSlugContactRoute: NetworkSiteSlugContactRoute,
+  NetworkSiteSlugDmcaRoute: NetworkSiteSlugDmcaRoute,
+  NetworkSiteSlugPrivacyRoute: NetworkSiteSlugPrivacyRoute,
   NetworkSiteSlugShowsRoute: NetworkSiteSlugShowsRoute,
   NetworkSiteSlugSportsRoute: NetworkSiteSlugSportsRoute,
+  NetworkSiteSlugTermsRoute: NetworkSiteSlugTermsRoute,
   NetworkSiteSlugWatchLiveRoute: NetworkSiteSlugWatchLiveRoute,
   NetworkSiteSlugWeatherRoute: NetworkSiteSlugWeatherRoute,
   NetworkSiteSlugIndexRoute: NetworkSiteSlugIndexRoute,
@@ -2238,13 +2301,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

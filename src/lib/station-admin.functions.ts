@@ -632,3 +632,51 @@ export const deleteStationMedia = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ---------- LEGAL PAGES ----------
+export const getStationLegal = createServerFn({ method: "POST" })
+  .inputValidator((d: { siteId: string }) => d)
+  .handler(async ({ data }) => {
+    const { site } = await requireSession(data.siteId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .select("legal_terms_md, legal_privacy_md, legal_dmca_md")
+      .eq("id", site.id)
+      .maybeSingle();
+    const { boilerplate } = await import("@/lib/tenant-legal.functions");
+    return {
+      terms: (row?.legal_terms_md ?? "") as string,
+      privacy: (row?.legal_privacy_md ?? "") as string,
+      dmca: (row?.legal_dmca_md ?? "") as string,
+      defaults: {
+        terms: boilerplate("terms", site.display_name),
+        privacy: boilerplate("privacy", site.display_name),
+        dmca: boilerplate("dmca", site.display_name),
+      },
+    };
+  });
+
+export const updateStationLegal = createServerFn({ method: "POST" })
+  .inputValidator((d: {
+    siteId: string;
+    kind: "terms" | "privacy" | "dmca";
+    body: string;
+  }) => d)
+  .handler(async ({ data }) => {
+    const { site } = await requireSession(data.siteId);
+    const col = data.kind === "terms" ? "legal_terms_md"
+      : data.kind === "privacy" ? "legal_privacy_md"
+      : data.kind === "dmca" ? "legal_dmca_md"
+      : null;
+    if (!col) throw new Error("Invalid kind");
+    const body = (data.body ?? "").slice(0, 50_000);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any)
+      .from("managed_sites")
+      .update({ [col]: body.trim() ? body : null })
+      .eq("id", site.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
