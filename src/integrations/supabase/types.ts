@@ -719,6 +719,15 @@ export type Database = {
       }
       managed_sites: {
         Row: {
+          ai_images_quota_per_day: number
+          ai_images_quota_per_min: number
+          ai_images_quota_per_month: number
+          ai_mode: string
+          ai_model: string | null
+          ai_posts_quota_per_day: number
+          ai_posts_quota_per_min: number
+          ai_posts_quota_per_month: number
+          ai_provider_api_key_enc: string | null
           auto_apply_security: boolean
           contact_email: string | null
           contact_phone: string | null
@@ -778,6 +787,15 @@ export type Database = {
           zip_code: string | null
         }
         Insert: {
+          ai_images_quota_per_day?: number
+          ai_images_quota_per_min?: number
+          ai_images_quota_per_month?: number
+          ai_mode?: string
+          ai_model?: string | null
+          ai_posts_quota_per_day?: number
+          ai_posts_quota_per_min?: number
+          ai_posts_quota_per_month?: number
+          ai_provider_api_key_enc?: string | null
           auto_apply_security?: boolean
           contact_email?: string | null
           contact_phone?: string | null
@@ -837,6 +855,15 @@ export type Database = {
           zip_code?: string | null
         }
         Update: {
+          ai_images_quota_per_day?: number
+          ai_images_quota_per_min?: number
+          ai_images_quota_per_month?: number
+          ai_mode?: string
+          ai_model?: string | null
+          ai_posts_quota_per_day?: number
+          ai_posts_quota_per_min?: number
+          ai_posts_quota_per_month?: number
+          ai_provider_api_key_enc?: string | null
           auto_apply_security?: boolean
           contact_email?: string | null
           contact_phone?: string | null
@@ -2027,6 +2054,53 @@ export type Database = {
           {
             foreignKeyName: "tenant_admin_sessions_site_id_fkey"
             columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "managed_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_ai_usage: {
+        Row: {
+          ai_mode: string
+          created_at: string
+          error_message: string | null
+          id: string
+          managed_site_id: string
+          model: string | null
+          op_type: string
+          succeeded: boolean
+          tokens_in: number | null
+          tokens_out: number | null
+        }
+        Insert: {
+          ai_mode: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          managed_site_id: string
+          model?: string | null
+          op_type: string
+          succeeded?: boolean
+          tokens_in?: number | null
+          tokens_out?: number | null
+        }
+        Update: {
+          ai_mode?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          managed_site_id?: string
+          model?: string | null
+          op_type?: string
+          succeeded?: boolean
+          tokens_in?: number | null
+          tokens_out?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_ai_usage_managed_site_id_fkey"
+            columns: ["managed_site_id"]
             isOneToOne: false
             referencedRelation: "managed_sites"
             referencedColumns: ["id"]
