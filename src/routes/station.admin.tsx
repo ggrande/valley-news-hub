@@ -165,6 +165,7 @@ function Dashboard({ session }: { session: any }) {
     { id: "media", label: "Media" },
     { id: "domain", label: "Domain" },
     { id: "legal", label: "Legal" },
+    { id: "ai", label: "AI" },
     { id: "billing", label: "Billing" },
     { id: "network", label: "Network" },
   ];
