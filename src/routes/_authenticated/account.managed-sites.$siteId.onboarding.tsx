@@ -87,7 +87,7 @@ function shortSessionCode(siteId: string): string {
 
 const STATE_PCT: Record<string, number> = {
   awaiting_oauth: 5,
-  linking: 20,
+  linking: 5,
   provisioning: 55,
   migrating: 85,
   ready: 100,
@@ -161,9 +161,11 @@ function OnboardingPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  // If a project is already kicked off (refresh / returning user), auto-advance past step 0.
+  // Advance past step 0 once a project exists; snap back to step 0 if a full
+  // reset clears the project so the "Start provisioning" CTA is visible again.
   useEffect(() => {
-    if (step === 0 && status.data?.project) setStep(1);
+    if (status.data?.project && step === 0) setStep(1);
+    else if (!status.data?.project && step !== 0) setStep(0);
   }, [status.data?.project, step]);
 
   // Default the org dropdown to the first org returned (usually "Personal").
@@ -817,7 +819,9 @@ function ProvisioningPanel({
       case "awaiting_oauth":
         return "Awaiting Supabase authorization";
       case "linking":
-        return "Linking your Supabase account";
+        return s?.project
+          ? "Linking your Supabase account"
+          : "Choose an organization to continue";
       case "provisioning":
         return "Provisioning database…";
       case "migrating":
@@ -829,7 +833,7 @@ function ProvisioningPanel({
       default:
         return "Initializing…";
     }
-  }, [s?.state]);
+  }, [s?.state, s?.project]);
 
   const startConnect = async () => {
     try {
