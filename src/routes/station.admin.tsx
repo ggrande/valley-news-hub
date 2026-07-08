@@ -35,6 +35,8 @@ import {
   uploadStationMedia,
   listStationMedia,
   deleteStationMedia,
+  getStationLegal,
+  updateStationLegal,
 } from "@/lib/station-admin.functions";
 
 
@@ -43,7 +45,7 @@ export const Route = createFileRoute("/station/admin")({
   component: StationAdminPage,
 });
 
-type Tab = "dashboard" | "posts" | "comments" | "branding" | "media" | "domain" | "billing" | "network";
+type Tab = "dashboard" | "posts" | "comments" | "branding" | "media" | "domain" | "legal" | "billing" | "network";
 
 function StationAdminPage() {
   const sessionFn = useServerFn(getStationSession);
@@ -160,6 +162,7 @@ function Dashboard({ session }: { session: any }) {
     { id: "branding", label: "Branding" },
     { id: "media", label: "Media" },
     { id: "domain", label: "Domain" },
+    { id: "legal", label: "Legal" },
     { id: "billing", label: "Billing" },
     { id: "network", label: "Network" },
   ];
@@ -192,6 +195,7 @@ function Dashboard({ session }: { session: any }) {
         {tab === "branding" && <BrandingTab site={active} />}
         {tab === "media" && <MediaTab site={active} />}
         {tab === "domain" && <DomainTab site={active} />}
+        {tab === "legal" && <LegalTab site={active} />}
         {tab === "billing" && <BillingTab site={active} />}
         {tab === "network" && (
           <div className="space-y-4">
@@ -539,7 +543,7 @@ function BrandingTab({ site }: { site: any }) {
         )}
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Contact email">
+        <Field label="Public email (used site-wide for contact, tips, hiring)">
           <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="news@station.com"
                  className="w-full rounded-md border px-3 py-2 text-sm" />
         </Field>
