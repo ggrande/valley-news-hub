@@ -2,6 +2,7 @@
 // No password, no Supabase auth — short-lived link tokens + long-lived session tokens.
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const COOKIE = "wkna_station_sess";
 const SESSION_TTL_SEC = 60 * 60 * 24 * 30; // 30 days
